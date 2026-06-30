@@ -1,0 +1,11 @@
+{
+  "identifier": "default",
+  "description": "Default desktop capability set for main and widget windows.",
+  "windows": ["main", "widget"],
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "core:window:default",
+    "core:webview:default"
+  ]
+}

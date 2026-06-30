@@ -18,13 +18,53 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26.1"
+          cache-dependency-path: apps/core/go.sum
       - uses: dtolnay/rust-toolchain@stable
       - run: pnpm install --frozen-lockfile
       - run: cd apps/core && go test ./...
       - run: cd apps/desktop && pnpm test
+      - name: Generate macOS icon assets
+        run: |
+          mkdir -p apps/desktop/src-tauri/icons/icon.iconset
+          python3 <<'PY'
+          import pathlib
+          import struct
+          import zlib
+
+          out = pathlib.Path("apps/desktop/src-tauri/icons/app.png")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          width = height = 1024
+          color = bytes((45, 106, 79, 255))
+          row = color * width
+          raw = b"".join(b"\x00" + row for _ in range(height))
+
+          def chunk(tag: bytes, data: bytes) -> bytes:
+              return (
+                  struct.pack(">I", len(data))
+                  + tag
+                  + data
+                  + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+              )
+
+          png = b"\x89PNG\r\n\x1a\n"
+          png += chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+          png += chunk(b"IDAT", zlib.compress(raw, 9))
+          png += chunk(b"IEND", b"")
+          out.write_bytes(png)
+          PY
+          for size in 16 32 64 128 256 512; do
+            sips -z "$size" "$size" apps/desktop/src-tauri/icons/app.png --out "apps/desktop/src-tauri/icons/icon.iconset/icon_${size}x${size}.png"
+          done
+          cp apps/desktop/src-tauri/icons/icon.iconset/icon_32x32.png apps/desktop/src-tauri/icons/icon.iconset/icon_16x16@2x.png
+          cp apps/desktop/src-tauri/icons/icon.iconset/icon_64x64.png apps/desktop/src-tauri/icons/icon.iconset/icon_32x32@2x.png
+          cp apps/desktop/src-tauri/icons/icon.iconset/icon_256x256.png apps/desktop/src-tauri/icons/icon.iconset/icon_128x128@2x.png
+          cp apps/desktop/src-tauri/icons/icon.iconset/icon_512x512.png apps/desktop/src-tauri/icons/icon.iconset/icon_256x256@2x.png
+          cp apps/desktop/src-tauri/icons/app.png apps/desktop/src-tauri/icons/icon.iconset/icon_512x512@2x.png
+          iconutil -c icns apps/desktop/src-tauri/icons/icon.iconset -o apps/desktop/src-tauri/icons/icon.icns
       - run: cd apps/desktop && pnpm tauri:build
       - uses: actions/upload-artifact@v4
         with:
