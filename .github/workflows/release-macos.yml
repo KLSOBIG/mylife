@@ -8,25 +8,42 @@ on:
 
 jobs:
   build-macos:
+    permissions:
+      contents: write
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
         with:
           version: 10.12.1
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
+
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26.1"
           cache-dependency-path: apps/core/go.sum
+
       - uses: dtolnay/rust-toolchain@stable
-      - run: pnpm install --frozen-lockfile
-      - run: cd apps/core && go test ./...
-      - run: cd apps/desktop && pnpm test
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Go tests
+        run: cd apps/core && go test ./...
+
+      - name: Run frontend tests
+        run: cd apps/desktop && pnpm test
+
       - name: Generate macOS icon assets
         run: |
           mkdir -p apps/desktop/src-tauri/icons/icon.iconset
@@ -65,8 +82,22 @@ jobs:
           cp apps/desktop/src-tauri/icons/icon.iconset/icon_512x512.png apps/desktop/src-tauri/icons/icon.iconset/icon_256x256@2x.png
           cp apps/desktop/src-tauri/icons/app.png apps/desktop/src-tauri/icons/icon.iconset/icon_512x512@2x.png
           iconutil -c icns apps/desktop/src-tauri/icons/icon.iconset -o apps/desktop/src-tauri/icons/icon.icns
-      - run: cd apps/desktop && pnpm tauri:build
-      - uses: actions/upload-artifact@v4
+
+      - name: Build macOS dmg with Tauri Action
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: "mylife ${{ github.ref_name }}"
+          releaseBody: "Mac installer build for mylife."
+          releaseDraft: false
+          prerelease: false
+          args: --bundles dmg
+
+      - name: Upload dmg artifact
+        uses: actions/upload-artifact@v4
         with:
           name: mylife-macos-installer
           path: apps/desktop/src-tauri/target/release/bundle/dmg/*.dmg
