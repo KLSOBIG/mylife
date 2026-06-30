@@ -1,0 +1,34 @@
+.app-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr 320px;
+  gap: 16px;
+  min-height: 100vh;
+}
+
+.left-pane,
+.details-pane,
+.status-column {
+  border: 1px solid #ddd6c8;
+  border-radius: 16px;
+  padding: 16px;
+  background: #fffdfa;
+}
+
+.today-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
