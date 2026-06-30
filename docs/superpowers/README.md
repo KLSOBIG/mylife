@@ -21,11 +21,15 @@
   视觉系统。主题、状态色、字号、间距、卡片、toast、tab 规则。
 - [2026-06-30-mylife-interaction-states.md](./specs/2026-06-30-mylife-interaction-states.md)
   交互规则。任务流转、撤销、Markdown `[]` 同步、提醒、甘特图、小窗边界。
+- [2026-06-30-mylife-frontend-correction.md](./specs/2026-06-30-mylife-frontend-correction.md)
+  前端纠偏。针对当前 UI 与需求不符的整改要求，优先级最高。
 
 ### Plans
 
 - [2026-06-30-mylife-v1.md](./plans/2026-06-30-mylife-v1.md)
   `v1` 实现计划。
+- [2026-06-30-mylife-ui-remediation.md](./plans/2026-06-30-mylife-ui-remediation.md)
+  UI 整改计划。给多 agent 并行开发的施工单。
 
 ### Prototypes
 

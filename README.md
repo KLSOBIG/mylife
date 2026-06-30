@@ -120,7 +120,9 @@ git push origin v0.1.0
 - 设计文档：`docs/superpowers/specs/2026-06-30-mylife-design.md`
 - 视觉系统：`docs/superpowers/specs/2026-06-30-mylife-visual-system.md`
 - 交互规则：`docs/superpowers/specs/2026-06-30-mylife-interaction-states.md`
+- 前端纠偏：`docs/superpowers/specs/2026-06-30-mylife-frontend-correction.md`
 - 实现计划：`docs/superpowers/plans/2026-06-30-mylife-v1.md`
+- UI 整改计划：`docs/superpowers/plans/2026-06-30-mylife-ui-remediation.md`
 - 主窗口原型：`docs/superpowers/prototypes/2026-06-30-mylife-main-window.html`
 - 小窗原型：`docs/superpowers/prototypes/2026-06-30-mylife-widget.html`
 - 文档索引：`docs/superpowers/README.md`
