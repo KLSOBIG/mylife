@@ -4,26 +4,30 @@ import { ThemeProvider } from "../features/theme/theme-provider";
 import { MonthFilter } from "../features/calendar/month-filter";
 import { UndoToast } from "../features/tasks/undo-toast";
 import { TodayBoard } from "../features/tasks/today-board";
-import { WorkspaceList } from "../features/workspaces/workspace-list";
 import {
   advanceTask,
   buildTaskDetail,
   buildTaskSummary,
   completeTask,
   createTaskRecord,
+  moveTaskRecords,
   seedTasks,
   statusMeta,
   type TaskRecord,
   type ThemeName
 } from "../lib/task-state";
+import type { TaskMoveRequest } from "../lib/types";
 import "../styles/app.css";
+
+const APP_TODAY = new Date(2026, 5, 30, 9, 0, 0);
 
 export function AppShell() {
   const [tasks, setTasks] = useState<TaskRecord[]>(seedTasks);
   const [selectedTaskId, setSelectedTaskId] = useState<string>(seedTasks()[0].id);
+  const [selectedDate, setSelectedDate] = useState<Date>(APP_TODAY);
+  const [selectedWorkspace, setSelectedWorkspace] = useState("my-work");
   const [draftTitle, setDraftTitle] = useState("");
   const [isComposerOpen, setIsComposerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"details" | "gantt">("details");
   const [theme, setTheme] = useState<ThemeName>("olive");
   const [undoState, setUndoState] = useState<{
     message: string;
@@ -67,6 +71,15 @@ export function AppShell() {
     setIsComposerOpen(false);
   }
 
+  function commitTasks(nextTasks: TaskRecord[], message: string) {
+    const previous = tasks;
+    setTasks(nextTasks);
+    setUndoState({
+      message,
+      previous
+    });
+  }
+
   function applyTaskChange(taskId: string, transformer: (task: TaskRecord) => TaskRecord) {
     const previous = tasks;
     const nextTasks = tasks.map((task) => (task.id === taskId ? transformer(task) : task));
@@ -78,6 +91,16 @@ export function AppShell() {
         previous
       });
     }
+  }
+
+  function applyTaskMove(request: TaskMoveRequest) {
+    const nextTasks = moveTaskRecords(tasks, request);
+    const moved = nextTasks.find((task) => task.id === request.taskId);
+    if (!moved) {
+      return;
+    }
+
+    commitTasks(nextTasks, `任务已拖动到 ${statusMeta[moved.status].label}`);
   }
 
   function undoLastChange() {
@@ -92,8 +115,15 @@ export function AppShell() {
     <ThemeProvider value={theme}>
       <main className={`app-shell theme-${theme}`}>
         <aside className="left-pane">
-          <MonthFilter />
-          <WorkspaceList />
+          <MonthFilter
+            title="日历"
+            today={APP_TODAY}
+            initialSelectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            showWorkspaces
+            activeWorkspaceId={selectedWorkspace}
+            onSelectWorkspace={setSelectedWorkspace}
+          />
         </aside>
         <TodayBoard
           tasks={summaries}
@@ -102,37 +132,19 @@ export function AppShell() {
           onDraftTitleChange={setDraftTitle}
           onCreateClick={openComposer}
           onCreateSave={saveTask}
-          onSelectTask={(taskId) => {
-            setSelectedTaskId(taskId);
-            setActiveTab("details");
-          }}
+          onSelectTask={setSelectedTaskId}
           onCompleteTask={(taskId) => applyTaskChange(taskId, completeTask)}
+          onAdvanceTask={(taskId) => applyTaskChange(taskId, advanceTask)}
+          onTaskMove={applyTaskMove}
           onThemeChange={setTheme}
         />
         <section aria-label="details-pane" className="details-pane">
-          <div className="details-pane__actions">
-            <button type="button" onClick={() => setActiveTab("details")}>
-              任务详情
-            </button>
-            <button type="button" onClick={() => setActiveTab("gantt")}>
-              甘特图
-            </button>
-          </div>
-          {selectedTask && activeTab === "details" ? (
-            <>
-              <div className="details-pane__task-actions">
-                <button type="button" onClick={() => applyTaskChange(selectedTask.id, completeTask)}>
-                  完成
-                </button>
-                <button type="button" onClick={() => applyTaskChange(selectedTask.id, advanceTask)}>
-                  下一状态
-                </button>
-              </div>
-              <TaskDetailPane task={detail!} activeTab="details" />
-            </>
-          ) : null}
-          {selectedTask && activeTab === "gantt" ? (
-            <TaskDetailPane task={detail!} activeTab="gantt" />
+          {selectedTask ? (
+            <TaskDetailPane
+              task={detail!}
+              onCompleteTask={(taskId) => applyTaskChange(taskId, completeTask)}
+              onAdvanceTask={(taskId) => applyTaskChange(taskId, advanceTask)}
+            />
           ) : null}
         </section>
         {undoState ? <UndoToast message={undoState.message} onUndo={undoLastChange} /> : null}

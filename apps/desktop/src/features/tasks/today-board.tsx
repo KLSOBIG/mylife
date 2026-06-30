@@ -1,7 +1,12 @@
-import { statusMeta, themes, type ThemeName } from "../../lib/task-state";
-import type { TaskStatus, TaskSummary } from "../../lib/types";
+import { themes, type ThemeName } from "../../lib/task-state";
+import type { TaskMoveRequest, TaskSummary } from "../../lib/types";
+import { TaskLaneBoard } from "./task-lane-board";
 
-const defaultGroups = ["未开始", "进行中", "已完成", "废弃"];
+const themeLabels: Record<ThemeName, string> = {
+  olive: "苔绿",
+  amber: "赤陶",
+  slate: "石板"
+};
 
 export function TodayBoard({
   tasks = [],
@@ -12,6 +17,8 @@ export function TodayBoard({
   onCreateSave,
   onSelectTask,
   onCompleteTask,
+  onAdvanceTask,
+  onTaskMove,
   onThemeChange
 }: {
   tasks?: TaskSummary[];
@@ -22,100 +29,48 @@ export function TodayBoard({
   onCreateSave?: () => void;
   onSelectTask?: (taskId: string) => void;
   onCompleteTask?: (taskId: string) => void;
+  onAdvanceTask?: (taskId: string) => void;
+  onTaskMove?: (request: TaskMoveRequest) => void;
   onThemeChange?: (theme: ThemeName) => void;
 }) {
-  const grouped = groupTasks(tasks);
   return (
     <section className="today-board">
       <header className="today-header">
-        <h1>今天</h1>
+        <div className="today-header__title">
+          <p className="today-header__eyebrow">Today Focus</p>
+          <h1>今天</h1>
+        </div>
         <div className="today-header__actions">
-          <div className="theme-switch">
+          <div className="theme-switch" role="group" aria-label="主题切换">
             {themes.map((theme) => (
               <button
                 key={theme}
                 type="button"
                 aria-label={`theme-${theme}`}
-                className={`theme-switch__dot theme-switch__dot--${theme}`}
+                className={`theme-switch__item theme-switch__item--${theme}`}
                 onClick={() => onThemeChange?.(theme)}
-              />
+              >
+                <span className={`theme-switch__swatch theme-switch__swatch--${theme}`} aria-hidden="true" />
+                <span>{themeLabels[theme]}</span>
+              </button>
             ))}
           </div>
-          <button type="button" onClick={onCreateClick}>
+          <button type="button" className="toolbar-button toolbar-button--primary" onClick={onCreateClick}>
             快速新增 +
           </button>
         </div>
       </header>
-      {isComposerOpen ? (
-        <div className="task-creator">
-          <input
-            placeholder="输入任务标题"
-            value={draftTitle}
-            onChange={(event) => onDraftTitleChange?.(event.target.value)}
-          />
-          <button type="button" onClick={onCreateSave}>
-            保存任务
-          </button>
-        </div>
-      ) : null}
-      <div className="status-grid">
-        {(tasks.length === 0 ? defaultGroups : Object.keys(grouped)).map((group) => (
-          <article key={group} className="status-column">
-            <h2>{group}</h2>
-            {"length" in grouped ? null : null}
-            {tasks.length > 0
-              ? grouped[group].map((task) => (
-                  <button
-                    key={task.id}
-                    type="button"
-                    className="task-card"
-                    onClick={() => onSelectTask?.(task.id)}
-                  >
-                    <strong>{task.title}</strong>
-                    <span className={`task-chip ${statusMeta[task.status].chipClass}`}>
-                      {statusMeta[task.status].label}
-                    </span>
-                    {task.reminderLabel ? <small>{task.reminderLabel}</small> : null}
-                    {task.status !== "completed" ? (
-                      <span
-                        className="task-complete"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          onCompleteTask?.(task.id);
-                        }}
-                      >
-                        完成
-                      </span>
-                    ) : null}
-                  </button>
-                ))
-              : null}
-          </article>
-        ))}
-      </div>
+      <TaskLaneBoard
+        tasks={tasks}
+        draftTitle={draftTitle}
+        isComposerOpen={isComposerOpen}
+        onDraftTitleChange={onDraftTitleChange}
+        onCreateSave={onCreateSave}
+        onSelectTask={onSelectTask}
+        onCompleteTask={onCompleteTask}
+        onAdvanceTask={onAdvanceTask}
+        onTaskMove={onTaskMove}
+      />
     </section>
   );
-}
-
-function groupTasks(tasks: TaskSummary[]) {
-  const labels: Record<TaskStatus, string> = {
-    not_started: "未开始",
-    in_progress: "进行中",
-    completed: "已完成",
-    abandoned: "废弃"
-  };
-
-  return tasks.reduce<Record<string, TaskSummary[]>>((groups, task) => {
-    const label = labels[task.status];
-    if (!groups[label]) {
-      groups[label] = [];
-    }
-    groups[label].push(task);
-    return groups;
-  }, {
-    未开始: [],
-    进行中: [],
-    已完成: [],
-    废弃: []
-  });
 }

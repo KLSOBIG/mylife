@@ -18,7 +18,8 @@ export type ReminderDetail = {
 export type TimelineSegment = {
   id: string;
   status: TaskStatus;
-  width: string;
+  startAt: string;
+  endAt: string;
 };
 
 export type TimelineRow = {
@@ -33,6 +34,20 @@ export type TaskSummary = {
   status: TaskStatus;
   isToday: boolean;
   reminderLabel?: string;
+  checklistCount?: number;
+};
+
+export type TaskLane = {
+  status: TaskStatus;
+  label: string;
+  tasks: TaskSummary[];
+  count: number;
+};
+
+export type TaskMoveRequest = {
+  taskId: string;
+  toStatus: TaskStatus;
+  toIndex: number;
 };
 
 export type TaskDetail = {

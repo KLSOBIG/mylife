@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { AppShell } from "./app-shell";
 
@@ -6,5 +7,39 @@ describe("AppShell", () => {
   it("renders today header", () => {
     render(<AppShell />);
     expect(screen.getByRole("heading", { name: "今天" })).toBeInTheDocument();
+  });
+
+  it("shows a full month calendar in the left pane", () => {
+    render(<AppShell />);
+    expect(screen.getByRole("heading", { name: "日历" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /2026年6月1日/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /2026年6月30日/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /2026年5月31日/ })).toBeInTheDocument();
+  });
+
+  it("uses one real tab set instead of duplicated action rows", () => {
+    render(<AppShell />);
+    expect(screen.getByRole("tab", { name: "任务详情" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "甘特图" })).toBeInTheDocument();
+    expect(screen.getAllByRole("tab")).toHaveLength(2);
+  });
+
+  it("creates task without requiring an explicit save button", async () => {
+    const user = userEvent.setup();
+    render(<AppShell />);
+
+    await user.click(screen.getByRole("button", { name: /快速新增/i }));
+
+    const input = screen.getByPlaceholderText("输入任务标题");
+    await user.type(input, "自动保存任务");
+    await user.tab();
+
+    expect(screen.queryByRole("button", { name: "保存任务" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("自动保存任务").length).toBeGreaterThan(0);
+  });
+
+  it("keeps markdown editor as the dominant editable area in details", () => {
+    render(<AppShell />);
+    expect(screen.getByRole("textbox", { name: /markdown/i })).toBeInTheDocument();
   });
 });

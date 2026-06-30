@@ -2,10 +2,19 @@ import type {
   ChecklistItem,
   ReminderDetail,
   TaskDetail,
+  TaskLane,
+  TaskMoveRequest,
   TaskStatus,
   TaskSummary,
   TimelineRow
 } from "./types";
+
+export const taskStatusOrder: TaskStatus[] = [
+  "not_started",
+  "in_progress",
+  "completed",
+  "abandoned"
+];
 
 export const statusMeta: Record<
   TaskStatus,
@@ -37,7 +46,8 @@ export function buildTaskSummary(task: TaskRecord): TaskSummary {
     title: task.title,
     status: task.status,
     isToday: task.isToday,
-    reminderLabel: task.reminder.at
+    reminderLabel: task.reminder.at,
+    checklistCount: task.checklist.length
   };
 }
 
@@ -56,6 +66,9 @@ export function buildTaskDetail(task: TaskRecord): TaskDetail {
 }
 
 export function createTaskRecord(title: string, index: number): TaskRecord {
+  const base = new Date(2026, 5, 30 + index, 9, 0, 0).toISOString();
+  const end = new Date(2026, 5, 30 + index, 18, 0, 0).toISOString();
+
   return {
     id: `task_${Date.now()}_${index}`,
     title,
@@ -71,7 +84,7 @@ export function createTaskRecord(title: string, index: number): TaskRecord {
       {
         id: `row_${Date.now()}_${index}`,
         title,
-        segments: [{ id: `seg_${Date.now()}_${index}`, status: "not_started", width: "28%" }]
+        segments: [{ id: `seg_${Date.now()}_${index}`, status: "not_started", startAt: base, endAt: end }]
       }
     ]
   };
@@ -103,7 +116,8 @@ export function applyStatus(task: TaskRecord, status: TaskStatus): TaskRecord {
               {
                 id: `${row.id}_${row.segments.length + 1}`,
                 status,
-                width: status === "completed" ? "24%" : "18%"
+                startAt: buildSegmentStart(row.segments, task.id),
+                endAt: buildSegmentEnd(row.segments, task.id, status)
               }
             ]
           }
@@ -130,16 +144,16 @@ export function seedTasks(): TaskRecord[] {
           id: "row_main_1",
           title: "主任务",
           segments: [
-            { id: "seg_1", status: "not_started", width: "18%" },
-            { id: "seg_2", status: "in_progress", width: "40%" }
+            { id: "seg_1", status: "not_started", startAt: "2026-06-28T09:00:00.000Z", endAt: "2026-06-29T12:00:00.000Z" },
+            { id: "seg_2", status: "in_progress", startAt: "2026-06-30T09:00:00.000Z", endAt: "2026-07-03T18:00:00.000Z" }
           ]
         },
         {
           id: "row_child_1",
           title: "子任务 A",
           segments: [
-            { id: "seg_3", status: "not_started", width: "12%" },
-            { id: "seg_4", status: "completed", width: "24%" }
+            { id: "seg_3", status: "not_started", startAt: "2026-06-28T09:00:00.000Z", endAt: "2026-06-28T18:00:00.000Z" },
+            { id: "seg_4", status: "completed", startAt: "2026-06-29T09:00:00.000Z", endAt: "2026-06-30T16:00:00.000Z" }
           ]
         }
       ]
@@ -157,11 +171,106 @@ export function seedTasks(): TaskRecord[] {
           id: "row_main_2",
           title: "主任务",
           segments: [
-            { id: "seg_5", status: "not_started", width: "16%" },
-            { id: "seg_6", status: "in_progress", width: "36%" }
+            { id: "seg_5", status: "not_started", startAt: "2026-06-29T08:00:00.000Z", endAt: "2026-06-29T16:00:00.000Z" },
+            { id: "seg_6", status: "in_progress", startAt: "2026-06-30T10:00:00.000Z", endAt: "2026-07-02T17:00:00.000Z" }
           ]
         }
       ]
     }
   ];
+}
+
+export function buildTaskLanes(tasks: TaskSummary[]): TaskLane[] {
+  const grouped = createEmptyStatusMap<TaskSummary[]>(
+    () => []
+  );
+
+  for (const task of tasks) {
+    grouped[task.status].push(task);
+  }
+
+  return taskStatusOrder.map((status) => ({
+    status,
+    label: statusMeta[status].label,
+    tasks: grouped[status],
+    count: grouped[status].length
+  }));
+}
+
+export function moveTaskSummaries(
+  tasks: TaskSummary[],
+  request: TaskMoveRequest
+): TaskSummary[] {
+  return moveTasks(tasks, request, (task, status) =>
+    task.status === status ? task : { ...task, status }
+  );
+}
+
+export function moveTaskRecords(
+  tasks: TaskRecord[],
+  request: TaskMoveRequest
+): TaskRecord[] {
+  return moveTasks(tasks, request, (task, status) =>
+    task.status === status ? task : applyStatus(task, status)
+  );
+}
+
+function moveTasks<T extends { id: string; status: TaskStatus }>(
+  tasks: T[],
+  request: TaskMoveRequest,
+  updateStatus: (task: T, status: TaskStatus) => T
+): T[] {
+  const current = tasks.find((task) => task.id === request.taskId);
+  if (!current) {
+    return tasks;
+  }
+
+  const remaining = tasks.filter((task) => task.id !== request.taskId);
+  const grouped = createEmptyStatusMap<T[]>(
+    () => []
+  );
+
+  for (const task of remaining) {
+    grouped[task.status].push(task);
+  }
+
+  const nextTask = updateStatus(current, request.toStatus);
+  const lane = grouped[request.toStatus];
+  const nextIndex = clamp(request.toIndex, 0, lane.length);
+  lane.splice(nextIndex, 0, nextTask);
+
+  return taskStatusOrder.flatMap((status) => grouped[status]);
+}
+
+function createEmptyStatusMap<T>(factory: () => T): Record<TaskStatus, T> {
+  return {
+    not_started: factory(),
+    in_progress: factory(),
+    completed: factory(),
+    abandoned: factory()
+  };
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function buildSegmentStart(segments: TimelineRow["segments"], _seed: string) {
+  const lastSegment = segments[segments.length - 1];
+  if (lastSegment) {
+    return lastSegment.endAt;
+  }
+
+  return new Date("2026-06-30T09:00:00.000Z").toISOString();
+}
+
+function buildSegmentEnd(
+  segments: TimelineRow["segments"],
+  seed: string,
+  status: TaskStatus
+) {
+  const startAt = new Date(buildSegmentStart(segments, seed));
+  const durationHours = status === "completed" ? 20 : 12;
+  startAt.setHours(startAt.getHours() + durationHours);
+  return startAt.toISOString();
 }

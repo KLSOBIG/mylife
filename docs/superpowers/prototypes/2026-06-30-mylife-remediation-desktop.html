@@ -6,17 +6,18 @@
     <title>mylife 整改版桌面原型</title>
     <style>
       :root {
-        --bg: #f6f3ed;
-        --panel: #fbfaf7;
-        --panel-strong: #ffffff;
-        --line: #e2ddd2;
-        --text: #221f1a;
-        --muted: #7f786f;
-        --accent: #2f6f57;
-        --accent-soft: #e7f1ec;
+        --bg: #f7f6f3;
+        --sidebar: #f3f2ee;
+        --panel: #ffffff;
+        --panel-soft: #fbfaf7;
+        --line: #e7e3db;
+        --text: #2a2824;
+        --muted: #8a847a;
+        --accent: #ef5a57;
+        --accent-soft: #fde9e8;
         --not-started: #a7afb8;
-        --in-progress: #d29b2f;
-        --done: #3f8a61;
+        --in-progress: #cb9b3f;
+        --done: #4e9a73;
         --abandoned: #c56a6a;
       }
 
@@ -24,8 +25,7 @@
       body {
         margin: 0;
         background:
-          radial-gradient(circle at top left, rgba(47, 111, 87, 0.08), transparent 28%),
-          linear-gradient(180deg, #faf8f4 0%, var(--bg) 100%);
+          linear-gradient(180deg, #faf9f6 0%, var(--bg) 100%);
         color: var(--text);
         font-family: "PingFang SC", "Noto Sans SC", sans-serif;
       }
@@ -39,16 +39,17 @@
       }
 
       .panel {
-        background: rgba(251, 250, 247, 0.92);
+        background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 18px;
-        box-shadow: 0 10px 28px rgba(38, 31, 24, 0.05);
+        box-shadow: 0 4px 18px rgba(38, 31, 24, 0.04);
         overflow: hidden;
       }
 
       .left {
         display: grid;
         grid-template-rows: auto 1fr;
+        background: var(--sidebar);
       }
 
       .section {
@@ -75,7 +76,7 @@
       .nav-btn, .mini-btn, .theme-btn, .action-btn {
         border: 1px solid var(--line);
         border-radius: 10px;
-        background: var(--panel-strong);
+        background: var(--panel-soft);
         color: var(--text);
         font-size: 12px;
       }
@@ -103,17 +104,18 @@
         display: grid;
         place-items: center;
         font-size: 12px;
-        background: #f3f0e9;
+        background: transparent;
       }
 
       .date.is-faded {
-        color: #bbb3a6;
-        background: #f7f5ef;
+        color: #c0bab0;
+        background: transparent;
       }
 
       .date.is-today {
-        border: 1px solid var(--accent);
+        border: 1px solid #f2b0ae;
         color: var(--accent);
+        background: var(--accent-soft);
       }
 
       .date.is-selected {
@@ -135,14 +137,15 @@
       }
 
       .workspace.is-active {
-        background: var(--accent-soft);
+        background: #ffffff;
+        border: 1px solid var(--line);
       }
 
       .dot {
         width: 8px;
         height: 8px;
         border-radius: 999px;
-        background: var(--accent);
+        background: #7b67ff;
       }
 
       .main {
@@ -178,9 +181,8 @@
 
       .action-btn {
         padding: 8px 12px;
-        background: var(--accent);
-        border-color: var(--accent);
-        color: #fff;
+        background: var(--panel-soft);
+        color: var(--text);
       }
 
       .lanes {
@@ -191,7 +193,7 @@
       .lane {
         border: 1px solid var(--line);
         border-radius: 16px;
-        background: rgba(255,255,255,0.72);
+        background: #fff;
         margin-bottom: 12px;
         overflow: hidden;
       }
@@ -201,7 +203,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 12px 14px;
-        background: rgba(255,255,255,0.75);
+        background: #fbfaf7;
         border-bottom: 1px solid var(--line);
       }
 
@@ -286,7 +288,7 @@
         border-radius: 999px;
         padding: 8px 12px;
         font-size: 12px;
-        background: var(--panel-strong);
+        background: var(--panel-soft);
       }
 
       .tab.active {
@@ -310,7 +312,7 @@
       .editor, .preview, .meta-block {
         border: 1px solid var(--line);
         border-radius: 14px;
-        background: #fff;
+        background: #fcfbf8;
       }
 
       .editor {
@@ -352,7 +354,7 @@
         min-width: 300px;
         padding: 14px 16px;
         border-radius: 16px;
-        background: rgba(32, 31, 26, 0.94);
+        background: rgba(42, 40, 36, 0.94);
         color: #fff;
         box-shadow: 0 16px 36px rgba(0,0,0,0.18);
       }
@@ -365,7 +367,7 @@
           <div class="month-head">
             <div>
               <div class="title">六月 2026</div>
-              <div class="subtle">今天 / 周视图 / 工作上下文联动</div>
+              <div class="subtle">完整月历 / 今天高亮 / 日期筛选</div>
             </div>
             <div class="month-nav">
               <button class="nav-btn">‹</button>
@@ -387,8 +389,8 @@
           <div class="title">工作空间</div>
           <div class="workspace-list">
             <div class="workspace is-active"><span class="dot"></span><span>我的工作</span></div>
-            <div class="workspace"><span class="dot" style="background:#b7742d;"></span><span>学习项目</span></div>
-            <div class="workspace"><span class="dot" style="background:#496982;"></span><span>生活事项</span></div>
+            <div class="workspace"><span class="dot" style="background:#39a0db;"></span><span>学习项目</span></div>
+            <div class="workspace"><span class="dot" style="background:#f38b2a;"></span><span>生活事项</span></div>
           </div>
         </section>
       </aside>
@@ -400,9 +402,9 @@
             <div class="subtle">2026-06-30 · 今天优先 · 拖拽改状态</div>
           </div>
           <div class="head-actions">
-            <button class="theme-btn"><span class="theme-swatch" style="background:#2f6f57;"></span>橄榄</button>
-            <button class="theme-btn"><span class="theme-swatch" style="background:#b7742d;"></span>琥珀</button>
-            <button class="theme-btn"><span class="theme-swatch" style="background:#496982;"></span>石板</button>
+            <button class="theme-btn"><span class="theme-swatch" style="background:#ef5a57;"></span>浅色</button>
+            <button class="theme-btn"><span class="theme-swatch" style="background:#39a0db;"></span>冷调</button>
+            <button class="theme-btn"><span class="theme-swatch" style="background:#b18d52;"></span>暖调</button>
             <button class="action-btn">新增任务</button>
           </div>
         </header>
