@@ -23,6 +23,8 @@
   交互规则。任务流转、撤销、Markdown `[]` 同步、提醒、甘特图、小窗边界。
 - [2026-06-30-mylife-frontend-correction.md](./specs/2026-06-30-mylife-frontend-correction.md)
   前端纠偏。针对当前 UI 与需求不符的整改要求，优先级最高。
+- [2026-06-30-mylife-component-spec.md](./specs/2026-06-30-mylife-component-spec.md)
+  组件规范。月历、泳道、任务卡、页签、Markdown 主区、toast、小窗的统一约束。
 
 ### Plans
 
@@ -37,6 +39,8 @@
   主窗口原型。三栏布局、今天视图、详情/甘特双页签、撤销 toast、主题入口。
 - [2026-06-30-mylife-widget.html](./prototypes/2026-06-30-mylife-widget.html)
   桌面小窗原型。今天进行中任务、轻交互、空态、联动边界。
+- [2026-06-30-mylife-remediation-desktop.html](./prototypes/2026-06-30-mylife-remediation-desktop.html)
+  整改版桌面原型。作为本轮 H5 与 Mac 视觉收敛基准。
 
 ## 协作规则
 

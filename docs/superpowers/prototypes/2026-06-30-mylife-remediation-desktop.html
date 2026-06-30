@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mylife 整改版桌面原型</title>
+    <style>
+      :root {
+        --bg: #f6f3ed;
+        --panel: #fbfaf7;
+        --panel-strong: #ffffff;
+        --line: #e2ddd2;
+        --text: #221f1a;
+        --muted: #7f786f;
+        --accent: #2f6f57;
+        --accent-soft: #e7f1ec;
+        --not-started: #a7afb8;
+        --in-progress: #d29b2f;
+        --done: #3f8a61;
+        --abandoned: #c56a6a;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top left, rgba(47, 111, 87, 0.08), transparent 28%),
+          linear-gradient(180deg, #faf8f4 0%, var(--bg) 100%);
+        color: var(--text);
+        font-family: "PingFang SC", "Noto Sans SC", sans-serif;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 260px minmax(640px, 1fr) 420px;
+        gap: 14px;
+        min-height: 100vh;
+        padding: 14px;
+      }
+
+      .panel {
+        background: rgba(251, 250, 247, 0.92);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(38, 31, 24, 0.05);
+        overflow: hidden;
+      }
+
+      .left {
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .section {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .section:last-child { border-bottom: 0; }
+      .title { margin: 0 0 10px; font-size: 15px; font-weight: 700; }
+      .subtle { color: var(--muted); font-size: 12px; }
+
+      .month-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .month-nav {
+        display: flex;
+        gap: 8px;
+      }
+
+      .nav-btn, .mini-btn, .theme-btn, .action-btn {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel-strong);
+        color: var(--text);
+        font-size: 12px;
+      }
+
+      .nav-btn, .mini-btn, .theme-btn {
+        padding: 6px 9px;
+      }
+
+      .calendar-weekdays, .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+      }
+
+      .calendar-weekdays {
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        text-align: center;
+      }
+
+      .date {
+        height: 32px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        background: #f3f0e9;
+      }
+
+      .date.is-faded {
+        color: #bbb3a6;
+        background: #f7f5ef;
+      }
+
+      .date.is-today {
+        border: 1px solid var(--accent);
+        color: var(--accent);
+      }
+
+      .date.is-selected {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .workspace-list {
+        display: grid;
+        gap: 6px;
+      }
+
+      .workspace {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+
+      .workspace.is-active {
+        background: var(--accent-soft);
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .main {
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .main-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .head-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .theme-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .theme-swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+      }
+
+      .action-btn {
+        padding: 8px 12px;
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      .lanes {
+        padding: 12px;
+        overflow: auto;
+      }
+
+      .lane {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.72);
+        margin-bottom: 12px;
+        overflow: hidden;
+      }
+
+      .lane-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+        background: rgba(255,255,255,0.75);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .lane-body {
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .inline-create {
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        color: var(--muted);
+        font-size: 13px;
+        background: #fff;
+      }
+
+      .task {
+        display: grid;
+        gap: 7px;
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--in-progress);
+        border-radius: 14px;
+        padding: 12px;
+        background: #fff;
+      }
+
+      .task-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .task-title {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+
+      .chip.in-progress { background: #f4e1b5; }
+      .chip.not-started { background: #e0e4e8; }
+      .chip.done { background: #d6ebdd; }
+
+      .task-meta {
+        display: flex;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .task-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .mini-btn {
+        background: #fff;
+      }
+
+      .detail {
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        padding: 14px 14px 0;
+      }
+
+      .tab, .tab.active {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 12px;
+        background: var(--panel-strong);
+      }
+
+      .tab.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .detail-head {
+        padding: 14px;
+      }
+
+      .markdown {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 10px;
+        padding: 0 14px 14px;
+        min-height: 0;
+      }
+
+      .editor, .preview, .meta-block {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .editor {
+        padding: 12px;
+        min-height: 340px;
+        font-family: "SFMono-Regular", ui-monospace, monospace;
+        font-size: 13px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+      }
+
+      .preview {
+        padding: 12px;
+      }
+
+      .preview h3 {
+        margin: 0 0 10px;
+      }
+
+      .tree-item {
+        margin: 8px 0;
+        font-size: 13px;
+      }
+
+      .meta {
+        display: grid;
+        gap: 10px;
+        padding: 0 14px 14px;
+      }
+
+      .meta-block {
+        padding: 12px;
+      }
+
+      .toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        min-width: 300px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(32, 31, 26, 0.94);
+        color: #fff;
+        box-shadow: 0 16px 36px rgba(0,0,0,0.18);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <aside class="panel left">
+        <section class="section">
+          <div class="month-head">
+            <div>
+              <div class="title">六月 2026</div>
+              <div class="subtle">今天 / 周视图 / 工作上下文联动</div>
+            </div>
+            <div class="month-nav">
+              <button class="nav-btn">‹</button>
+              <button class="nav-btn">›</button>
+            </div>
+          </div>
+          <div class="calendar-weekdays">
+            <div>周日</div><div>周一</div><div>周二</div><div>周三</div><div>周四</div><div>周五</div><div>周六</div>
+          </div>
+          <div class="calendar-grid">
+            <div class="date is-faded">31</div><div class="date">1</div><div class="date">2</div><div class="date">3</div><div class="date">4</div><div class="date">5</div><div class="date">6</div>
+            <div class="date">7</div><div class="date">8</div><div class="date">9</div><div class="date">10</div><div class="date">11</div><div class="date">12</div><div class="date">13</div>
+            <div class="date">14</div><div class="date">15</div><div class="date">16</div><div class="date">17</div><div class="date">18</div><div class="date">19</div><div class="date">20</div>
+            <div class="date">21</div><div class="date">22</div><div class="date">23</div><div class="date">24</div><div class="date">25</div><div class="date">26</div><div class="date">27</div>
+            <div class="date">28</div><div class="date">29</div><div class="date is-today is-selected">30</div><div class="date is-faded">1</div><div class="date is-faded">2</div><div class="date is-faded">3</div><div class="date is-faded">4</div>
+          </div>
+        </section>
+        <section class="section">
+          <div class="title">工作空间</div>
+          <div class="workspace-list">
+            <div class="workspace is-active"><span class="dot"></span><span>我的工作</span></div>
+            <div class="workspace"><span class="dot" style="background:#b7742d;"></span><span>学习项目</span></div>
+            <div class="workspace"><span class="dot" style="background:#496982;"></span><span>生活事项</span></div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="panel main">
+        <header class="main-head">
+          <div>
+            <h1 class="title" style="font-size:24px; margin:0 0 4px;">今天</h1>
+            <div class="subtle">2026-06-30 · 今天优先 · 拖拽改状态</div>
+          </div>
+          <div class="head-actions">
+            <button class="theme-btn"><span class="theme-swatch" style="background:#2f6f57;"></span>橄榄</button>
+            <button class="theme-btn"><span class="theme-swatch" style="background:#b7742d;"></span>琥珀</button>
+            <button class="theme-btn"><span class="theme-swatch" style="background:#496982;"></span>石板</button>
+            <button class="action-btn">新增任务</button>
+          </div>
+        </header>
+        <div class="lanes">
+          <section class="lane">
+            <div class="lane-head">
+              <strong>未开始 · 4</strong>
+              <button class="mini-btn">展开</button>
+            </div>
+            <div class="lane-body">
+              <div class="inline-create">输入任务标题，回车或失焦自动保存</div>
+            </div>
+          </section>
+
+          <section class="lane">
+            <div class="lane-head">
+              <strong>进行中 · 2</strong>
+              <button class="mini-btn">展开</button>
+            </div>
+            <div class="lane-body">
+              <article class="task">
+                <div class="task-header">
+                  <div class="task-title">重构任务时间轴存储</div>
+                  <div class="chip in-progress">进行中</div>
+                </div>
+                <div class="task-meta">
+                  <span>今天 14:00</span>
+                  <span>子任务 2</span>
+                  <span>今天</span>
+                </div>
+                <div class="task-actions">
+                  <button class="mini-btn">完成</button>
+                  <button class="mini-btn">下一状态</button>
+                  <button class="mini-btn">更多</button>
+                </div>
+              </article>
+
+              <article class="task">
+                <div class="task-header">
+                  <div class="task-title">设计桌面小窗交互</div>
+                  <div class="chip in-progress">进行中</div>
+                </div>
+                <div class="task-meta">
+                  <span>明天 09:00</span>
+                  <span>子任务 1</span>
+                  <span>今天</span>
+                </div>
+                <div class="task-actions">
+                  <button class="mini-btn">完成</button>
+                  <button class="mini-btn">下一状态</button>
+                  <button class="mini-btn">更多</button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="lane">
+            <div class="lane-head">
+              <strong>已完成 · 6</strong>
+              <button class="mini-btn">折叠</button>
+            </div>
+          </section>
+
+          <section class="lane">
+            <div class="lane-head">
+              <strong>废弃 · 1</strong>
+              <button class="mini-btn">折叠</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <aside class="panel detail">
+        <div class="tabs">
+          <div class="tab active">任务详情</div>
+          <div class="tab">甘特图</div>
+        </div>
+        <div class="detail-head">
+          <div class="title" style="margin:0 0 4px;">重构任务时间轴存储</div>
+          <div class="subtle">进行中 · 今天 14:00 · 每周一 / 每周三 / 每周五</div>
+        </div>
+        <section class="markdown">
+          <article class="editor" aria-label="Markdown 编辑器"># 任务说明
+
+- [ ] 定义 task_events 表
+- [x] 补状态颜色映射
+- [ ] 为甘特图增加状态筛选
+</article>
+          <article class="preview">
+            <h3>解析后任务树</h3>
+            <div class="tree-item">[ ] 定义 task_events 表</div>
+            <div class="tree-item">[x] 补状态颜色映射</div>
+            <div class="tree-item">[ ] 为甘特图增加状态筛选</div>
+          </article>
+        </section>
+        <section class="meta">
+          <article class="meta-block">
+            <strong>提醒设置</strong>
+            <div class="subtle" style="margin-top:8px;">今天 14:00</div>
+            <div class="subtle">每周一 / 每周三 / 每周五</div>
+          </article>
+          <article class="meta-block">
+            <strong>状态历史</strong>
+            <div class="subtle" style="margin-top:8px;">未开始 → 进行中</div>
+          </article>
+        </section>
+      </aside>
+    </main>
+
+    <div class="toast">
+      <strong>已移动到「进行中」</strong>
+      <div style="margin-top:6px; color:rgba(255,255,255,0.78); font-size:12px;">5 秒内可撤销。拖拽、完成、小窗切换都走同一规则。</div>
+    </div>
+  </body>
+</html>

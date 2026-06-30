@@ -10,6 +10,14 @@
 
 ---
 
+## 设计输入
+
+本计划执行必须同时遵守以下设计资产，不允许只读文字计划直接发挥：
+
+- [前端纠偏](../specs/2026-06-30-mylife-frontend-correction.md)
+- [组件规范](../specs/2026-06-30-mylife-component-spec.md)
+- [整改版桌面原型](../prototypes/2026-06-30-mylife-remediation-desktop.html)
+
 ## 目标拆分
 
 本次整改拆成 4 个独立子系统，允许多 agent 并行：
@@ -216,4 +224,5 @@
 - 拖拽改状态可用
 - 右侧页签只有一组
 - Markdown 主区可编辑可预览
+- 实现与整改版原型、组件规范一致，不允许再用临时占位按钮替代组件
 - H5 先通过，再进入 Mac 封装
