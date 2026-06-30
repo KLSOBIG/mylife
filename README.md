@@ -21,8 +21,9 @@ apps/
   core/      Go 本地 API、SQLite、提醒与时间轴逻辑
   desktop/   React + Vite + Tauri 桌面端
 docs/
-  superpowers/specs/  设计文档
-  superpowers/plans/  实现计划
+  superpowers/specs/       设计文档、视觉与交互规则
+  superpowers/plans/       实现计划
+  superpowers/prototypes/  可审阅原型
 ```
 
 ## 本地开发
@@ -117,4 +118,9 @@ git push origin v0.1.0
 ## 文档
 
 - 设计文档：`docs/superpowers/specs/2026-06-30-mylife-design.md`
+- 视觉系统：`docs/superpowers/specs/2026-06-30-mylife-visual-system.md`
+- 交互规则：`docs/superpowers/specs/2026-06-30-mylife-interaction-states.md`
 - 实现计划：`docs/superpowers/plans/2026-06-30-mylife-v1.md`
+- 主窗口原型：`docs/superpowers/prototypes/2026-06-30-mylife-main-window.html`
+- 小窗原型：`docs/superpowers/prototypes/2026-06-30-mylife-widget.html`
+- 文档索引：`docs/superpowers/README.md`

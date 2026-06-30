@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mylife 主窗口原型</title>
+    <style>
+      :root {
+        --bg: #f4f2ea;
+        --panel: #fbfaf6;
+        --panel-muted: #f0ecdf;
+        --line: #d8d3c1;
+        --text: #20231d;
+        --subtle: #657060;
+        --accent: #55744f;
+        --not-started: #9aa4af;
+        --in-progress: #3a8d5d;
+        --done: #2f7bd9;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #f7f4ed 0%, var(--bg) 100%);
+        color: var(--text);
+        font-family: "PingFang SC", "Noto Sans SC", sans-serif;
+      }
+
+      .page {
+        min-height: 100vh;
+        padding: 16px;
+      }
+
+      .frame {
+        display: grid;
+        grid-template-columns: 280px minmax(520px, 1fr) 420px;
+        gap: 16px;
+        min-height: calc(100vh - 32px);
+      }
+
+      .panel {
+        background: rgba(251, 250, 246, 0.96);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(32, 35, 29, 0.06);
+        overflow: hidden;
+      }
+
+      .section {
+        padding: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .section:last-child { border-bottom: 0; }
+      .title { margin: 0 0 10px; font-size: 16px; font-weight: 700; }
+      .muted { color: var(--subtle); font-size: 12px; }
+
+      .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+      }
+
+      .day, .day-active {
+        border-radius: 10px;
+        padding: 8px 0;
+        text-align: center;
+        font-size: 12px;
+        background: var(--panel-muted);
+      }
+
+      .day-active {
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .workspace {
+        display: grid;
+        gap: 8px;
+      }
+
+      .workspace-item, .workspace-active {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+
+      .workspace-active {
+        background: #eef3eb;
+        border-color: var(--accent);
+      }
+
+      .board-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .theme-switch {
+        display: flex;
+        gap: 8px;
+      }
+
+      .chip {
+        width: 16px;
+        height: 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .board-columns {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .column {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel);
+        min-height: 480px;
+      }
+
+      .column-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .column-body {
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .task {
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--not-started);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+      }
+
+      .task.in-progress {
+        border-left-color: var(--in-progress);
+        background: #f3f8f2;
+      }
+
+      .task.done {
+        border-left-color: var(--done);
+      }
+
+      .task.selected {
+        outline: 2px solid rgba(85, 116, 79, 0.18);
+      }
+
+      .task-title {
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .task-meta {
+        color: var(--subtle);
+        font-size: 12px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .tab, .tab-active {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+
+      .tab-active {
+        background: #eef3eb;
+        border-color: var(--accent);
+      }
+
+      .doc, .tree, .gantt {
+        margin-top: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+      }
+
+      .doc {
+        min-height: 160px;
+        line-height: 1.7;
+        font-size: 14px;
+      }
+
+      .tree-item {
+        margin: 8px 0;
+        font-size: 13px;
+      }
+
+      .indent { padding-left: 20px; }
+
+      .gantt-row {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        align-items: center;
+        gap: 12px;
+        margin: 10px 0;
+      }
+
+      .gantt-track {
+        position: relative;
+        height: 18px;
+        border-radius: 999px;
+        background: #edf0eb;
+      }
+
+      .bar {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        border-radius: 999px;
+      }
+
+      .undo {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        min-width: 280px;
+        border-radius: 14px;
+        padding: 14px 16px;
+        background: rgba(32, 35, 29, 0.94);
+        color: #fff;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+      }
+
+      .undo strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .undo span {
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="frame">
+        <aside class="panel">
+          <section class="section">
+            <h1 class="title">2026 / 06</h1>
+            <div class="calendar">
+              <div class="day">24</div><div class="day">25</div><div class="day">26</div><div class="day">27</div><div class="day">28</div><div class="day">29</div><div class="day-active">30</div>
+              <div class="day">1</div><div class="day">2</div><div class="day">3</div><div class="day">4</div><div class="day">5</div><div class="day">6</div><div class="day">7</div>
+            </div>
+          </section>
+          <section class="section">
+            <h2 class="title">工作空间</h2>
+            <div class="workspace">
+              <div class="workspace-active">我的工作</div>
+              <div class="workspace-item">产品实验</div>
+              <div class="workspace-item">个人学习</div>
+            </div>
+          </section>
+        </aside>
+
+        <main class="panel">
+          <div class="board-head">
+            <div>
+              <div class="title" style="margin:0;">今天</div>
+              <div class="muted">默认视图。任务可拖拽换状态，支持快速新增。</div>
+            </div>
+            <div class="theme-switch" aria-label="主题切换">
+              <div class="chip" style="background:#55744f;"></div>
+              <div class="chip" style="background:#b7742d;"></div>
+              <div class="chip" style="background:#496982;"></div>
+            </div>
+          </div>
+          <div class="board-columns">
+            <section class="column">
+              <div class="column-head">
+                <strong>未开始 · 4</strong>
+                <span class="muted">+ 新建</span>
+              </div>
+              <div class="column-body">
+                <article class="task">
+                  <div class="task-title">整理甘特图状态图例</div>
+                  <div class="task-meta">提醒 18:00 · 子任务 2</div>
+                </article>
+                <article class="task">
+                  <div class="task-title">补充提醒重复规则测试</div>
+                  <div class="task-meta">无提醒 · 子任务 0</div>
+                </article>
+              </div>
+            </section>
+            <section class="column">
+              <div class="column-head">
+                <strong>进行中 · 2</strong>
+                <span class="muted">+ 新建</span>
+              </div>
+              <div class="column-body">
+                <article class="task in-progress selected">
+                  <div class="task-title">实现桌面小窗轻交互</div>
+                  <div class="task-meta">提醒 每天 09:30 · 子任务 3</div>
+                </article>
+                <article class="task in-progress">
+                  <div class="task-title">修复 macOS 打包流水线</div>
+                  <div class="task-meta">提醒 17:00 · 子任务 1</div>
+                </article>
+              </div>
+            </section>
+            <section class="column">
+              <div class="column-head">
+                <strong>已完成 · 6</strong>
+                <span class="muted">展开</span>
+              </div>
+              <div class="column-body">
+                <article class="task done">
+                  <div class="task-title">整理主窗口三栏布局</div>
+                  <div class="task-meta">完成于 10:20</div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </main>
+
+        <aside class="panel">
+          <section class="section">
+            <div class="title" style="margin:0;">实现桌面小窗轻交互</div>
+            <div class="muted">状态：进行中 · 提醒：每天 09:30</div>
+            <div class="tabs">
+              <div class="tab-active">任务详情</div>
+              <div class="tab">甘特图</div>
+            </div>
+            <div class="doc">
+              <strong>Markdown 文档</strong><br />
+              - [ ] 对齐主窗口状态切换<br />
+              - [x] 补 `toast` 撤销交互<br />
+              - [ ] 增加 widget 空态说明
+            </div>
+            <div class="tree">
+              <strong>文档提取任务树</strong>
+              <div class="tree-item">[ ] 对齐主窗口状态切换</div>
+              <div class="tree-item">[x] 补 `toast` 撤销交互</div>
+              <div class="tree-item indent">[ ] 撤销写反向事件</div>
+              <div class="tree-item">[ ] 增加 widget 空态说明</div>
+            </div>
+            <div class="gantt">
+              <strong>甘特页签预览</strong>
+              <div class="gantt-row">
+                <div class="muted">主任务</div>
+                <div class="gantt-track">
+                  <div class="bar" style="left:10%; width:42%; background: var(--in-progress);"></div>
+                </div>
+              </div>
+              <div class="gantt-row">
+                <div class="muted">子任务 A</div>
+                <div class="gantt-track">
+                  <div class="bar" style="left:12%; width:20%; background: var(--done);"></div>
+                </div>
+              </div>
+              <div class="gantt-row">
+                <div class="muted">子任务 B</div>
+                <div class="gantt-track">
+                  <div class="bar" style="left:36%; width:14%; background: var(--not-started);"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <aside class="undo">
+      <strong>任务已移动到「进行中」</strong>
+      <span>5 秒内可撤销。主窗口与桌面小窗统一规则。</span>
+    </aside>
+  </body>
+</html>
