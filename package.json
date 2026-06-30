@@ -1,0 +1,10 @@
+{
+  "name": "mylife",
+  "private": true,
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "dev:desktop": "pnpm --dir apps/desktop tauri dev"
+  }
+}
