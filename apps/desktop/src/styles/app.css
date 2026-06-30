@@ -1,8 +1,18 @@
+.app-shell,
+body {
+  margin: 0;
+  background: #f5efe5;
+  color: #2f2a24;
+  font-family: "PingFang SC", "Noto Sans SC", "Helvetica Neue", sans-serif;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 240px 1fr 320px;
   gap: 16px;
   min-height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 .left-pane,
@@ -21,14 +31,207 @@
   margin-bottom: 16px;
 }
 
+.today-header__actions,
+.details-pane__actions,
+.details-pane__task-actions,
+.undo-toast__row,
+.today-widget__actions,
+.gantt-filters,
+.detail-tabs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.today-board,
+.details-pane {
+  position: relative;
+}
+
+.task-creator,
+.theme-switch {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.theme-switch__dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+}
+
+.theme-switch__dot--olive {
+  background: #2d6a4f;
+}
+
+.theme-switch__dot--amber {
+  background: #b7791f;
+}
+
+.theme-switch__dot--slate {
+  background: #5b708b;
+}
+
 .status-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
+.task-card {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #e2dbce;
+  border-radius: 14px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.task-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.task-complete {
+  color: #2d6a4f;
+  font-weight: 700;
+}
+
+.status-slate {
+  background: #d9e0eb;
+}
+
+.status-amber {
+  background: #f0d8a2;
+}
+
+.status-green {
+  background: #cfe5d6;
+}
+
+.status-rose {
+  background: #edc9c0;
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+}
+
+.detail-tabs {
+  margin-bottom: 12px;
+}
+
+.detail-tabs .is-active,
+.details-pane__actions button:first-child,
+.details-pane__actions button:last-child {
+  font-weight: 700;
+}
+
+.detail-document,
+.detail-checklist,
+.today-widget__card,
+.undo-toast {
+  border: 1px solid #e2dbce;
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px;
+}
+
+.gantt-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.gantt-row__track {
+  display: flex;
+  gap: 6px;
+  min-height: 18px;
+  align-items: center;
+}
+
+.gantt-segment {
+  display: inline-block;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.gantt-segment--not_started {
+  background: #aab5c5;
+}
+
+.gantt-segment--in_progress {
+  background: #ddb458;
+}
+
+.gantt-segment--completed {
+  background: #65a67f;
+}
+
+.gantt-segment--abandoned {
+  background: #d08679;
+}
+
+.today-widget {
+  padding: 16px;
+}
+
+.today-widget__list {
+  display: grid;
+  gap: 12px;
+}
+
+.undo-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 260px;
+  box-shadow: 0 14px 30px rgba(56, 45, 28, 0.2);
+}
+
+.theme-olive .today-header button,
+.theme-olive .details-pane button,
+.theme-olive .today-widget button {
+  background: #2d6a4f;
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.theme-amber .today-header button,
+.theme-amber .details-pane button,
+.theme-amber .today-widget button {
+  background: #b7791f;
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.theme-slate .today-header button,
+.theme-slate .details-pane button,
+.theme-slate .today-widget button {
+  background: #5b708b;
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 12px;
 }

@@ -1,0 +1,32 @@
+name: release-macos
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.1"
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pnpm install --frozen-lockfile
+      - run: cd apps/core && go test ./...
+      - run: cd apps/desktop && pnpm test
+      - run: cd apps/desktop && pnpm tauri:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mylife-macos-installer
+          path: apps/desktop/src-tauri/target/release/bundle/dmg/*.dmg

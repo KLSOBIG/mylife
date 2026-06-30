@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import type { TaskDetail } from "../../lib/types";
 import { TaskDetailPane } from "./task-detail-pane";
 
-const fakeTask = {
+const fakeTask: TaskDetail = {
   id: "task_1",
   title: "重构任务时间轴存储",
   document: "- [ ] 定义 task_events 表",

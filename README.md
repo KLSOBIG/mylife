@@ -1,3 +1,120 @@
 # mylife
 
-Mac-first local task manager.
+`mylife` 是 Mac 优先、纯本地优先的时间管理软件。核心目标：比 Notion 更轻，支持简单任务两步闭环，也支持复杂任务树、Markdown 文档、提醒、甘特图、小窗执行。
+
+## 当前能力
+
+- 今天优先三栏界面
+- 工作空间与日历过滤
+- 本地任务 API
+- 状态切换与 5 秒撤销
+- Markdown `[]` 解析
+- 右侧任务详情与甘特图页签
+- 主题切换
+- 桌面小窗页面骨架
+- GitHub macOS `.dmg` 打包工作流
+
+## 目录结构
+
+```text
+apps/
+  core/      Go 本地 API、SQLite、提醒与时间轴逻辑
+  desktop/   React + Vite + Tauri 桌面端
+docs/
+  superpowers/specs/  设计文档
+  superpowers/plans/  实现计划
+```
+
+## 本地开发
+
+先安装：
+
+- Node.js 22+
+- pnpm 10.12.1+
+- Go 1.26+
+- Rust stable
+
+安装依赖：
+
+```bash
+pnpm install
+```
+
+启动前端：
+
+```bash
+cd apps/desktop
+pnpm dev
+```
+
+启动桌面端：
+
+```bash
+pnpm dev:desktop
+```
+
+## 测试
+
+Go：
+
+```bash
+cd apps/core
+go test ./...
+```
+
+前端单测：
+
+```bash
+cd apps/desktop
+pnpm test
+```
+
+端到端：
+
+```bash
+cd apps/desktop
+pnpm e2e
+```
+
+## 构建
+
+前端构建：
+
+```bash
+cd apps/desktop
+pnpm build
+```
+
+桌面安装包构建：
+
+```bash
+cd apps/desktop
+pnpm tauri:build
+```
+
+## GitHub 产出 Mac 安装包
+
+仓库已包含工作流：
+
+`/.github/workflows/release-macos.yml`
+
+触发方式：
+
+1. 推送 tag，例如：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+2. 或在 GitHub Actions 页面手动触发 `release-macos`
+
+产物：
+
+- GitHub Actions Artifact：`mylife-macos-installer`
+- 文件类型：`.dmg`
+
+## 文档
+
+- 设计文档：`docs/superpowers/specs/2026-06-30-mylife-design.md`
+- 实现计划：`docs/superpowers/plans/2026-06-30-mylife-v1.md`
