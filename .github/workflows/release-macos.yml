@@ -52,7 +52,7 @@ jobs:
           import struct
           import zlib
 
-          out = pathlib.Path("apps/desktop/src-tauri/icons/app.png")
+          out = pathlib.Path("apps/desktop/src-tauri/icons/icon.png")
           out.parent.mkdir(parents=True, exist_ok=True)
           width = height = 1024
           color = bytes((45, 106, 79, 255))
@@ -74,13 +74,13 @@ jobs:
           out.write_bytes(png)
           PY
           for size in 16 32 64 128 256 512; do
-            sips -z "$size" "$size" apps/desktop/src-tauri/icons/app.png --out "apps/desktop/src-tauri/icons/icon.iconset/icon_${size}x${size}.png"
+            sips -z "$size" "$size" apps/desktop/src-tauri/icons/icon.png --out "apps/desktop/src-tauri/icons/icon.iconset/icon_${size}x${size}.png"
           done
           cp apps/desktop/src-tauri/icons/icon.iconset/icon_32x32.png apps/desktop/src-tauri/icons/icon.iconset/icon_16x16@2x.png
           cp apps/desktop/src-tauri/icons/icon.iconset/icon_64x64.png apps/desktop/src-tauri/icons/icon.iconset/icon_32x32@2x.png
           cp apps/desktop/src-tauri/icons/icon.iconset/icon_256x256.png apps/desktop/src-tauri/icons/icon.iconset/icon_128x128@2x.png
           cp apps/desktop/src-tauri/icons/icon.iconset/icon_512x512.png apps/desktop/src-tauri/icons/icon.iconset/icon_256x256@2x.png
-          cp apps/desktop/src-tauri/icons/app.png apps/desktop/src-tauri/icons/icon.iconset/icon_512x512@2x.png
+          cp apps/desktop/src-tauri/icons/icon.png apps/desktop/src-tauri/icons/icon.iconset/icon_512x512@2x.png
           iconutil -c icns apps/desktop/src-tauri/icons/icon.iconset -o apps/desktop/src-tauri/icons/icon.icns
 
       - name: Build macOS dmg
