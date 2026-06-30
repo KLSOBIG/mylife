@@ -18,6 +18,7 @@ import { TaskLane } from "./task-lane";
 const defaultCollapsedState: Record<TaskStatus, boolean> = {
   not_started: false,
   in_progress: false,
+  shelved: false,
   completed: false,
   abandoned: false
 };
@@ -30,7 +31,8 @@ export function TaskLaneBoard({
   onCreateSave,
   onSelectTask,
   onCompleteTask,
-  onAdvanceTask,
+  onShelveTask,
+  onResumeTask,
   onTaskMove
 }: {
   tasks?: TaskSummary[];
@@ -40,7 +42,8 @@ export function TaskLaneBoard({
   onCreateSave?: () => void;
   onSelectTask?: (taskId: string) => void;
   onCompleteTask?: (taskId: string) => void;
-  onAdvanceTask?: (taskId: string) => void;
+  onShelveTask?: (taskId: string) => void;
+  onResumeTask?: (taskId: string) => void;
   onTaskMove?: (request: TaskMoveRequest) => void;
 }) {
   const [orderedTasks, setOrderedTasks] = useState(tasks);
@@ -133,7 +136,8 @@ export function TaskLaneBoard({
             onCreateDiscard={handleCreateDiscard}
             onSelectTask={onSelectTask}
             onCompleteTask={onCompleteTask}
-            onAdvanceTask={onAdvanceTask}
+            onShelveTask={onShelveTask}
+            onResumeTask={onResumeTask}
           />
         ))}
       </section>

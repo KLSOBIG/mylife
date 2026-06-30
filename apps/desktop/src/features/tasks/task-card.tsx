@@ -1,13 +1,67 @@
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
+import { useId, useState } from "react";
 import { statusMeta } from "../../lib/task-state";
-import type { TaskSummary } from "../../lib/types";
+import type { ChecklistTreeNode, TaskSummary } from "../../lib/types";
+
+function ChecklistTreeBranch({
+  nodes,
+  depth = 0
+}: {
+  nodes: ChecklistTreeNode[];
+  depth?: number;
+}) {
+  return (
+    <ul
+      style={{
+        listStyle: "none",
+        margin: 0,
+        padding: 0,
+        display: "flex",
+        flexDirection: "column",
+        gap: 8
+      }}
+    >
+      {nodes.map((node) => (
+        <li key={node.id} role="treeitem" aria-level={node.depth + 1}>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              alignItems: "flex-start",
+              paddingLeft: depth * 14
+            }}
+          >
+            <span
+              style={{
+                flex: "0 0 auto",
+                padding: "2px 6px",
+                borderRadius: 999,
+                fontSize: 11,
+                lineHeight: 1.4,
+                color: node.checked ? "#2d6a4f" : "#8a6a37",
+                background: node.checked ? "#edf7f0" : "#fff4dc"
+              }}
+            >
+              {node.checked ? "已完成" : "未完成"}
+            </span>
+            <span style={{ minWidth: 0, color: "#3a3229", fontSize: 13 }}>{node.title}</span>
+          </div>
+          {node.children.length > 0 ? <ChecklistTreeBranch nodes={node.children} depth={depth + 1} /> : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 function TaskCardBody({
   task,
   onSelectTask,
   onCompleteTask,
-  onAdvanceTask,
+  onShelveTask,
+  onResumeTask,
+  onToggleTree,
+  expanded,
   dragHandleProps,
   dragging = false,
   overlay = false
@@ -15,12 +69,17 @@ function TaskCardBody({
   task: TaskSummary;
   onSelectTask?: (taskId: string) => void;
   onCompleteTask?: (taskId: string) => void;
-  onAdvanceTask?: (taskId: string) => void;
+  onShelveTask?: (taskId: string) => void;
+  onResumeTask?: (taskId: string) => void;
+  onToggleTree?: () => void;
+  expanded?: boolean;
   dragHandleProps?: Record<string, unknown>;
   dragging?: boolean;
   overlay?: boolean;
 }) {
-  const nextStatus = statusMeta[task.status].next;
+  const treeNodes = task.checklistTree ?? [];
+  const treeId = useId();
+  const hasTree = treeNodes.length > 0;
 
   return (
     <div
@@ -118,6 +177,26 @@ function TaskCardBody({
             今天
           </span>
         ) : null}
+        {!overlay && hasTree ? (
+          <button
+            type="button"
+            aria-label={`${task.title} 任务树`}
+            aria-expanded={expanded ? "true" : "false"}
+            aria-controls={`task-tree-${treeId}`}
+            onClick={onToggleTree}
+            style={{
+              border: "1px solid #e0cfb6",
+              background: expanded ? "#fff4dc" : "#fffaf1",
+              color: "#7a5d34",
+              borderRadius: 999,
+              padding: "4px 8px",
+              fontSize: 12,
+              cursor: "pointer"
+            }}
+          >
+            {expanded ? "收起任务树" : "展开任务树"}
+          </button>
+        ) : null}
         {typeof task.checklistCount === "number" ? (
           <span style={{ fontSize: 12, color: "#7c6a55" }}>{task.checklistCount} 子任务</span>
         ) : null}
@@ -127,7 +206,7 @@ function TaskCardBody({
       </div>
       {!overlay ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {task.status !== "completed" ? (
+          {task.status !== "completed" && task.status !== "abandoned" ? (
             <button
               type="button"
               className="task-complete"
@@ -145,10 +224,10 @@ function TaskCardBody({
               完成
             </button>
           ) : null}
-          {nextStatus && onAdvanceTask ? (
+          {task.status === "in_progress" && onShelveTask ? (
             <button
               type="button"
-              onClick={() => onAdvanceTask(task.id)}
+              onClick={() => onShelveTask(task.id)}
               style={{
                 border: "1px solid #d8c9b2",
                 background: "#fffaf1",
@@ -158,10 +237,44 @@ function TaskCardBody({
                 cursor: "pointer"
               }}
             >
-              下一状态
+              搁置
+            </button>
+          ) : null}
+          {task.status === "shelved" && onResumeTask ? (
+            <button
+              type="button"
+              onClick={() => onResumeTask(task.id)}
+              style={{
+                border: "1px solid #d8c9b2",
+                background: "#f2f0ff",
+                color: "#5d5aa0",
+                borderRadius: 999,
+                padding: "6px 10px",
+                cursor: "pointer"
+              }}
+            >
+              恢复进行
             </button>
           ) : null}
         </div>
+      ) : null}
+      {!overlay && expanded && hasTree ? (
+        <section
+          id={`task-tree-${treeId}`}
+          role="tree"
+          aria-label={`${task.title} 任务树预览`}
+          style={{
+            maxHeight: 192,
+            overflowY: "auto",
+            minHeight: 0,
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid #e6d8c4",
+            background: "#fffaf2"
+          }}
+        >
+          <ChecklistTreeBranch nodes={treeNodes} />
+        </section>
       ) : null}
     </div>
   );
@@ -171,13 +284,16 @@ export function TaskCard({
   task,
   onSelectTask,
   onCompleteTask,
-  onAdvanceTask
+  onShelveTask,
+  onResumeTask
 }: {
   task: TaskSummary;
   onSelectTask?: (taskId: string) => void;
   onCompleteTask?: (taskId: string) => void;
-  onAdvanceTask?: (taskId: string) => void;
+  onShelveTask?: (taskId: string) => void;
+  onResumeTask?: (taskId: string) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     data: {
@@ -199,7 +315,10 @@ export function TaskCard({
         task={task}
         onSelectTask={onSelectTask}
         onCompleteTask={onCompleteTask}
-        onAdvanceTask={onAdvanceTask}
+        onShelveTask={onShelveTask}
+        onResumeTask={onResumeTask}
+        onToggleTree={() => setExpanded((current) => !current)}
+        expanded={expanded}
         dragHandleProps={{ ...attributes, ...listeners }}
         dragging={isDragging}
       />

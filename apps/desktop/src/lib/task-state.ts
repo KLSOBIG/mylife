@@ -1,5 +1,6 @@
 import type {
   ChecklistItem,
+  ChecklistTreeNode,
   ReminderDetail,
   TaskDetail,
   TaskLane,
@@ -12,16 +13,18 @@ import type {
 export const taskStatusOrder: TaskStatus[] = [
   "not_started",
   "in_progress",
+  "shelved",
   "completed",
   "abandoned"
 ];
 
 export const statusMeta: Record<
   TaskStatus,
-  { label: string; chipClass: string; next?: TaskStatus }
+  { label: string; chipClass: string }
 > = {
-  not_started: { label: "未开始", chipClass: "status-slate", next: "in_progress" },
-  in_progress: { label: "进行中", chipClass: "status-amber", next: "completed" },
+  not_started: { label: "未开始", chipClass: "status-slate" },
+  in_progress: { label: "进行中", chipClass: "status-amber" },
+  shelved: { label: "搁置", chipClass: "status-indigo" },
   completed: { label: "已完成", chipClass: "status-green" },
   abandoned: { label: "废弃", chipClass: "status-rose" }
 };
@@ -47,7 +50,8 @@ export function buildTaskSummary(task: TaskRecord): TaskSummary {
     status: task.status,
     isToday: task.isToday,
     reminderLabel: task.reminder.at,
-    checklistCount: task.checklist.length
+    checklistCount: task.checklist.length,
+    checklistTree: buildChecklistTree(task.document, task.checklist)
   };
 }
 
@@ -90,13 +94,16 @@ export function createTaskRecord(title: string, index: number): TaskRecord {
   };
 }
 
-export function advanceTask(task: TaskRecord): TaskRecord {
-  const next = statusMeta[task.status].next ?? task.status;
-  return applyStatus(task, next);
-}
-
 export function completeTask(task: TaskRecord): TaskRecord {
   return applyStatus(task, "completed");
+}
+
+export function shelveTask(task: TaskRecord): TaskRecord {
+  return applyStatus(task, "shelved");
+}
+
+export function resumeTask(task: TaskRecord): TaskRecord {
+  return applyStatus(task, "in_progress");
 }
 
 export function applyStatus(task: TaskRecord, status: TaskStatus): TaskRecord {
@@ -161,7 +168,7 @@ export function seedTasks(): TaskRecord[] {
     {
       id: "task_seed_2",
       title: "设计桌面小窗交互",
-      status: "in_progress",
+      status: "shelved",
       isToday: true,
       reminder: { at: "明天 09:00", repeat: "每天" },
       checklist: [{ id: "check_3", title: "定义小窗按钮状态", status: "not_started" }],
@@ -172,7 +179,8 @@ export function seedTasks(): TaskRecord[] {
           title: "主任务",
           segments: [
             { id: "seg_5", status: "not_started", startAt: "2026-06-29T08:00:00.000Z", endAt: "2026-06-29T16:00:00.000Z" },
-            { id: "seg_6", status: "in_progress", startAt: "2026-06-30T10:00:00.000Z", endAt: "2026-07-02T17:00:00.000Z" }
+            { id: "seg_6", status: "in_progress", startAt: "2026-06-30T10:00:00.000Z", endAt: "2026-07-01T12:00:00.000Z" },
+            { id: "seg_7", status: "shelved", startAt: "2026-07-01T12:00:00.000Z", endAt: "2026-07-03T17:00:00.000Z" }
           ]
         }
       ]
@@ -246,6 +254,7 @@ function createEmptyStatusMap<T>(factory: () => T): Record<TaskStatus, T> {
   return {
     not_started: factory(),
     in_progress: factory(),
+    shelved: factory(),
     completed: factory(),
     abandoned: factory()
   };
@@ -253,6 +262,55 @@ function createEmptyStatusMap<T>(factory: () => T): Record<TaskStatus, T> {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
+}
+
+function buildChecklistTree(
+  markdown: string,
+  fallbackItems: ChecklistItem[] = []
+): ChecklistTreeNode[] {
+  const roots: ChecklistTreeNode[] = [];
+  const stack: ChecklistTreeNode[] = [];
+
+  markdown.split("\n").forEach((line, index) => {
+    const match = line.match(/^(\s*)-\s\[( |x|X)\]\s(.+)$/);
+
+    if (!match) {
+      return;
+    }
+
+    const depth = Math.floor(match[1].length / 2);
+    const node: ChecklistTreeNode = {
+      id: `preview_${index}`,
+      title: match[3].trim(),
+      checked: match[2].toLowerCase() === "x",
+      depth,
+      children: []
+    };
+
+    while (stack.length > depth) {
+      stack.pop();
+    }
+
+    if (depth === 0 || stack.length === 0) {
+      roots.push(node);
+    } else {
+      stack[stack.length - 1].children.push(node);
+    }
+
+    stack[depth] = node;
+  });
+
+  if (roots.length > 0) {
+    return roots;
+  }
+
+  return fallbackItems.map((item, index) => ({
+    id: item.id || `fallback_${index}`,
+    title: item.title,
+    checked: item.status === "completed",
+    depth: 0,
+    children: []
+  }));
 }
 
 function buildSegmentStart(segments: TimelineRow["segments"], _seed: string) {

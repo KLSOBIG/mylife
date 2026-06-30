@@ -18,6 +18,9 @@ describe("TaskMarkdownEditor", () => {
     expect(screen.getByRole("heading", { name: "重构任务" })).toBeInTheDocument();
     expect(screen.getByText("定义 task_events 表")).toBeInTheDocument();
     expect(screen.getByLabelText("markdown-preview")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "编写" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "预览" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "分栏" })).toHaveAttribute("aria-selected", "true");
 
     fireEvent.change(editor, {
       target: {
@@ -26,5 +29,10 @@ describe("TaskMarkdownEditor", () => {
     });
 
     expect(handleChange).toHaveBeenCalledWith("# 新标题");
+
+    fireEvent.click(screen.getByRole("tab", { name: "预览" }));
+
+    expect(screen.queryByLabelText("markdown-editor")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("markdown-preview")).toBeInTheDocument();
   });
 });

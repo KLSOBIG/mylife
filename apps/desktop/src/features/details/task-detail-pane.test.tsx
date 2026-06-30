@@ -34,9 +34,8 @@ describe("TaskDetailPane", () => {
     expect(screen.getByRole("tablist", { name: "task-detail-tabs" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "markdown-editor" })).toBeInTheDocument();
     expect(screen.getByLabelText("markdown-preview")).toBeInTheDocument();
-    expect(screen.getByRole("tree", { name: "markdown-checklist-tree" })).toBeInTheDocument();
-    expect(screen.getByText("状态")).toBeInTheDocument();
     expect(screen.getByText("进行中")).toBeInTheDocument();
+    expect(screen.getByText("1 条任务")).toBeInTheDocument();
     expect(screen.getByText("提醒")).toBeInTheDocument();
     expect(screen.getAllByText("每周一 / 每周三 / 每周五").length).toBeGreaterThan(0);
   });

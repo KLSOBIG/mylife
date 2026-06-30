@@ -1,6 +1,7 @@
 export type TaskStatus =
   | "not_started"
   | "in_progress"
+  | "shelved"
   | "completed"
   | "abandoned";
 
@@ -8,6 +9,14 @@ export type ChecklistItem = {
   id: string;
   title: string;
   status: "not_started" | "completed";
+};
+
+export type ChecklistTreeNode = {
+  id: string;
+  title: string;
+  checked: boolean;
+  depth: number;
+  children: ChecklistTreeNode[];
 };
 
 export type ReminderDetail = {
@@ -35,6 +44,7 @@ export type TaskSummary = {
   isToday: boolean;
   reminderLabel?: string;
   checklistCount?: number;
+  checklistTree?: ChecklistTreeNode[];
 };
 
 export type TaskLane = {

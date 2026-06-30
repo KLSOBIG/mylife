@@ -10,7 +10,7 @@ export function TodayWidget({ tasks }: { tasks: WidgetTask[] }) {
             <h3>{task.title}</h3>
             <div className="today-widget__actions">
               <button type="button">完成</button>
-              <button type="button">下一状态</button>
+              <button type="button">搁置</button>
               <button type="button">详情</button>
             </div>
           </article>

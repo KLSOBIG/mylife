@@ -15,7 +15,8 @@ export function TaskLane({
   onCreateDiscard,
   onSelectTask,
   onCompleteTask,
-  onAdvanceTask
+  onShelveTask,
+  onResumeTask
 }: {
   lane: TaskLaneType;
   collapsed: boolean;
@@ -27,7 +28,8 @@ export function TaskLane({
   onCreateDiscard?: () => void;
   onSelectTask?: (taskId: string) => void;
   onCompleteTask?: (taskId: string) => void;
-  onAdvanceTask?: (taskId: string) => void;
+  onShelveTask?: (taskId: string) => void;
+  onResumeTask?: (taskId: string) => void;
 }) {
   const { isOver, setNodeRef } = useDroppable({
     id: `lane:${lane.status}`,
@@ -97,7 +99,8 @@ export function TaskLane({
                 task={task}
                 onSelectTask={onSelectTask}
                 onCompleteTask={onCompleteTask}
-                onAdvanceTask={onAdvanceTask}
+                onShelveTask={onShelveTask}
+                onResumeTask={onResumeTask}
               />
             ))}
           </SortableContext>

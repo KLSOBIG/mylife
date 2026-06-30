@@ -17,7 +17,8 @@ export function TodayBoard({
   onCreateSave,
   onSelectTask,
   onCompleteTask,
-  onAdvanceTask,
+  onShelveTask,
+  onResumeTask,
   onTaskMove,
   onThemeChange
 }: {
@@ -29,7 +30,8 @@ export function TodayBoard({
   onCreateSave?: () => void;
   onSelectTask?: (taskId: string) => void;
   onCompleteTask?: (taskId: string) => void;
-  onAdvanceTask?: (taskId: string) => void;
+  onShelveTask?: (taskId: string) => void;
+  onResumeTask?: (taskId: string) => void;
   onTaskMove?: (request: TaskMoveRequest) => void;
   onThemeChange?: (theme: ThemeName) => void;
 }) {
@@ -68,7 +70,8 @@ export function TodayBoard({
         onCreateSave={onCreateSave}
         onSelectTask={onSelectTask}
         onCompleteTask={onCompleteTask}
-        onAdvanceTask={onAdvanceTask}
+        onShelveTask={onShelveTask}
+        onResumeTask={onResumeTask}
         onTaskMove={onTaskMove}
       />
     </section>

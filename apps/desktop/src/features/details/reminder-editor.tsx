@@ -9,14 +9,14 @@ export function ReminderEditor({
 }) {
   return (
     <div className={className}>
-      <div className="reminder-editor__row">
-        <span>提醒时间</span>
-        <span>{reminder.at}</span>
-      </div>
-      <div className="reminder-editor__row">
-        <span>重复规则</span>
-        <span>{reminder.repeat}</span>
-      </div>
+      <span className="reminder-editor__pill">
+        <span>提醒</span>
+        <strong>{reminder.at}</strong>
+      </span>
+      <span className="reminder-editor__pill">
+        <span>重复</span>
+        <strong>{reminder.repeat}</strong>
+      </span>
     </div>
   );
 }

@@ -139,7 +139,7 @@
   - 提醒
   - 子任务数
   - 今天标记
-- [ ] 保留快捷完成与下一状态
+- [ ] 保留快捷完成与搁置 / 恢复进行
 - [ ] 运行：`cd apps/desktop && pnpm test task-lane-board`
 
 ## Task 4: 接入真实拖拽

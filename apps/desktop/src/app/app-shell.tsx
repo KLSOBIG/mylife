@@ -5,13 +5,14 @@ import { MonthFilter } from "../features/calendar/month-filter";
 import { UndoToast } from "../features/tasks/undo-toast";
 import { TodayBoard } from "../features/tasks/today-board";
 import {
-  advanceTask,
   buildTaskDetail,
   buildTaskSummary,
   completeTask,
   createTaskRecord,
   moveTaskRecords,
+  resumeTask,
   seedTasks,
+  shelveTask,
   statusMeta,
   type TaskRecord,
   type ThemeName
@@ -134,7 +135,8 @@ export function AppShell() {
           onCreateSave={saveTask}
           onSelectTask={setSelectedTaskId}
           onCompleteTask={(taskId) => applyTaskChange(taskId, completeTask)}
-          onAdvanceTask={(taskId) => applyTaskChange(taskId, advanceTask)}
+          onShelveTask={(taskId) => applyTaskChange(taskId, shelveTask)}
+          onResumeTask={(taskId) => applyTaskChange(taskId, resumeTask)}
           onTaskMove={applyTaskMove}
           onThemeChange={setTheme}
         />
@@ -143,7 +145,8 @@ export function AppShell() {
             <TaskDetailPane
               task={detail!}
               onCompleteTask={(taskId) => applyTaskChange(taskId, completeTask)}
-              onAdvanceTask={(taskId) => applyTaskChange(taskId, advanceTask)}
+              onShelveTask={(taskId) => applyTaskChange(taskId, shelveTask)}
+              onResumeTask={(taskId) => applyTaskChange(taskId, resumeTask)}
             />
           ) : null}
         </section>

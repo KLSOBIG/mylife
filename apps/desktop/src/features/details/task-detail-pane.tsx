@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import type { TaskDetail } from "../../lib/types";
 import { GanttTab } from "./gantt-tab";
 import { ReminderEditor } from "./reminder-editor";
-import { TaskChecklistTree } from "./task-checklist-tree";
 import { TaskMarkdownEditor } from "./task-markdown-editor";
 import { TaskTabs } from "./task-tabs";
 
@@ -11,13 +10,15 @@ export function TaskDetailPane({
   activeTab,
   onTabChange,
   onCompleteTask,
-  onAdvanceTask
+  onShelveTask,
+  onResumeTask
 }: {
   task: TaskDetail;
   activeTab?: "details" | "gantt";
   onTabChange?: (tab: "details" | "gantt") => void;
   onCompleteTask?: (taskId: string) => void;
-  onAdvanceTask?: (taskId: string) => void;
+  onShelveTask?: (taskId: string) => void;
+  onResumeTask?: (taskId: string) => void;
 }) {
   const [internalTab, setInternalTab] = useState<"details" | "gantt">("details");
   const [document, setDocument] = useState(task.document);
@@ -33,9 +34,21 @@ export function TaskDetailPane({
       ? "已完成"
       : task.status === "abandoned"
         ? "废弃"
+        : task.status === "shelved"
+          ? "搁置"
         : task.status === "in_progress"
           ? "进行中"
           : "未开始";
+  const statusChipClass =
+    task.status === "completed"
+      ? "status-green"
+      : task.status === "abandoned"
+        ? "status-rose"
+        : task.status === "shelved"
+          ? "status-indigo"
+          : task.status === "in_progress"
+            ? "status-amber"
+            : "status-slate";
 
   function handleTabChange(tab: "details" | "gantt") {
     if (activeTab === undefined) {
@@ -61,44 +74,35 @@ export function TaskDetailPane({
               <h2>{task.title}</h2>
             </div>
             <div className="task-detail-pane__summary">
-              <span>{checklistCount} 条任务</span>
+              <span>{checklistCount} 条子任务</span>
               <div className="task-detail-pane__header-actions">
-                {task.status !== "completed" ? (
+                {task.status !== "completed" && task.status !== "abandoned" ? (
                   <button type="button" onClick={() => onCompleteTask?.(task.id)}>
                     完成
                   </button>
                 ) : null}
-                {task.status !== "completed" && task.status !== "abandoned" ? (
-                  <button type="button" onClick={() => onAdvanceTask?.(task.id)}>
-                    下一状态
+                {task.status === "in_progress" ? (
+                  <button type="button" onClick={() => onShelveTask?.(task.id)}>
+                    搁置
+                  </button>
+                ) : null}
+                {task.status === "shelved" ? (
+                  <button type="button" onClick={() => onResumeTask?.(task.id)}>
+                    恢复进行
                   </button>
                 ) : null}
               </div>
             </div>
           </header>
+          <div className="task-detail-pane__toolbelt">
+            <span className={`task-chip ${statusChipClass}`}>
+              {statusLabel}
+            </span>
+            <span className="task-detail-pane__count-pill">{checklistCount} 条任务</span>
+            <ReminderEditor reminder={task.reminder} className="task-detail-pane__reminder-inline" />
+          </div>
           <div className="task-detail-pane__content">
             <TaskMarkdownEditor value={document} onChange={setDocument} />
-            <aside className="task-detail-pane__secondary">
-              <section className="task-detail-pane__meta">
-                <h3>任务信息</h3>
-                <div className="task-detail-pane__meta-grid">
-                  <div className="task-detail-pane__meta-row">
-                    <span>状态</span>
-                    <span>{statusLabel}</span>
-                  </div>
-                  <div className="task-detail-pane__meta-row">
-                    <span>提醒</span>
-                    <span>{task.reminder.at}</span>
-                  </div>
-                  <div className="task-detail-pane__meta-row">
-                    <span>任务树</span>
-                    <span>{checklistCount} 项</span>
-                  </div>
-                </div>
-                <ReminderEditor reminder={task.reminder} className="task-detail-pane__reminder-card" />
-              </section>
-              <TaskChecklistTree markdown={document} fallbackItems={task.checklist} />
-            </aside>
           </div>
         </section>
       ) : (

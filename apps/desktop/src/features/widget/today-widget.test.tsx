@@ -14,6 +14,6 @@ describe("TodayWidget", () => {
     render(<TodayWidget tasks={[fakeInProgressTask]} />);
     expect(screen.getByText("今天进行中")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "完成" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "下一状态" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "搁置" })).toBeInTheDocument();
   });
 });

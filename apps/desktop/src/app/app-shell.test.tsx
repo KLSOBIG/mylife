@@ -19,9 +19,10 @@ describe("AppShell", () => {
 
   it("uses one real tab set instead of duplicated action rows", () => {
     render(<AppShell />);
+    const detailTabs = screen.getByRole("tablist", { name: "task-detail-tabs" });
     expect(screen.getByRole("tab", { name: "任务详情" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "甘特图" })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(2);
+    expect(detailTabs.querySelectorAll('[role="tab"]')).toHaveLength(2);
   });
 
   it("creates task without requiring an explicit save button", async () => {

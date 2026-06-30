@@ -5,6 +5,7 @@ const filters: Array<{ label: string; value: TaskStatus | "all" }> = [
   { label: "全部", value: "all" },
   { label: "未开始", value: "not_started" },
   { label: "进行中", value: "in_progress" },
+  { label: "搁置", value: "shelved" },
   { label: "已完成", value: "completed" },
   { label: "废弃", value: "abandoned" }
 ];
@@ -164,6 +165,8 @@ function statusLabel(status: TaskStatus) {
       return "未开始";
     case "in_progress":
       return "进行中";
+    case "shelved":
+      return "搁置";
     case "completed":
       return "已完成";
     case "abandoned":
