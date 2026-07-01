@@ -465,6 +465,7 @@ body {
 .task-tiptap {
   --tt-toolbar-bg: rgba(248, 246, 240, 0.96);
   --tt-toolbar-border: rgba(112, 102, 83, 0.12);
+  --tt-toolbar-shadow: rgba(54, 48, 40, 0.05);
 }
 
 .task-tiptap__content {
@@ -536,6 +537,29 @@ body {
   text-underline-offset: 3px;
 }
 
+.task-tiptap__content .ProseMirror code {
+  padding: 0.12em 0.38em;
+  border-radius: 6px;
+  background: rgba(42, 37, 32, 0.08);
+  font-size: 0.92em;
+}
+
+.task-tiptap__content .ProseMirror pre {
+  overflow-x: auto;
+  margin: 1.1em 0;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #23211e;
+  color: #f8f3e8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.task-tiptap__content .ProseMirror pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
 .task-tiptap__content .ProseMirror ul[data-type="taskList"] {
   list-style: none;
   padding-left: 0;
@@ -571,6 +595,7 @@ body {
   padding: 12px 14px;
   border-bottom: 1px solid var(--tt-toolbar-border);
   background: var(--tt-toolbar-bg);
+  box-shadow: 0 10px 18px -18px var(--tt-toolbar-shadow);
   backdrop-filter: blur(12px);
 }
 
@@ -604,12 +629,21 @@ body {
     background-color 140ms ease,
     border-color 140ms ease,
     color 140ms ease,
-    transform 140ms ease;
+    transform 140ms ease,
+    opacity 140ms ease;
 }
 
 .task-tiptap__toolbar-button--icon {
   min-width: 32px;
   padding: 0 8px;
+}
+
+.task-tiptap__toolbar-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  line-height: 1;
 }
 
 .task-tiptap__toolbar-button:hover,
@@ -619,8 +653,107 @@ body {
   border-color: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
+.task-tiptap__toolbar-button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.task-tiptap__toolbar-button:disabled:hover {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-body);
+}
+
 .task-tiptap__toolbar-button:active {
   transform: translateY(1px);
+}
+
+.task-tiptap__toolbar-select-shell {
+  position: relative;
+  display: inline-flex;
+  min-width: 108px;
+}
+
+.task-tiptap__toolbar-select-shell::after {
+  content: "⌄";
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  color: var(--text-subtle);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.task-tiptap__toolbar-select {
+  min-height: 34px;
+  width: 100%;
+  padding: 0 28px 0 11px;
+  border: 1px solid var(--tt-toolbar-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 600;
+  appearance: none;
+}
+
+.task-tiptap__toolbar-select:focus-visible,
+.task-tiptap__link-editor input:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 2px;
+}
+
+.task-tiptap__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.task-tiptap__link-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--tt-toolbar-border);
+  background: rgba(251, 249, 245, 0.98);
+}
+
+.task-tiptap__link-editor input {
+  flex: 1 1 240px;
+  min-height: 36px;
+  min-width: 0;
+  padding: 0 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.task-tiptap__link-button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.task-tiptap__link-button--ghost {
+  border-color: var(--border-soft);
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--text-body);
 }
 
 .task-checklist-tree__header h3,
@@ -960,6 +1093,18 @@ body {
   .task-markdown-editor__toolbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .task-tiptap__toolbar {
+    gap: 8px;
+  }
+
+  .task-tiptap__toolbar-separator {
+    display: none;
+  }
+
+  .task-tiptap__toolbar-select-shell {
+    width: 100%;
   }
 
   .settings-panel__preset-list {
