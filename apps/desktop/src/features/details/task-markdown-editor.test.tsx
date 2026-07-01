@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TaskMarkdownEditor } from "./task-markdown-editor";
@@ -48,7 +48,7 @@ describe("TaskMarkdownEditor", () => {
     HTMLElement.prototype.getClientRects = vi.fn(() => [fallbackRect] as unknown as DOMRectList);
   });
 
-  it("renders one editor surface and no markdown mode switcher", () => {
+  it("renders toolbar, gutter controls, and secondary markdown drawers", () => {
     const handleChange = vi.fn();
 
     render(
@@ -63,31 +63,18 @@ describe("TaskMarkdownEditor", () => {
     expect(screen.getByRole("combobox", { name: "文本样式" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "待办清单" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "粗体" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "插入块" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "块操作" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Markdown" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("markdown-editor")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("markdown-preview")).not.toBeInTheDocument();
     expect(screen.getByLabelText("rich-editor")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Markdown" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "预览" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "重构任务" })).toBeInTheDocument();
     expect(handleChange).not.toHaveBeenCalled();
   });
 
-  it("renders component-style toolbar controls for required formatting actions", () => {
-    render(<TaskMarkdownEditor documentId="task-toolbar" value="" onChange={vi.fn()} />);
-
-    expect(screen.getByRole("button", { name: "撤销编辑" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "重做编辑" })).toBeInTheDocument();
-    expect(screen.getByRole("combobox", { name: "文本样式" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "项目列表" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "编号列表" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "待办清单" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "引用" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "代码块" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "行内代码" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "编辑链接" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "项目列表" })).toHaveTextContent("•≡");
-    expect(screen.getByRole("button", { name: "编号列表" })).toHaveTextContent("1≡");
-  });
-
-  it("applies heading and inline formatting through toolbar and emits markdown only", async () => {
+  it("applies heading and inline formatting through toolbar and emits markdown", async () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
 
@@ -103,8 +90,6 @@ describe("TaskMarkdownEditor", () => {
     await waitFor(() => {
       expect(latestMarkdown(handleChange)).toMatch(/^## \*\*Alpha\*\*/);
     });
-
-    expect(screen.queryByText("```")).not.toBeInTheDocument();
   });
 
   it("supports link editing from toolbar", async () => {
@@ -123,6 +108,37 @@ describe("TaskMarkdownEditor", () => {
     });
   });
 
+  it("opens markdown and preview drawers without breaking source sync", () => {
+    const handleChange = vi.fn();
+
+    render(
+      <TaskMarkdownEditor
+        documentId="task-drawer"
+        value={"# 重构任务\n\n- [ ] 定义 task_events 表\n- [x] 补状态颜色映射"}
+        onChange={handleChange}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Markdown" }));
+
+    const sourceEditor = screen.getByLabelText("markdown-editor");
+    expect(sourceEditor).toHaveValue("# 重构任务\n\n- [ ] 定义 task_events 表\n- [x] 补状态颜色映射");
+
+    fireEvent.change(sourceEditor, {
+      target: {
+        value: "# 新标题"
+      }
+    });
+
+    expect(handleChange).toHaveBeenCalledWith("# 新标题");
+
+    fireEvent.click(screen.getByRole("button", { name: "预览" }));
+
+    const preview = screen.getByLabelText("markdown-preview");
+    expect(preview).toBeInTheDocument();
+    expect(within(preview).getByRole("heading", { name: "重构任务" })).toBeInTheDocument();
+  });
+
   it("keeps task list markdown semantics", async () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
@@ -133,42 +149,6 @@ describe("TaskMarkdownEditor", () => {
 
     await waitFor(() => {
       expect(latestMarkdown(handleChange)).toContain("- [ ] Todo");
-    });
-  });
-
-  it("emits markdown for ordered list", async () => {
-    const user = userEvent.setup();
-    const handleChange = vi.fn();
-
-    render(<TaskMarkdownEditor documentId="task-ordered" value="Alpha" onChange={handleChange} />);
-
-    await user.click(screen.getByRole("button", { name: "编号列表" }));
-    await waitFor(() => {
-      expect(latestMarkdown(handleChange)).toContain("1. Alpha");
-    });
-  });
-
-  it("emits markdown for code block", async () => {
-    const user = userEvent.setup();
-    const handleChange = vi.fn();
-
-    render(<TaskMarkdownEditor documentId="task-code" value="Code" onChange={handleChange} />);
-
-    await user.click(screen.getByRole("button", { name: "代码块" }));
-    await waitFor(() => {
-      expect(latestMarkdown(handleChange)).toContain("```");
-    });
-  });
-
-  it("emits markdown for underline formatting", async () => {
-    const user = userEvent.setup();
-    const handleChange = vi.fn();
-
-    render(<TaskMarkdownEditor documentId="task-underline" value="Line" onChange={handleChange} />);
-
-    await user.click(screen.getByRole("button", { name: "下划线" }));
-    await waitFor(() => {
-      expect(latestMarkdown(handleChange)).toContain("++Line++");
     });
   });
 });

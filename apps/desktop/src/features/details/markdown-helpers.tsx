@@ -8,7 +8,62 @@ export type ChecklistNode = {
   children: ChecklistNode[];
 };
 
+export type MarkdownBlock =
+  | {
+      type: "heading";
+      depth: number;
+      text: string;
+    }
+  | {
+      type: "paragraph";
+      text: string;
+    }
+  | {
+      type: "checklist";
+      checked: boolean;
+      text: string;
+    };
+
 const checkboxPattern = /^(\s*)-\s\[( |x|X)\]\s(.+)$/;
+const headingPattern = /^(#{1,6})\s+(.+)$/;
+
+export function parseMarkdownBlocks(markdown: string): MarkdownBlock[] {
+  return markdown
+    .split("\n")
+    .map((line) => {
+      const heading = line.match(headingPattern);
+
+      if (heading) {
+        return {
+          type: "heading" as const,
+          depth: heading[1].length,
+          text: heading[2].trim()
+        };
+      }
+
+      const checkbox = line.match(checkboxPattern);
+
+      if (checkbox) {
+        return {
+          type: "checklist" as const,
+          checked: checkbox[2].toLowerCase() === "x",
+          text: checkbox[3].trim()
+        };
+      }
+
+      const text = line.trim();
+
+      if (!text) {
+        return null;
+      }
+
+      return {
+        type: "paragraph" as const,
+        text
+      };
+    })
+    .filter((block): block is MarkdownBlock => block !== null);
+}
 
 export function parseChecklistTree(
   markdown: string,
