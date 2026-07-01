@@ -62,7 +62,7 @@ function TaskCardBody({
   onResumeTask,
   onToggleTree,
   expanded,
-  dragHandleProps,
+  draggable = false,
   dragging = false,
   overlay = false
 }: {
@@ -73,7 +73,7 @@ function TaskCardBody({
   onResumeTask?: (taskId: string) => void;
   onToggleTree?: () => void;
   expanded?: boolean;
-  dragHandleProps?: Record<string, unknown>;
+  draggable?: boolean;
   dragging?: boolean;
   overlay?: boolean;
 }) {
@@ -104,17 +104,35 @@ function TaskCardBody({
       }}
     >
       <div
+        className="task-card__header"
         style={{
           display: "flex",
           alignItems: "flex-start",
-          justifyContent: "space-between",
+          justifyContent: "flex-start",
           gap: 10
         }}
       >
+        {!overlay && hasTree ? (
+          <button
+            type="button"
+            aria-label={`${expanded ? "收起" : "展开"} ${task.title} 任务树`}
+            aria-expanded={expanded ? "true" : "false"}
+            aria-controls={`task-tree-${treeId}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleTree?.();
+            }}
+            className={`task-card__tree-toggle ${expanded ? "is-expanded" : ""}`}
+            style={{
+            }}
+          >
+            <span aria-hidden="true">▾</span>
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => onSelectTask?.(task.id)}
-          className="task-card__title"
+          className={`task-card__title ${draggable ? "is-draggable" : ""}`}
           style={{
             flex: 1,
             padding: 0,
@@ -129,24 +147,6 @@ function TaskCardBody({
         >
           {task.title}
         </button>
-        {!overlay ? (
-          <button
-            type="button"
-            aria-label={`拖动排序 ${task.title}`}
-            title="拖动排序"
-            className="task-card__drag-handle"
-            style={{
-              marginLeft: 4,
-              touchAction: "none"
-            }}
-            {...dragHandleProps}
-          >
-            <span className="task-card__drag-icon" aria-hidden="true">
-              ↕
-            </span>
-            <span className="task-card__drag-label">拖动</span>
-          </button>
-        ) : null}
       </div>
       <div
         style={{
@@ -182,26 +182,6 @@ function TaskCardBody({
           >
             今天
           </span>
-        ) : null}
-        {!overlay && hasTree ? (
-          <button
-            type="button"
-            aria-label={`${task.title} 任务树`}
-            aria-expanded={expanded ? "true" : "false"}
-            aria-controls={`task-tree-${treeId}`}
-            onClick={onToggleTree}
-            style={{
-              border: "1px solid #e0cfb6",
-              background: expanded ? "#fff4dc" : "#fffaf1",
-              color: "#7a5d34",
-              borderRadius: 999,
-              padding: "4px 8px",
-              fontSize: 12,
-              cursor: "pointer"
-            }}
-          >
-            {expanded ? "收起任务树" : "展开任务树"}
-          </button>
         ) : null}
         {typeof task.checklistCount === "number" ? (
           <span style={{ fontSize: 12, color: "#7c6a55" }}>{task.checklistCount} 子任务</span>
@@ -312,12 +292,15 @@ export function TaskCard({
     <div
       ref={setNodeRef}
       className="task-card-shell"
+      {...attributes}
+      {...listeners}
       style={{
         transform: CSS.Transform.toString(transform),
         transition: transition ?? "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 180ms ease",
         opacity: isDragging ? 0.44 : 1,
         zIndex: isDragging ? 2 : 0,
-        willChange: "transform, opacity"
+        willChange: "transform, opacity",
+        cursor: isDragging ? "grabbing" : "grab"
       }}
     >
       <TaskCardBody
@@ -328,7 +311,7 @@ export function TaskCard({
         onResumeTask={onResumeTask}
         onToggleTree={() => setExpanded((current) => !current)}
         expanded={expanded}
-        dragHandleProps={{ ...attributes, ...listeners }}
+        draggable
         dragging={isDragging}
       />
     </div>

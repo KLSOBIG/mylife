@@ -65,7 +65,6 @@ describe("TaskLaneBoard", () => {
     expect(screen.getByText("重构任务时间轴存储")).toBeInTheDocument();
     expect(screen.getAllByText("今天")).toHaveLength(2);
     expect(screen.getByText(/4\s*子任务/)).toBeInTheDocument();
-    expect(screen.getByLabelText("拖动排序 重构任务时间轴存储")).toBeInTheDocument();
     expect(sampleTasks[0].checklistTree?.[0].title).toBe("定义 task_events 表");
     expect(screen.queryByRole("tree", { name: "重构任务时间轴存储 任务树预览" })).not.toBeInTheDocument();
   });
@@ -83,7 +82,7 @@ describe("TaskLaneBoard", () => {
     const onSelectTask = vi.fn();
     render(<TaskLaneBoard tasks={sampleTasks} onSelectTask={onSelectTask} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "重构任务时间轴存储 任务树" }));
+    fireEvent.click(screen.getByRole("button", { name: "展开 重构任务时间轴存储 任务树" }));
 
     const tree = screen.getByRole("tree", { name: "重构任务时间轴存储 任务树预览" });
     expect(tree).toHaveStyle({ maxHeight: "192px", overflowY: "auto" });

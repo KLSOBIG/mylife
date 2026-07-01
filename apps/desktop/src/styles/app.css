@@ -259,53 +259,53 @@ body {
   transition: color 160ms ease, transform 160ms ease;
 }
 
+.task-card__title.is-draggable {
+  cursor: grab;
+}
+
 .task-card__title:hover {
   color: var(--text-strong);
   transform: translateY(-0.5px);
 }
 
-.task-card__drag-handle {
+.task-card__header {
+  min-width: 0;
+}
+
+.task-card__tree-toggle {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 6px;
-  min-height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--border-soft);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-top: -1px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
   color: var(--text-subtle);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: grab;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  cursor: pointer;
   transition:
     transform 160ms ease,
-    border-color 160ms ease,
     background-color 160ms ease,
-    color 160ms ease,
-    box-shadow 160ms ease;
+    color 160ms ease;
 }
 
-.task-card__drag-handle:hover {
-  border-color: var(--border-strong);
+.task-card__tree-toggle:hover {
   background: var(--bg-hover);
   color: var(--text-strong);
-  transform: translateY(-1px);
 }
 
-.task-card__drag-handle:active {
-  cursor: grabbing;
-  transform: translateY(0) scale(0.98);
+.task-card__tree-toggle.is-expanded span {
+  transform: rotate(180deg);
 }
 
-.task-card__drag-icon {
-  font-size: 13px;
+.task-card__tree-toggle span {
+  display: inline-block;
+  font-size: 12px;
   line-height: 1;
-  letter-spacing: -0.12em;
-}
-
-.task-card__drag-label {
-  white-space: nowrap;
+  transition: transform 160ms ease;
 }
 
 .task-inline-creator input::placeholder,
