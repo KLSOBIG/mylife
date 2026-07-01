@@ -402,43 +402,6 @@ export function TaskMarkdownEditor({
 
   return (
     <section className="task-markdown-editor">
-      <div className="task-markdown-editor__chrome">
-        <div className="task-markdown-editor__page-meta">
-          <span className="task-markdown-editor__page-label">Document</span>
-          <span className="task-markdown-editor__page-hint">Markdown-backed editor</span>
-        </div>
-        <div className="task-markdown-editor__chrome-actions">
-          <button
-            type="button"
-            className={showMarkdown ? "task-markdown-editor__chrome-button is-active" : "task-markdown-editor__chrome-button"}
-            onClick={() => toggleInspector("markdown")}
-          >
-            Markdown
-          </button>
-          <button
-            type="button"
-            className={showPreview ? "task-markdown-editor__chrome-button is-active" : "task-markdown-editor__chrome-button"}
-            onClick={() => toggleInspector("preview")}
-          >
-            预览
-          </button>
-          <button
-            type="button"
-            className="task-markdown-editor__chrome-button"
-            onClick={() => editor?.chain().focus().undo().run()}
-          >
-            Undo
-          </button>
-          <button
-            type="button"
-            className="task-markdown-editor__chrome-button"
-            onClick={() => editor?.chain().focus().redo().run()}
-          >
-            Redo
-          </button>
-        </div>
-      </div>
-
       <div className="task-markdown-editor__canvas" ref={canvasRef}>
         <div className="task-markdown-editor__gutter" style={{ top: `${gutterTop}px` }}>
           <button
@@ -461,13 +424,12 @@ export function TaskMarkdownEditor({
               setInsertMenuOpen(false);
             }}
           >
-            ::
+            ⋮⋮
           </button>
         </div>
 
         {insertMenuOpen ? (
           <div className="task-markdown-editor__menu-popover" ref={insertMenuRef} style={{ top: `${gutterTop}px` }}>
-            <div className="task-markdown-editor__menu-header">Insert</div>
             {commandDefinitions.map((command) => (
               <button
                 key={command.id}
@@ -484,7 +446,6 @@ export function TaskMarkdownEditor({
 
         {blockMenuOpen ? (
           <div className="task-markdown-editor__menu-popover" ref={blockMenuRef} style={{ top: `${gutterTop}px` }}>
-            <div className="task-markdown-editor__menu-header">Turn into</div>
             {commandDefinitions.map((command) => (
               <button
                 key={command.id}
@@ -499,72 +460,92 @@ export function TaskMarkdownEditor({
           </div>
         ) : null}
 
-        <div className="task-markdown-editor__page">
-          {editor ? (
-            <>
-              <BubbleMenu editor={editor} className="task-tiptap__menu task-tiptap__menu--bubble">
-                <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} data-active={editor.isActive("bold")}>
-                  B
-                </button>
-                <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} data-active={editor.isActive("italic")}>
-                  I
-                </button>
-                <button
-                  type="button"
-                  onClick={() => editor.chain().focus().toggleUnderline().run()}
-                  data-active={editor.isActive("underline")}
-                >
-                  U
-                </button>
-                <button
-                  type="button"
-                  onClick={() => editor.chain().focus().toggleStrike().run()}
-                  data-active={editor.isActive("strike")}
-                >
-                  S
-                </button>
-                <button type="button" onClick={() => editor.chain().focus().toggleCode().run()} data-active={editor.isActive("code")}>
-                  Code
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const previous = editor.getAttributes("link").href ?? "";
-                    const href = window.prompt("输入链接", previous);
-                    if (href === null) {
-                      return;
-                    }
-                    if (!href.trim()) {
-                      editor.chain().focus().unsetLink().run();
-                      return;
-                    }
-                    editor.chain().focus().setLink({ href }).run();
-                  }}
-                  data-active={editor.isActive("link")}
-                >
-                  Link
-                </button>
-              </BubbleMenu>
-              <EditorContent editor={editor} className="task-tiptap__content" />
-            </>
-          ) : null}
-
-          {slashMenu && visibleSlashCommands.length > 0 ? (
-            <div className="task-markdown-editor__slash-menu" style={{ top: `${slashMenu.top}px` }}>
-              <div className="task-markdown-editor__menu-header">Basic blocks</div>
-              {visibleSlashCommands.map((command) => (
-                <button
-                  key={command.id}
-                  type="button"
-                  className="task-markdown-editor__menu-item"
-                  onClick={() => runCommand(command, slashMenu.range)}
-                >
-                  <span>{command.label}</span>
-                  <small>{command.hint}</small>
-                </button>
-              ))}
+        <div className="task-markdown-editor__canvas-frame">
+          <div className="task-markdown-editor__canvas-bar">
+            <div className="task-markdown-editor__canvas-actions">
+              <button
+                type="button"
+                className={showMarkdown ? "task-markdown-editor__chrome-button is-active" : "task-markdown-editor__chrome-button"}
+                onClick={() => toggleInspector("markdown")}
+              >
+                Markdown
+              </button>
+              <button
+                type="button"
+                className={showPreview ? "task-markdown-editor__chrome-button is-active" : "task-markdown-editor__chrome-button"}
+                onClick={() => toggleInspector("preview")}
+              >
+                预览
+              </button>
             </div>
-          ) : null}
+          </div>
+
+          <div className="task-markdown-editor__page">
+            {editor ? (
+              <>
+                <BubbleMenu editor={editor} className="task-tiptap__menu task-tiptap__menu--bubble">
+                  <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} data-active={editor.isActive("bold")}>
+                    B
+                  </button>
+                  <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} data-active={editor.isActive("italic")}>
+                    I
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleUnderline().run()}
+                    data-active={editor.isActive("underline")}
+                  >
+                    U
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleStrike().run()}
+                    data-active={editor.isActive("strike")}
+                  >
+                    S
+                  </button>
+                  <button type="button" onClick={() => editor.chain().focus().toggleCode().run()} data-active={editor.isActive("code")}>
+                    Code
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const previous = editor.getAttributes("link").href ?? "";
+                      const href = window.prompt("输入链接", previous);
+                      if (href === null) {
+                        return;
+                      }
+                      if (!href.trim()) {
+                        editor.chain().focus().unsetLink().run();
+                        return;
+                      }
+                      editor.chain().focus().setLink({ href }).run();
+                    }}
+                    data-active={editor.isActive("link")}
+                  >
+                    Link
+                  </button>
+                </BubbleMenu>
+                <EditorContent editor={editor} className="task-tiptap__content" />
+              </>
+            ) : null}
+
+            {slashMenu && visibleSlashCommands.length > 0 ? (
+              <div className="task-markdown-editor__slash-menu" style={{ top: `${slashMenu.top}px` }}>
+                {visibleSlashCommands.map((command) => (
+                  <button
+                    key={command.id}
+                    type="button"
+                    className="task-markdown-editor__menu-item"
+                    onClick={() => runCommand(command, slashMenu.range)}
+                  >
+                    <span>{command.label}</span>
+                    <small>{command.hint}</small>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 

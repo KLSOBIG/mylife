@@ -72,11 +72,9 @@ export function TaskDetailPane({
         >
           <header className="task-detail-pane__header">
             <div className="task-detail-pane__title-block">
-              <span className="task-detail-pane__eyebrow">Task</span>
               <h2>{task.title}</h2>
               <div className="task-detail-pane__summary">
                 <span>{checklistCount} 条子任务</span>
-                <span>Markdown source of truth</span>
               </div>
             </div>
             <div className="task-detail-pane__header-actions">

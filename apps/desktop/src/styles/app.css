@@ -339,32 +339,25 @@ body {
   align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
-  padding: 18px 28px 0;
+  padding: 14px 28px 0;
 }
 
 .task-detail-pane__title-block h2 {
-  margin: 6px 0 0;
+  margin: 0;
   color: var(--text-strong);
-  font-size: 36px;
-  line-height: 1.08;
-  letter-spacing: -0.04em;
-  font-weight: 700;
-}
-
-.task-detail-pane__eyebrow {
-  color: var(--text-subtle);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 28px;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 680;
 }
 
 .task-detail-pane__summary {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 8px;
   color: var(--text-subtle);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .task-detail-pane__header-actions {
@@ -427,52 +420,26 @@ body {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   min-height: 0;
 }
 
-.task-markdown-editor__chrome {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 0 6px;
-}
-
-.task-markdown-editor__page-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.task-markdown-editor__page-label {
-  color: var(--text-strong);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.task-markdown-editor__page-hint {
-  color: var(--text-subtle);
-  font-size: 12px;
-}
-
-.task-markdown-editor__chrome-actions {
+.task-markdown-editor__canvas-actions {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .task-markdown-editor__chrome-button {
-  min-height: 30px;
-  padding: 0 12px;
+  min-height: 28px;
+  padding: 0 8px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-subtle);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
 }
 
@@ -487,12 +454,12 @@ body {
 .task-markdown-editor__drawer,
 .gantt-chart,
 .gantt-empty {
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.05);
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.58);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.84),
-    0 24px 44px rgba(15, 23, 42, 0.05);
+    0 18px 36px rgba(15, 23, 42, 0.03);
 }
 
 .task-markdown-editor__canvas {
@@ -501,6 +468,23 @@ body {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  backdrop-filter: blur(6px);
+}
+
+.task-markdown-editor__canvas-frame {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.task-markdown-editor__canvas-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 48px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
 }
 
 .task-markdown-editor__page {
@@ -508,34 +492,43 @@ body {
   display: flex;
   flex: 1;
   min-height: 0;
-  padding: 20px 20px 30px 72px;
+  padding: 6px 20px 30px 62px;
 }
 
 .task-markdown-editor__gutter {
   position: absolute;
-  left: 20px;
+  left: 16px;
   z-index: 4;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.task-markdown-editor__canvas:hover .task-markdown-editor__gutter,
+.task-markdown-editor__canvas:focus-within .task-markdown-editor__gutter {
+  opacity: 1;
 }
 
 .task-markdown-editor__gutter-button {
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.94);
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
   color: var(--text-subtle);
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: none;
+  opacity: 0.82;
 }
 
 .task-markdown-editor__gutter-button:hover {
+  background: rgba(15, 23, 42, 0.06);
   color: var(--text-strong);
-  transform: translateY(-1px);
+  opacity: 1;
 }
 
 .task-markdown-editor__menu-popover,
@@ -557,15 +550,6 @@ body {
 
 .task-markdown-editor__slash-menu {
   left: 86px;
-}
-
-.task-markdown-editor__menu-header {
-  padding: 0 4px 6px;
-  color: var(--text-subtle);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .task-markdown-editor__menu-item {
@@ -615,13 +599,13 @@ body {
 
 .task-tiptap__content .ProseMirror {
   min-height: 100%;
-  max-width: 720px;
+  max-width: 700px;
   margin: 0 auto;
-  padding: 34px 48px 60px;
+  padding: 12px 44px 60px;
   outline: none;
   color: var(--text-strong);
   font-size: 16px;
-  line-height: 1.7;
+  line-height: 1.68;
 }
 
 .task-tiptap__content .ProseMirror p {
@@ -642,12 +626,12 @@ body {
 }
 
 .task-tiptap__content .ProseMirror h1 {
-  font-size: 40px;
+  font-size: 38px;
   line-height: 1.05;
 }
 
 .task-tiptap__content .ProseMirror h2 {
-  font-size: 28px;
+  font-size: 27px;
   line-height: 1.14;
 }
 
@@ -1157,13 +1141,13 @@ body {
   }
 
   .task-detail-pane__header,
-  .task-markdown-editor__chrome {
+  .task-markdown-editor__canvas-bar {
     flex-direction: column;
     align-items: stretch;
   }
 
   .task-detail-pane__header-actions,
-  .task-markdown-editor__chrome-actions {
+  .task-markdown-editor__canvas-actions {
     width: 100%;
     justify-content: flex-start;
   }
