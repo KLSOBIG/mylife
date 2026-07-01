@@ -519,42 +519,135 @@ body {
   flex-direction: column;
 }
 
-.task-markdown-editor__rich :where(.mdxeditor) {
+.task-markdown-editor__rich-shell {
   display: flex;
   min-height: 0;
   flex: 1;
   flex-direction: column;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
-.task-markdown-editor__rich :where(.mdxeditor-toolbar) {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  margin: -14px -14px 14px;
-  padding: 10px;
-  border-bottom: 1px solid var(--border-soft);
-  background: rgba(255, 255, 255, 0.96);
+.task-tiptap {
+  --tt-toolbar-bg: rgba(255, 255, 255, 0.96);
 }
 
-.task-markdown-editor__rich :where(.mdxeditor-root-contenteditable),
-.task-markdown-editor__rich :where(.mdxeditor-rich-text-editor),
-.task-markdown-editor__rich :where(.mdxeditor-source-editor),
-.task-markdown-editor__rich :where(.cm-editor),
-.task-markdown-editor__rich :where(.cm-scroller) {
+.task-tiptap__content {
   min-height: 0;
   flex: 1;
 }
 
-.task-markdown-editor__rich-content {
+.task-tiptap__content .tiptap {
   min-height: 100%;
-  padding: 0 4px 4px;
 }
 
-.task-markdown-editor__rich-shell {
+.task-tiptap__content .ProseMirror {
+  min-height: 100%;
+  padding: 22px 22px 28px;
+  outline: none;
+  color: var(--text-strong);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.task-tiptap__content .ProseMirror p {
+  margin: 0;
+}
+
+.task-tiptap__content .ProseMirror > * + * {
+  margin-top: 0.78em;
+}
+
+.task-tiptap__content .ProseMirror h1,
+.task-tiptap__content .ProseMirror h2,
+.task-tiptap__content .ProseMirror h3 {
+  margin: 1.1em 0 0.45em;
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.task-tiptap__content .ProseMirror h1 {
+  font-size: 30px;
+}
+
+.task-tiptap__content .ProseMirror h2 {
+  font-size: 24px;
+}
+
+.task-tiptap__content .ProseMirror h3 {
+  font-size: 18px;
+}
+
+.task-tiptap__content .ProseMirror ul,
+.task-tiptap__content .ProseMirror ol {
+  padding-left: 1.2em;
+}
+
+.task-tiptap__content .ProseMirror blockquote {
+  margin: 1em 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--border-strong);
+  color: var(--text-body);
+}
+
+.task-tiptap__content .ProseMirror a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.task-tiptap__content .ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.task-tiptap__content .ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.task-tiptap__content .ProseMirror ul[data-type="taskList"] li > label {
+  margin-top: 0.22em;
+}
+
+.task-tiptap__content .ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--text-subtle);
+  pointer-events: none;
+}
+
+.task-tiptap__menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
   border: 1px solid var(--border-soft);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  border-radius: 14px;
+  background: var(--tt-toolbar-bg);
+  box-shadow: var(--shadow-soft);
+}
+
+.task-tiptap__menu button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.task-tiptap__menu button:hover,
+.task-tiptap__menu button[data-active="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .task-markdown-editor__preview h1,

@@ -105,6 +105,7 @@ export function TaskDetailPane({
           </div>
           <div className="task-detail-pane__content">
             <TaskMarkdownEditor
+              documentId={task.id}
               value={document}
               onChange={(nextDocument) => {
                 setDocument(nextDocument);

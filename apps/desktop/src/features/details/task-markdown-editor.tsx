@@ -1,21 +1,11 @@
+import { EditorContent, useEditor } from "@tiptap/react";
+import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
+import { Markdown } from "@tiptap/markdown";
+import StarterKit from "@tiptap/starter-kit";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
+import Placeholder from "@tiptap/extension-placeholder";
 import { useEffect, useRef, useState } from "react";
-import {
-  BlockTypeSelect,
-  BoldItalicUnderlineToggles,
-  CreateLink,
-  ListsToggle,
-  MDXEditor,
-  type MDXEditorMethods,
-  UndoRedo,
-  headingsPlugin,
-  linkPlugin,
-  listsPlugin,
-  markdownShortcutPlugin,
-  quotePlugin,
-  thematicBreakPlugin,
-  toolbarPlugin
-} from "@mdxeditor/editor";
-import "@mdxeditor/editor/style.css";
 import { parseMarkdownBlocks } from "./markdown-helpers";
 
 const viewModes = [
@@ -25,25 +15,71 @@ const viewModes = [
 ] as const;
 
 export function TaskMarkdownEditor({
+  documentId,
   value,
   onChange
 }: {
+  documentId: string;
   value: string;
   onChange: (value: string) => void;
 }) {
   const [viewMode, setViewMode] = useState<"document" | "markdown" | "preview">("document");
-  const editorRef = useRef<MDXEditorMethods>(null);
+  const lastSyncedMarkdownRef = useRef(value);
   const blocks = parseMarkdownBlocks(value);
+  const editor = useEditor(
+    {
+      immediatelyRender: false,
+      content: value,
+      contentType: "markdown",
+      editorProps: {
+        attributes: {
+          class: "task-tiptap__editor",
+          "aria-label": "rich-editor"
+        }
+      },
+      extensions: [
+        StarterKit.configure({
+          codeBlock: false
+        }),
+        TaskList,
+        TaskItem.configure({
+          nested: true
+        }),
+        Placeholder.configure({
+          placeholder: "像 Notion 一样直接输入内容，[] 会同步成任务树"
+        }),
+        Markdown.configure({
+          indentation: {
+            style: "space",
+            size: 2
+          },
+          markedOptions: {
+            gfm: true,
+            breaks: false
+          }
+        })
+      ],
+      onUpdate({ editor: currentEditor }) {
+        const nextMarkdown = currentEditor.getMarkdown();
+        lastSyncedMarkdownRef.current = nextMarkdown;
+        onChange(nextMarkdown);
+      }
+    },
+    [documentId]
+  );
 
   useEffect(() => {
-    if (!editorRef.current) {
+    if (!editor) {
       return;
     }
 
-    if (editorRef.current.getMarkdown() !== value) {
-      editorRef.current.setMarkdown(value);
+    if (value === lastSyncedMarkdownRef.current) {
+      return;
     }
-  }, [value]);
+
+    editor.commands.setContent(value, { contentType: "markdown" });
+    lastSyncedMarkdownRef.current = value;
+  }, [editor, value]);
 
   return (
     <section className="task-markdown-editor" data-view-mode={viewMode}>
@@ -67,34 +103,55 @@ export function TaskMarkdownEditor({
       </div>
 
       {viewMode === "document" ? (
-        <div className="task-markdown-editor__rich-shell">
-          <MDXEditor
-            ref={editorRef}
-            className="task-markdown-editor__rich"
-            contentEditableClassName="task-markdown-editor__rich-content"
-            markdown={value}
-            onChange={(nextMarkdown) => onChange(nextMarkdown)}
-            placeholder="直接像文档一样输入内容，checkbox 会同步成任务树"
-            plugins={[
-              headingsPlugin(),
-              listsPlugin(),
-              quotePlugin(),
-              thematicBreakPlugin(),
-              linkPlugin(),
-              markdownShortcutPlugin(),
-              toolbarPlugin({
-                toolbarContents: () => (
-                  <>
-                    <UndoRedo />
-                    <BoldItalicUnderlineToggles />
-                    <BlockTypeSelect />
-                    <ListsToggle />
-                    <CreateLink />
-                  </>
-                )
-              })
-            ]}
-          />
+        <div className="task-markdown-editor__rich-shell task-tiptap">
+          {editor ? (
+            <>
+              <BubbleMenu editor={editor} className="task-tiptap__menu task-tiptap__menu--bubble">
+                <button type="button" onClick={() => editor.chain().focus().toggleBold().run()} data-active={editor.isActive("bold")}>
+                  B
+                </button>
+                <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} data-active={editor.isActive("italic")}>
+                  I
+                </button>
+                <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} data-active={editor.isActive("underline")}>
+                  U
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const previous = editor.getAttributes("link").href ?? "";
+                    const href = window.prompt("输入链接", previous);
+                    if (href === null) {
+                      return;
+                    }
+                    if (!href.trim()) {
+                      editor.chain().focus().unsetLink().run();
+                      return;
+                    }
+                    editor.chain().focus().setLink({ href }).run();
+                  }}
+                  data-active={editor.isActive("link")}
+                >
+                  链接
+                </button>
+              </BubbleMenu>
+              <FloatingMenu editor={editor} className="task-tiptap__menu task-tiptap__menu--floating">
+                <button type="button" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+                  H2
+                </button>
+                <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()}>
+                  列表
+                </button>
+                <button type="button" onClick={() => editor.chain().focus().toggleTaskList().run()}>
+                  待办
+                </button>
+                <button type="button" onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+                  引用
+                </button>
+              </FloatingMenu>
+              <EditorContent editor={editor} className="task-tiptap__content" />
+            </>
+          ) : null}
         </div>
       ) : null}
 

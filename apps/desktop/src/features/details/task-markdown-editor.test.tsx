@@ -8,6 +8,7 @@ describe("TaskMarkdownEditor", () => {
 
     render(
       <TaskMarkdownEditor
+        documentId="task-1"
         value={"# 重构任务\n\n- [ ] 定义 task_events 表\n- [x] 补状态颜色映射"}
         onChange={handleChange}
       />
