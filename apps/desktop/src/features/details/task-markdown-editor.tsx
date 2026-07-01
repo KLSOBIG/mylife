@@ -69,14 +69,14 @@ const blockControls: ButtonControl[] = [
   {
     id: "bullet-list",
     label: "项目列表",
-    icon: "•",
+    icon: "•≡",
     active: (editor) => editor.isActive("bulletList"),
     run: (editor) => editor.chain().focus().toggleBulletList().run()
   },
   {
     id: "ordered-list",
     label: "编号列表",
-    icon: "1.",
+    icon: "1≡",
     active: (editor) => editor.isActive("orderedList"),
     run: (editor) => editor.chain().focus().toggleOrderedList().run()
   },

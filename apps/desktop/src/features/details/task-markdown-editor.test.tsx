@@ -83,6 +83,8 @@ describe("TaskMarkdownEditor", () => {
     expect(screen.getByRole("button", { name: "代码块" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "行内代码" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "编辑链接" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "项目列表" })).toHaveTextContent("•≡");
+    expect(screen.getByRole("button", { name: "编号列表" })).toHaveTextContent("1≡");
   });
 
   it("applies heading and inline formatting through toolbar and emits markdown only", async () => {
