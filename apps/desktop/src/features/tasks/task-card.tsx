@@ -85,6 +85,7 @@ function TaskCardBody({
     <div
       className="task-card"
       data-dragging={dragging ? "true" : "false"}
+      data-overlay={overlay ? "true" : "false"}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -96,7 +97,10 @@ function TaskCardBody({
         boxShadow: dragging
           ? "0 14px 28px rgba(118, 84, 35, 0.18)"
           : "0 4px 12px rgba(47, 42, 36, 0.06)",
-        opacity: overlay ? 0.96 : 1
+        opacity: overlay ? 0.96 : 1,
+        transform: dragging ? "translateY(-1px) scale(1.01)" : "translateY(0) scale(1)",
+        transition:
+          "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 180ms ease, background-color 180ms ease, opacity 180ms ease"
       }}
     >
       <div
@@ -110,6 +114,7 @@ function TaskCardBody({
         <button
           type="button"
           onClick={() => onSelectTask?.(task.id)}
+          className="task-card__title"
           style={{
             flex: 1,
             padding: 0,
@@ -127,18 +132,19 @@ function TaskCardBody({
         {!overlay ? (
           <button
             type="button"
-            aria-label={`拖拽 ${task.title}`}
+            aria-label={`拖动排序 ${task.title}`}
+            title="拖动排序"
+            className="task-card__drag-handle"
             style={{
-              border: 0,
-              background: "transparent",
-              color: "#8f7656",
-              cursor: "grab",
-              fontSize: 18,
-              lineHeight: 1
+              marginLeft: 4,
+              touchAction: "none"
             }}
             {...dragHandleProps}
           >
-            ⋮⋮
+            <span className="task-card__drag-icon" aria-hidden="true">
+              ↕
+            </span>
+            <span className="task-card__drag-label">拖动</span>
           </button>
         ) : null}
       </div>
@@ -305,10 +311,13 @@ export function TaskCard({
   return (
     <div
       ref={setNodeRef}
+      className="task-card-shell"
       style={{
         transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.48 : 1
+        transition: transition ?? "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 180ms ease",
+        opacity: isDragging ? 0.44 : 1,
+        zIndex: isDragging ? 2 : 0,
+        willChange: "transform, opacity"
       }}
     >
       <TaskCardBody

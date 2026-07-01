@@ -64,8 +64,8 @@ describe("TaskLaneBoard", () => {
     expect(screen.getByRole("button", { name: "废弃 · 0" })).toBeInTheDocument();
     expect(screen.getByText("重构任务时间轴存储")).toBeInTheDocument();
     expect(screen.getAllByText("今天")).toHaveLength(2);
-    expect(screen.getByText("2 子任务")).toBeInTheDocument();
-    expect(screen.getByLabelText("拖拽 重构任务时间轴存储")).toBeInTheDocument();
+    expect(screen.getByText(/4\s*子任务/)).toBeInTheDocument();
+    expect(screen.getByLabelText("拖动排序 重构任务时间轴存储")).toBeInTheDocument();
     expect(sampleTasks[0].checklistTree?.[0].title).toBe("定义 task_events 表");
     expect(screen.queryByRole("tree", { name: "重构任务时间轴存储 任务树预览" })).not.toBeInTheDocument();
   });

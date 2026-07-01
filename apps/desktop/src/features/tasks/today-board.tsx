@@ -1,12 +1,5 @@
-import { themes, type ThemeName } from "../../lib/task-state";
 import type { TaskMoveRequest, TaskSummary } from "../../lib/types";
 import { TaskLaneBoard } from "./task-lane-board";
-
-const themeLabels: Record<ThemeName, string> = {
-  olive: "苔绿",
-  amber: "赤陶",
-  slate: "石板"
-};
 
 export function TodayBoard({
   tasks = [],
@@ -19,8 +12,7 @@ export function TodayBoard({
   onCompleteTask,
   onShelveTask,
   onResumeTask,
-  onTaskMove,
-  onThemeChange
+  onTaskMove
 }: {
   tasks?: TaskSummary[];
   draftTitle?: string;
@@ -33,7 +25,6 @@ export function TodayBoard({
   onShelveTask?: (taskId: string) => void;
   onResumeTask?: (taskId: string) => void;
   onTaskMove?: (request: TaskMoveRequest) => void;
-  onThemeChange?: (theme: ThemeName) => void;
 }) {
   return (
     <section className="today-board">
@@ -43,20 +34,6 @@ export function TodayBoard({
           <h1>今天</h1>
         </div>
         <div className="today-header__actions">
-          <div className="theme-switch" role="group" aria-label="主题切换">
-            {themes.map((theme) => (
-              <button
-                key={theme}
-                type="button"
-                aria-label={`theme-${theme}`}
-                className={`theme-switch__item theme-switch__item--${theme}`}
-                onClick={() => onThemeChange?.(theme)}
-              >
-                <span className={`theme-switch__swatch theme-switch__swatch--${theme}`} aria-hidden="true" />
-                <span>{themeLabels[theme]}</span>
-              </button>
-            ))}
-          </div>
           <button type="button" className="toolbar-button toolbar-button--primary" onClick={onCreateClick}>
             快速新增 +
           </button>

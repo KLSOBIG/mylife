@@ -11,7 +11,8 @@ export function TaskDetailPane({
   onTabChange,
   onCompleteTask,
   onShelveTask,
-  onResumeTask
+  onResumeTask,
+  onDocumentChange
 }: {
   task: TaskDetail;
   activeTab?: "details" | "gantt";
@@ -19,6 +20,7 @@ export function TaskDetailPane({
   onCompleteTask?: (taskId: string) => void;
   onShelveTask?: (taskId: string) => void;
   onResumeTask?: (taskId: string) => void;
+  onDocumentChange?: (taskId: string, document: string) => void;
 }) {
   const [internalTab, setInternalTab] = useState<"details" | "gantt">("details");
   const [document, setDocument] = useState(task.document);
@@ -102,7 +104,13 @@ export function TaskDetailPane({
             <ReminderEditor reminder={task.reminder} className="task-detail-pane__reminder-inline" />
           </div>
           <div className="task-detail-pane__content">
-            <TaskMarkdownEditor value={document} onChange={setDocument} />
+            <TaskMarkdownEditor
+              value={document}
+              onChange={(nextDocument) => {
+                setDocument(nextDocument);
+                onDocumentChange?.(task.id, nextDocument);
+              }}
+            />
           </div>
         </section>
       ) : (

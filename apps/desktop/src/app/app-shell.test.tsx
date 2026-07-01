@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { AppShell } from "./app-shell";
@@ -33,7 +33,7 @@ describe("AppShell", () => {
 
     const input = screen.getByPlaceholderText("输入任务标题");
     await user.type(input, "自动保存任务");
-    await user.tab();
+    fireEvent.blur(input);
 
     expect(screen.queryByRole("button", { name: "保存任务" })).not.toBeInTheDocument();
     expect(screen.getAllByText("自动保存任务").length).toBeGreaterThan(0);
@@ -41,6 +41,8 @@ describe("AppShell", () => {
 
   it("keeps markdown editor as the dominant editable area in details", () => {
     render(<AppShell />);
-    expect(screen.getByRole("textbox", { name: /markdown/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "文档" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Markdown" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
   });
 });

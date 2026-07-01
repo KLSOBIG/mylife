@@ -64,12 +64,12 @@
 }
 
 .month-panel__day:hover {
-  background: #f0ece5;
+  background: var(--bg-hover);
 }
 
 .month-panel__day:focus-visible,
 .month-panel__workspace:focus-visible {
-  outline: 2px solid rgba(78, 100, 91, 0.18);
+  outline: 2px solid var(--accent-soft);
   outline-offset: 2px;
 }
 
@@ -79,18 +79,18 @@
 
 .month-panel__day--today {
   color: #fff;
-  background: #ef5350;
+  background: var(--today-accent);
 }
 
 .month-panel__day--selected {
-  border-color: #d8d1c6;
-  background: #ece7de;
-  color: #27262b;
+  border-color: var(--border-strong);
+  background: var(--accent-soft);
+  color: var(--text-strong);
 }
 
 .month-panel__day--today.month-panel__day--selected {
-  border-color: #ef5350;
-  background: #ef5350;
+  border-color: var(--today-accent);
+  background: var(--today-accent);
   color: #fff;
 }
 
@@ -110,7 +110,7 @@
 }
 
 .month-panel__workspace--active {
-  border-color: #ddd6ca;
-  background: #f1ede6;
-  color: #27262b;
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
+  color: var(--text-strong);
 }

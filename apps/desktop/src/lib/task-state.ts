@@ -31,6 +31,11 @@ export const statusMeta: Record<
 
 export const themes = ["olive", "amber", "slate"] as const;
 export type ThemeName = (typeof themes)[number];
+export const themePresets: Record<ThemeName, { accentColor: string; backgroundColor: string }> = {
+  olive: { accentColor: "#3f5f52", backgroundColor: "#f7f6f3" },
+  amber: { accentColor: "#8b5e3c", backgroundColor: "#f8f3ec" },
+  slate: { accentColor: "#45596d", backgroundColor: "#f2f5f8" }
+};
 
 export type TaskRecord = {
   id: string;
@@ -44,14 +49,15 @@ export type TaskRecord = {
 };
 
 export function buildTaskSummary(task: TaskRecord): TaskSummary {
+  const checklistTree = buildChecklistTree(task.document, task.checklist);
   return {
     id: task.id,
     title: task.title,
     status: task.status,
     isToday: task.isToday,
     reminderLabel: task.reminder.at,
-    checklistCount: task.checklist.length,
-    checklistTree: buildChecklistTree(task.document, task.checklist)
+    checklistCount: countChecklistTree(checklistTree),
+    checklistTree
   };
 }
 
@@ -104,6 +110,14 @@ export function shelveTask(task: TaskRecord): TaskRecord {
 
 export function resumeTask(task: TaskRecord): TaskRecord {
   return applyStatus(task, "in_progress");
+}
+
+export function updateTaskDocument(task: TaskRecord, document: string): TaskRecord {
+  return {
+    ...task,
+    document,
+    checklist: buildChecklistItems(document, task.checklist)
+  };
 }
 
 export function applyStatus(task: TaskRecord, status: TaskStatus): TaskRecord {
@@ -311,6 +325,42 @@ function buildChecklistTree(
     depth: 0,
     children: []
   }));
+}
+
+function buildChecklistItems(
+  markdown: string,
+  fallbackItems: ChecklistItem[] = []
+): ChecklistItem[] {
+  const tree = buildChecklistTree(markdown, fallbackItems);
+  const flat: ChecklistItem[] = [];
+
+  const walk = (nodes: ChecklistTreeNode[]) => {
+    for (const node of nodes) {
+      flat.push({
+        id: node.id,
+        title: node.title,
+        status: node.checked ? "completed" : "not_started"
+      });
+      walk(node.children);
+    }
+  };
+
+  walk(tree);
+  return flat;
+}
+
+function countChecklistTree(nodes: ChecklistTreeNode[]) {
+  let count = 0;
+
+  const walk = (items: ChecklistTreeNode[]) => {
+    for (const item of items) {
+      count += 1;
+      walk(item.children);
+    }
+  };
+
+  walk(nodes);
+  return count;
 }
 
 function buildSegmentStart(segments: TimelineRow["segments"], _seed: string) {
