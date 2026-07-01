@@ -72,27 +72,28 @@ export function TaskDetailPane({
         >
           <header className="task-detail-pane__header">
             <div className="task-detail-pane__title-block">
+              <span className="task-detail-pane__eyebrow">任务文档</span>
               <h2>{task.title}</h2>
-              <div className="task-detail-pane__summary">
-                <span>{checklistCount} 条子任务</span>
-              </div>
             </div>
-            <div className="task-detail-pane__header-actions">
-              {task.status !== "completed" && task.status !== "abandoned" ? (
-                <button type="button" onClick={() => onCompleteTask?.(task.id)}>
-                  完成
-                </button>
-              ) : null}
-              {task.status === "in_progress" ? (
-                <button type="button" onClick={() => onShelveTask?.(task.id)}>
-                  搁置
-                </button>
-              ) : null}
-              {task.status === "shelved" ? (
-                <button type="button" onClick={() => onResumeTask?.(task.id)}>
-                  恢复进行
-                </button>
-              ) : null}
+            <div className="task-detail-pane__summary">
+              <span>{checklistCount} 条子任务</span>
+              <div className="task-detail-pane__header-actions">
+                {task.status !== "completed" && task.status !== "abandoned" ? (
+                  <button type="button" onClick={() => onCompleteTask?.(task.id)}>
+                    完成
+                  </button>
+                ) : null}
+                {task.status === "in_progress" ? (
+                  <button type="button" onClick={() => onShelveTask?.(task.id)}>
+                    搁置
+                  </button>
+                ) : null}
+                {task.status === "shelved" ? (
+                  <button type="button" onClick={() => onResumeTask?.(task.id)}>
+                    恢复进行
+                  </button>
+                ) : null}
+              </div>
             </div>
           </header>
           <div className="task-detail-pane__toolbelt">

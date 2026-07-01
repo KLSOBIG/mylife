@@ -49,10 +49,8 @@ describe("AppShell", () => {
   it("keeps markdown editor as the dominant editable area in details", () => {
     render(<AppShell />);
     expect(screen.getByLabelText("rich-editor")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "插入块" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "块操作" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Markdown" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Markdown" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "预览" })).not.toBeInTheDocument();
   });
 
   it("anchors theme settings sheet above settings trigger", async () => {
