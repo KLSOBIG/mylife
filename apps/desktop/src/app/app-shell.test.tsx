@@ -1,9 +1,15 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { AppShell } from "./app-shell";
 
+const APP_STATE_STORAGE_KEY = "mylife.desktop.app-state.v1";
+
 describe("AppShell", () => {
+  beforeEach(() => {
+    window.localStorage.removeItem(APP_STATE_STORAGE_KEY);
+  });
+
   it("renders today header", () => {
     render(<AppShell />);
     expect(screen.getByRole("heading", { name: "今天" })).toBeInTheDocument();
@@ -44,5 +50,27 @@ describe("AppShell", () => {
     expect(screen.getByRole("button", { name: "文档" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Markdown" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
+  });
+
+  it("persists edited markdown across refresh", async () => {
+    const user = userEvent.setup();
+    const firstRender = render(<AppShell />);
+
+    await user.click(screen.getByRole("button", { name: "Markdown" }));
+    const editor = screen.getByLabelText("markdown-editor");
+    fireEvent.change(editor, {
+      target: {
+        value: "# 已自动保存\n\n- [ ] 刷新后还在"
+      }
+    });
+
+    firstRender.unmount();
+
+    render(<AppShell />);
+    await user.click(screen.getByRole("button", { name: "Markdown" }));
+
+    const persistedEditor = screen.getByLabelText("markdown-editor") as HTMLTextAreaElement;
+    expect(persistedEditor.value).toContain("# 已自动保存");
+    expect(persistedEditor.value).toContain("[ ] 刷新后还在");
   });
 });

@@ -24,17 +24,28 @@ import type { TaskMoveRequest } from "../lib/types";
 import "../styles/app.css";
 
 const APP_TODAY = new Date(2026, 5, 30, 9, 0, 0);
+const APP_STATE_STORAGE_KEY = "mylife.desktop.app-state.v1";
+
+type AppStateSnapshot = {
+  tasks: TaskRecord[];
+  selectedTaskId: string;
+  selectedDate: string;
+  selectedWorkspace: string;
+  theme: ThemeName;
+  themeSettings: ThemeSettings;
+};
 
 export function AppShell() {
-  const [tasks, setTasks] = useState<TaskRecord[]>(seedTasks);
-  const [selectedTaskId, setSelectedTaskId] = useState<string>(seedTasks()[0].id);
-  const [selectedDate, setSelectedDate] = useState<Date>(APP_TODAY);
-  const [selectedWorkspace, setSelectedWorkspace] = useState("my-work");
+  const initialState = useMemo(readInitialAppState, []);
+  const [tasks, setTasks] = useState<TaskRecord[]>(initialState.tasks);
+  const [selectedTaskId, setSelectedTaskId] = useState<string>(initialState.selectedTaskId);
+  const [selectedDate, setSelectedDate] = useState<Date>(initialState.selectedDate);
+  const [selectedWorkspace, setSelectedWorkspace] = useState(initialState.selectedWorkspace);
   const [draftTitle, setDraftTitle] = useState("");
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [theme, setTheme] = useState<ThemeName>("olive");
-  const [themeSettings, setThemeSettings] = useState<ThemeSettings>(themePresets.olive);
+  const [theme, setTheme] = useState<ThemeName>(initialState.theme);
+  const [themeSettings, setThemeSettings] = useState<ThemeSettings>(initialState.themeSettings);
   const [undoState, setUndoState] = useState<{
     message: string;
     previous: TaskRecord[];
@@ -51,6 +62,17 @@ export function AppShell() {
 
     return () => window.clearTimeout(timer);
   }, [undoState]);
+
+  useEffect(() => {
+    writeAppState({
+      tasks,
+      selectedTaskId,
+      selectedDate: selectedDate.toISOString(),
+      selectedWorkspace,
+      theme,
+      themeSettings
+    });
+  }, [selectedDate, selectedTaskId, selectedWorkspace, tasks, theme, themeSettings]);
 
   const selectedTask = useMemo(
     () => tasks.find((task) => task.id === selectedTaskId) ?? tasks[0],
@@ -203,6 +225,81 @@ function buildThemeStyle(settings: ThemeSettings) {
     "--today-accent": accent,
     "--today-accent-soft": todaySoft
   } as CSSProperties;
+}
+
+function readInitialAppState() {
+  const fallbackTasks = seedTasks();
+  const fallback: {
+    tasks: TaskRecord[];
+    selectedTaskId: string;
+    selectedDate: Date;
+    selectedWorkspace: string;
+    theme: ThemeName;
+    themeSettings: ThemeSettings;
+  } = {
+    tasks: fallbackTasks,
+    selectedTaskId: fallbackTasks[0]?.id ?? "",
+    selectedDate: APP_TODAY,
+    selectedWorkspace: "my-work",
+    theme: "olive",
+    themeSettings: themePresets.olive
+  };
+
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(APP_STATE_STORAGE_KEY);
+    if (!raw) {
+      return fallback;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<AppStateSnapshot>;
+    const nextTasks = Array.isArray(parsed.tasks) && parsed.tasks.length > 0 ? parsed.tasks : fallback.tasks;
+    const nextTheme = isThemeName(parsed.theme) ? parsed.theme : fallback.theme;
+
+    return {
+      tasks: nextTasks,
+      selectedTaskId:
+        typeof parsed.selectedTaskId === "string" && nextTasks.some((task) => task.id === parsed.selectedTaskId)
+          ? parsed.selectedTaskId
+          : nextTasks[0]?.id ?? fallback.selectedTaskId,
+      selectedDate:
+        typeof parsed.selectedDate === "string" && !Number.isNaN(Date.parse(parsed.selectedDate))
+          ? new Date(parsed.selectedDate)
+          : fallback.selectedDate,
+      selectedWorkspace:
+        typeof parsed.selectedWorkspace === "string" ? parsed.selectedWorkspace : fallback.selectedWorkspace,
+      theme: nextTheme,
+      themeSettings: isThemeSettings(parsed.themeSettings) ? parsed.themeSettings : themePresets[nextTheme]
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function writeAppState(snapshot: AppStateSnapshot) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(snapshot));
+}
+
+function isThemeName(value: unknown): value is ThemeName {
+  return typeof value === "string" && value in themePresets;
+}
+
+function isThemeSettings(value: unknown): value is ThemeSettings {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "accentColor" in value &&
+      typeof (value as ThemeSettings).accentColor === "string" &&
+      "backgroundColor" in value &&
+      typeof (value as ThemeSettings).backgroundColor === "string"
+  );
 }
 
 function mixHex(base: string, target: string, weight: number) {

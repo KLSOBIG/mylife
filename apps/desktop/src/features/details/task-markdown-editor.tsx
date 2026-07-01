@@ -3,12 +3,10 @@ import {
   BlockTypeSelect,
   BoldItalicUnderlineToggles,
   CreateLink,
-  DiffSourceToggleWrapper,
   ListsToggle,
   MDXEditor,
   type MDXEditorMethods,
   UndoRedo,
-  diffSourcePlugin,
   headingsPlugin,
   linkPlugin,
   listsPlugin,
@@ -84,16 +82,15 @@ export function TaskMarkdownEditor({
               thematicBreakPlugin(),
               linkPlugin(),
               markdownShortcutPlugin(),
-              diffSourcePlugin({ viewMode: "rich-text" }),
               toolbarPlugin({
                 toolbarContents: () => (
-                  <DiffSourceToggleWrapper options={["rich-text", "source"]}>
+                  <>
                     <UndoRedo />
                     <BoldItalicUnderlineToggles />
                     <BlockTypeSelect />
                     <ListsToggle />
                     <CreateLink />
-                  </DiffSourceToggleWrapper>
+                  </>
                 )
               })
             ]}
