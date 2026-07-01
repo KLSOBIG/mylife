@@ -118,25 +118,62 @@ git push origin v0.1.0
 
 ## 发版脚本
 
-本地校验后，一条命令完成 `main` 推送和 tag 发布：
+脚本位置：
 
-```bash
-bash scripts/release-macos.sh v0.1.7
-```
+`scripts/release-macos.sh`
 
-脚本会先跑这些检查再发版：
+用途：
 
-- `pnpm install --frozen-lockfile`
-- `cd apps/core && go test ./...`
-- `cd apps/desktop && pnpm test`
-- `cd apps/desktop && pnpm build`
+- 同步远端 `main` 和 tags
+- 校验 Go core / desktop 测试 / desktop 构建
+- 推送 `main`
+- 创建并推送新的版本 tag
+- 触发 GitHub `release-macos` workflow 生成 `.dmg`
 
-要求：
+前置条件：
 
 - 当前分支必须是 `main`
 - 工作区必须干净
-- tag 不存在时自动创建，存在时直接复用
-- 推送 `main` 后再推送 tag，触发 `release-macos` workflow
+- 本机需要 `Node.js 18+` 且可用 `corepack`
+- 版本号使用 `vX.Y.Z` 格式，且远端不存在同名 tag
+
+用法：
+
+```bash
+./scripts/release-macos.sh v0.1.8
+```
+
+脚本内部会执行：
+
+- `git fetch origin --tags`
+- `git pull --ff-only origin main`
+- `corepack pnpm install --frozen-lockfile`
+- `cd apps/core && go test ./...`
+- `cd apps/desktop && corepack pnpm test`
+- `cd apps/desktop && corepack pnpm build`
+- `git push origin main`
+- `git tag vX.Y.Z`
+- `git push origin vX.Y.Z`
+
+完整示例：
+
+```bash
+git checkout main
+git pull --ff-only origin main
+./scripts/release-macos.sh v0.1.8
+```
+
+发布成功后查看：
+
+- GitHub Actions：`https://github.com/KLSOBIG/mylife/actions`
+- Releases：`https://github.com/KLSOBIG/mylife/releases`
+
+常见失败：
+
+- `错误: 需要在 main 分支运行`
+- `错误: 工作区不干净，先提交或清理改动`
+- `错误: 缺少 corepack，先安装 Node.js 18+ 或启用 corepack`
+- `错误: 远端已存在标签 vX.Y.Z`
 
 ## 文档
 
