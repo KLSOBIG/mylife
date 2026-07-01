@@ -28,9 +28,11 @@ body {
   display: grid;
   grid-template-columns: 272px minmax(320px, 0.62fr) minmax(620px, 1.38fr);
   gap: 16px;
+  height: 100vh;
   min-height: 100vh;
   padding: 14px;
   box-sizing: border-box;
+  overflow: hidden;
   background:
     radial-gradient(circle at top left, rgba(255, 255, 255, 0.82), transparent 34%),
     linear-gradient(180deg, #faf9f6 0%, var(--bg-app) 100%);
@@ -62,6 +64,7 @@ body {
 
 .left-pane {
   display: flex;
+  min-height: 0;
   min-width: 0;
   flex-direction: column;
   justify-content: space-between;
@@ -87,12 +90,14 @@ body {
 .today-board {
   display: flex;
   flex-direction: column;
+  min-height: 0;
   min-width: 0;
   padding: 18px 18px 14px;
 }
 
 .details-pane {
   overflow: hidden;
+  min-height: 0;
   min-width: 0;
 }
 
@@ -227,6 +232,13 @@ body {
 
 .task-lane {
   background: rgba(255, 255, 255, 0.72);
+}
+
+.task-lane-board {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .task-card-shell {
@@ -432,6 +444,10 @@ body {
   padding: 14px;
 }
 
+.task-markdown-editor__rich-shell {
+  overflow: hidden;
+}
+
 .task-markdown-editor__label {
   color: var(--text-subtle);
   font-size: 12px;
@@ -497,11 +513,41 @@ body {
 }
 
 .task-markdown-editor__rich {
-  min-height: 100%;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.task-markdown-editor__rich :where(.mdxeditor) {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.task-markdown-editor__rich :where(.mdxeditor-toolbar) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: -14px -14px 14px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.task-markdown-editor__rich :where(.mdxeditor-root-contenteditable),
+.task-markdown-editor__rich :where(.mdxeditor-rich-text-editor),
+.task-markdown-editor__rich :where(.mdxeditor-source-editor),
+.task-markdown-editor__rich :where(.cm-editor),
+.task-markdown-editor__rich :where(.cm-scroller) {
+  min-height: 0;
+  flex: 1;
 }
 
 .task-markdown-editor__rich-content {
-  min-height: 320px;
+  min-height: 100%;
+  padding: 0 4px 4px;
 }
 
 .task-markdown-editor__rich-shell {
@@ -867,11 +913,17 @@ body {
     min-height: auto;
   }
 
-  .task-detail-pane__content {
-    grid-template-columns: 1fr;
+  .task-markdown-editor__toolbar {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .task-markdown-editor--split .task-markdown-editor__surface {
+  .task-markdown-editor__mode-switch {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .settings-panel__preset-list {
     grid-template-columns: 1fr;
   }
 }

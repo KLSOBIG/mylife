@@ -111,6 +111,7 @@ export function TaskLaneBoard({
     >
       <section
         aria-label="task-lane-board"
+        className="task-lane-board"
         data-orientation="vertical"
         style={{
           display: "flex",
