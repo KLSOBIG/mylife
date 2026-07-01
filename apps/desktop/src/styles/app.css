@@ -526,17 +526,20 @@ body {
   flex-direction: column;
   border: 1px solid var(--border-soft);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.9);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(252, 251, 247, 0.94));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 .task-tiptap {
-  --tt-toolbar-bg: rgba(255, 255, 255, 0.96);
+  --tt-toolbar-bg: rgba(248, 246, 240, 0.96);
+  --tt-toolbar-border: rgba(112, 102, 83, 0.12);
 }
 
 .task-tiptap__content {
   min-height: 0;
   flex: 1;
+  overflow: auto;
 }
 
 .task-tiptap__content .tiptap {
@@ -545,7 +548,9 @@ body {
 
 .task-tiptap__content .ProseMirror {
   min-height: 100%;
-  padding: 22px 22px 28px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 30px 40px;
   outline: none;
   color: var(--text-strong);
   font-size: 16px;
@@ -569,15 +574,17 @@ body {
 }
 
 .task-tiptap__content .ProseMirror h1 {
-  font-size: 30px;
+  font-size: 34px;
+  letter-spacing: -0.03em;
 }
 
 .task-tiptap__content .ProseMirror h2 {
-  font-size: 24px;
+  font-size: 26px;
+  letter-spacing: -0.02em;
 }
 
 .task-tiptap__content .ProseMirror h3 {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .task-tiptap__content .ProseMirror ul,
@@ -607,10 +614,11 @@ body {
   display: flex;
   gap: 10px;
   align-items: flex-start;
+  padding: 3px 0;
 }
 
 .task-tiptap__content .ProseMirror ul[data-type="taskList"] li > label {
-  margin-top: 0.22em;
+  margin-top: 0.18em;
 }
 
 .task-tiptap__content .ProseMirror .is-empty::before {
@@ -621,33 +629,67 @@ body {
   pointer-events: none;
 }
 
-.task-tiptap__menu {
-  display: inline-flex;
+.task-tiptap__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px;
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--tt-toolbar-border);
   background: var(--tt-toolbar-bg);
-  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(12px);
 }
 
-.task-tiptap__menu button {
-  min-height: 30px;
-  padding: 0 10px;
-  border: 0;
+.task-tiptap__toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.task-tiptap__toolbar-separator {
+  width: 1px;
+  align-self: stretch;
+  background: var(--tt-toolbar-border);
+}
+
+.task-tiptap__toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
   color: var(--text-body);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
 }
 
-.task-tiptap__menu button:hover,
-.task-tiptap__menu button[data-active="true"] {
+.task-tiptap__toolbar-button--icon {
+  min-width: 32px;
+  padding: 0 8px;
+}
+
+.task-tiptap__toolbar-button:hover,
+.task-tiptap__toolbar-button[data-active="true"] {
   background: var(--accent-soft);
   color: var(--accent-strong);
+  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.task-tiptap__toolbar-button:active {
+  transform: translateY(1px);
 }
 
 .task-markdown-editor__preview h1,

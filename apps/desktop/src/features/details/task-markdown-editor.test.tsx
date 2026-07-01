@@ -17,11 +17,16 @@ describe("TaskMarkdownEditor", () => {
     expect(screen.getByRole("button", { name: "文档" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "Markdown" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
+    expect(screen.getByRole("toolbar", { name: "document-formatting-toolbar" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "标题 1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "待办清单" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "粗体" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Markdown" }));
 
     const editor = screen.getByLabelText("markdown-editor");
     expect(editor).toHaveValue("# 重构任务\n\n- [ ] 定义 task_events 表\n- [x] 补状态颜色映射");
+    expect(screen.queryByRole("toolbar", { name: "document-formatting-toolbar" })).not.toBeInTheDocument();
 
     fireEvent.change(editor, {
       target: {
