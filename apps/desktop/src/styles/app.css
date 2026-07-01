@@ -308,8 +308,7 @@ body {
   transition: transform 160ms ease;
 }
 
-.task-inline-creator input::placeholder,
-.task-markdown-editor__textarea::placeholder {
+.task-inline-creator input::placeholder {
   color: #a39c91;
 }
 
@@ -417,8 +416,6 @@ body {
   min-height: 0;
 }
 
-.task-markdown-editor__input,
-.task-markdown-editor__preview,
 .gantt-chart,
 .gantt-empty {
   border: 1px solid var(--border-soft);
@@ -430,13 +427,11 @@ body {
 .task-markdown-editor__toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   flex: 0 0 auto;
 }
 
-.task-markdown-editor__rich-shell,
-.task-markdown-editor__input {
+.task-markdown-editor__rich-shell {
   display: flex;
   min-height: 0;
   flex-direction: column;
@@ -453,70 +448,6 @@ body {
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.task-markdown-editor__mode-switch {
-  display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.86);
-}
-
-.task-markdown-editor__mode-button {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: var(--text-subtle);
-  cursor: pointer;
-}
-
-.task-markdown-editor__mode-button.is-active {
-  background: var(--accent);
-  color: #fff;
-}
-
-.task-markdown-editor__surface {
-  display: grid;
-  gap: 12px;
-  min-height: 0;
-}
-
-.task-markdown-editor--split .task-markdown-editor__surface {
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-}
-
-.task-markdown-editor__textarea {
-  width: 100%;
-  min-height: 100%;
-  flex: 1;
-  resize: none;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--text-strong);
-  font: inherit;
-  line-height: 1.7;
-}
-
-.task-markdown-editor__preview {
-  min-height: 100%;
-  overflow: auto;
-  padding: 16px;
-  color: var(--text-body);
-  line-height: 1.7;
-}
-
-.task-markdown-editor__rich {
-  display: flex;
-  min-height: 0;
-  flex: 1;
-  flex-direction: column;
 }
 
 .task-markdown-editor__rich-shell {
@@ -690,28 +621,6 @@ body {
 
 .task-tiptap__toolbar-button:active {
   transform: translateY(1px);
-}
-
-.task-markdown-editor__preview h1,
-.task-markdown-editor__preview h2,
-.task-markdown-editor__preview h3 {
-  color: var(--text-strong);
-}
-
-.task-markdown-editor__preview h1 {
-  margin: 0 0 12px;
-  font-size: 24px;
-}
-
-.task-markdown-editor__preview h2 {
-  margin: 18px 0 10px;
-  font-size: 19px;
-}
-
-.task-markdown-editor__check-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .task-checklist-tree__header h3,
@@ -1051,11 +960,6 @@ body {
   .task-markdown-editor__toolbar {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .task-markdown-editor__mode-switch {
-    width: 100%;
-    justify-content: space-between;
   }
 
   .settings-panel__preset-list {

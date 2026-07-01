@@ -4,14 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useEffect, useRef, useState } from "react";
-import { parseMarkdownBlocks } from "./markdown-helpers";
-
-const viewModes = [
-  { id: "document", label: "文档" },
-  { id: "markdown", label: "Markdown" },
-  { id: "preview", label: "预览" }
-] as const;
+import { useEffect, useRef } from "react";
 
 type TiptapEditor = NonNullable<ReturnType<typeof useEditor>>;
 
@@ -130,9 +123,7 @@ export function TaskMarkdownEditor({
   value: string;
   onChange: (value: string) => void;
 }) {
-  const [viewMode, setViewMode] = useState<"document" | "markdown" | "preview">("document");
   const lastSyncedMarkdownRef = useRef(value);
-  const blocks = parseMarkdownBlocks(value);
   const editor = useEditor(
     {
       immediatelyRender: false,
@@ -189,132 +180,73 @@ export function TaskMarkdownEditor({
   }, [editor, value]);
 
   return (
-    <section className="task-markdown-editor" data-view-mode={viewMode}>
+    <section className="task-markdown-editor">
       <div className="task-markdown-editor__toolbar">
-        <label className="task-markdown-editor__label">
-          任务文档
-        </label>
-        <div className="task-markdown-editor__mode-switch" role="group" aria-label="markdown-view-mode">
-          {viewModes.map((mode) => (
-            <button
-              key={mode.id}
-              type="button"
-              aria-pressed={viewMode === mode.id}
-              className={viewMode === mode.id ? "task-markdown-editor__mode-button is-active" : "task-markdown-editor__mode-button"}
-              onClick={() => setViewMode(mode.id)}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
+        <label className="task-markdown-editor__label">任务文档</label>
       </div>
-
-      {viewMode === "document" ? (
-        <div className="task-markdown-editor__rich-shell task-tiptap">
-          {editor ? (
-            <>
-              <div className="task-tiptap__toolbar" role="toolbar" aria-label="document-formatting-toolbar">
-                <div className="task-tiptap__toolbar-group">
-                  {documentControls.map((control) => (
-                    <button
-                      key={control.id}
-                      type="button"
-                      className="task-tiptap__toolbar-button"
-                      aria-label={control.label}
-                      title={control.label}
-                      data-active={control.active(editor)}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => control.run(editor)}
-                    >
-                      {control.short ?? control.label}
-                    </button>
-                  ))}
-                </div>
-                <div className="task-tiptap__toolbar-separator" aria-hidden="true" />
-                <div className="task-tiptap__toolbar-group">
-                  {inlineControls.map((control) => (
-                    <button
-                      key={control.id}
-                      type="button"
-                      className="task-tiptap__toolbar-button task-tiptap__toolbar-button--icon"
-                      aria-label={control.label}
-                      title={control.label}
-                      data-active={control.active(editor)}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => control.run(editor)}
-                    >
-                      {control.short}
-                    </button>
-                  ))}
+      <div className="task-markdown-editor__rich-shell task-tiptap">
+        {editor ? (
+          <>
+            <div className="task-tiptap__toolbar" role="toolbar" aria-label="document-formatting-toolbar">
+              <div className="task-tiptap__toolbar-group">
+                {documentControls.map((control) => (
                   <button
+                    key={control.id}
                     type="button"
                     className="task-tiptap__toolbar-button"
-                    aria-label="链接"
-                    title="链接"
-                    data-active={editor.isActive("link")}
+                    aria-label={control.label}
+                    title={control.label}
+                    data-active={control.active(editor)}
                     onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => applyLink(editor)}
+                    onClick={() => control.run(editor)}
                   >
-                    链接
+                    {control.short ?? control.label}
                   </button>
-                  <button
-                    type="button"
-                    className="task-tiptap__toolbar-button"
-                    aria-label="清除格式"
-                    title="清除格式"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
-                  >
-                    清除
-                  </button>
-                </div>
+                ))}
               </div>
-              <EditorContent editor={editor} className="task-tiptap__content" />
-            </>
-          ) : null}
-        </div>
-      ) : null}
-
-      {viewMode === "markdown" ? (
-        <div className="task-markdown-editor__input">
-          <textarea
-            aria-label="markdown-editor"
-            className="task-markdown-editor__textarea"
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-          />
-        </div>
-      ) : null}
-
-      {viewMode === "preview" ? (
-        <section aria-label="markdown-preview" className="task-markdown-editor__preview">
-          {blocks.map((block, index) => {
-            if (block.type === "heading") {
-              if (block.depth === 1) {
-                return <h1 key={index}>{block.text}</h1>;
-              }
-
-              if (block.depth === 2) {
-                return <h2 key={index}>{block.text}</h2>;
-              }
-
-              return <h3 key={index}>{block.text}</h3>;
-            }
-
-            if (block.type === "checklist") {
-              return (
-                <div key={index} className="task-markdown-editor__check-row">
-                  <input type="checkbox" checked={block.checked} readOnly aria-hidden="true" />
-                  <span>{block.text}</span>
-                </div>
-              );
-            }
-
-            return <p key={index}>{block.text}</p>;
-          })}
-          {blocks.length === 0 ? <div>暂无内容</div> : null}
-        </section>
-      ) : null}
+              <div className="task-tiptap__toolbar-separator" aria-hidden="true" />
+              <div className="task-tiptap__toolbar-group">
+                {inlineControls.map((control) => (
+                  <button
+                    key={control.id}
+                    type="button"
+                    className="task-tiptap__toolbar-button task-tiptap__toolbar-button--icon"
+                    aria-label={control.label}
+                    title={control.label}
+                    data-active={control.active(editor)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => control.run(editor)}
+                  >
+                    {control.short}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="task-tiptap__toolbar-button"
+                  aria-label="链接"
+                  title="链接"
+                  data-active={editor.isActive("link")}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => applyLink(editor)}
+                >
+                  链接
+                </button>
+                <button
+                  type="button"
+                  className="task-tiptap__toolbar-button"
+                  aria-label="清除格式"
+                  title="清除格式"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
+                >
+                  清除
+                </button>
+              </div>
+            </div>
+            <EditorContent editor={editor} className="task-tiptap__content" />
+          </>
+        ) : null}
+      </div>
     </section>
   );
 }

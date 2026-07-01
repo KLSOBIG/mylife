@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
+import { seedTasks, themePresets } from "../lib/task-state";
 import { AppShell } from "./app-shell";
 
 const APP_STATE_STORAGE_KEY = "mylife.desktop.app-state.v1";
@@ -47,30 +48,34 @@ describe("AppShell", () => {
 
   it("keeps markdown editor as the dominant editable area in details", () => {
     render(<AppShell />);
-    expect(screen.getByRole("button", { name: "文档" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Markdown" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
+    expect(screen.getByLabelText("rich-editor")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Markdown" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "预览" })).not.toBeInTheDocument();
   });
 
-  it("persists edited markdown across refresh", async () => {
-    const user = userEvent.setup();
-    const firstRender = render(<AppShell />);
+  it("hydrates stored markdown into editor and task linkage", () => {
+    const storedTasks = seedTasks();
+    storedTasks[0] = {
+      ...storedTasks[0],
+      document: "# 已自动保存\n\n- [ ] 刷新后还在\n- [x] 已完成联动项"
+    };
 
-    await user.click(screen.getByRole("button", { name: "Markdown" }));
-    const editor = screen.getByLabelText("markdown-editor");
-    fireEvent.change(editor, {
-      target: {
-        value: "# 已自动保存\n\n- [ ] 刷新后还在"
-      }
-    });
-
-    firstRender.unmount();
+    window.localStorage.setItem(
+      APP_STATE_STORAGE_KEY,
+      JSON.stringify({
+        tasks: storedTasks,
+        selectedTaskId: storedTasks[0].id,
+        selectedDate: new Date(2026, 5, 30, 9, 0, 0).toISOString(),
+        selectedWorkspace: "my-work",
+        theme: "olive",
+        themeSettings: themePresets.olive
+      })
+    );
 
     render(<AppShell />);
-    await user.click(screen.getByRole("button", { name: "Markdown" }));
 
-    const persistedEditor = screen.getByLabelText("markdown-editor") as HTMLTextAreaElement;
-    expect(persistedEditor.value).toContain("# 已自动保存");
-    expect(persistedEditor.value).toContain("[ ] 刷新后还在");
+    expect(screen.getByLabelText("rich-editor").textContent).toContain("已自动保存");
+    expect(screen.getAllByText("刷新后还在").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("已完成联动项").length).toBeGreaterThan(0);
   });
 });
