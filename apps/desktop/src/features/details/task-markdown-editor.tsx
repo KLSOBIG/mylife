@@ -375,8 +375,8 @@ export function TaskMarkdownEditor({
             <button
               type="button"
               className="task-tiptap__toolbar-button task-tiptap__toolbar-button--icon"
-              aria-label="撤销"
-              title="撤销"
+              aria-label="撤销编辑"
+              title="撤销编辑"
               disabled={!canUndo}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => editor.chain().focus().undo().run()}
@@ -388,8 +388,8 @@ export function TaskMarkdownEditor({
             <button
               type="button"
               className="task-tiptap__toolbar-button task-tiptap__toolbar-button--icon"
-              aria-label="重做"
-              title="重做"
+              aria-label="重做编辑"
+              title="重做编辑"
               disabled={!canRedo}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => editor.chain().focus().redo().run()}

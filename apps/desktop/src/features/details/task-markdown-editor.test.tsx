@@ -73,8 +73,8 @@ describe("TaskMarkdownEditor", () => {
   it("renders component-style toolbar controls for required formatting actions", () => {
     render(<TaskMarkdownEditor documentId="task-toolbar" value="" onChange={vi.fn()} />);
 
-    expect(screen.getByRole("button", { name: "撤销" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "重做" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "撤销编辑" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "重做编辑" })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: "文本样式" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "项目列表" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "编号列表" })).toBeInTheDocument();

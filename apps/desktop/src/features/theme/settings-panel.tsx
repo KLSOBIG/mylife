@@ -25,19 +25,16 @@ export function SettingsPanel({
   onToggle: () => void;
   onPresetChange: (preset: ThemeName) => void;
   onSettingsChange: (settings: ThemeSettings) => void;
-  }) {
+}) {
   return (
     <div className="settings-panel">
-      <button
-        type="button"
-        className="settings-panel__trigger"
-        aria-expanded={open ? "true" : "false"}
-        onClick={onToggle}
-      >
-        设置
-      </button>
       {open ? (
-        <section className="settings-panel__sheet">
+        <section
+          id="theme-settings-panel"
+          className="settings-panel__sheet"
+          role="dialog"
+          aria-label="主题设置"
+        >
           <div className="settings-panel__summary">
             <span className="settings-panel__dot" style={{ backgroundColor: settings.accentColor }} />
             <div>
@@ -97,6 +94,15 @@ export function SettingsPanel({
           </div>
         </section>
       ) : null}
+      <button
+        type="button"
+        className="settings-panel__trigger"
+        aria-controls="theme-settings-panel"
+        aria-expanded={open ? "true" : "false"}
+        onClick={onToggle}
+      >
+        设置
+      </button>
     </div>
   );
 }

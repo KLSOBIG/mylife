@@ -913,6 +913,9 @@ body {
 .settings-panel {
   display: grid;
   gap: 10px;
+  position: relative;
+  align-items: end;
+  isolation: isolate;
 }
 
 .settings-panel__trigger {
@@ -951,6 +954,13 @@ body {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow-soft);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  left: 0;
+  z-index: 20;
+  max-height: min(68vh, 420px);
+  overflow: auto;
 }
 
 .settings-panel__summary {

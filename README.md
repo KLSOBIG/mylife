@@ -116,6 +116,28 @@ git push origin v0.1.0
 - GitHub Actions Artifact：`mylife-macos-installer`
 - 文件类型：`.dmg`
 
+## 发版脚本
+
+本地校验后，一条命令完成 `main` 推送和 tag 发布：
+
+```bash
+bash scripts/release-macos.sh v0.1.7
+```
+
+脚本会先跑这些检查再发版：
+
+- `pnpm install --frozen-lockfile`
+- `cd apps/core && go test ./...`
+- `cd apps/desktop && pnpm test`
+- `cd apps/desktop && pnpm build`
+
+要求：
+
+- 当前分支必须是 `main`
+- 工作区必须干净
+- tag 不存在时自动创建，存在时直接复用
+- 推送 `main` 后再推送 tag，触发 `release-macos` workflow
+
 ## 文档
 
 - 设计文档：`docs/superpowers/specs/2026-06-30-mylife-design.md`

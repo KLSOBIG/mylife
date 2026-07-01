@@ -53,6 +53,20 @@ describe("AppShell", () => {
     expect(screen.queryByRole("button", { name: "预览" })).not.toBeInTheDocument();
   });
 
+  it("anchors theme settings sheet above settings trigger", async () => {
+    const user = userEvent.setup();
+    render(<AppShell />);
+
+    await user.click(screen.getByRole("button", { name: "设置" }));
+
+    const trigger = screen.getByRole("button", { name: "设置" });
+    const sheet = screen.getByRole("dialog", { name: "主题设置" });
+    const panel = trigger.parentElement;
+
+    expect(panel?.firstElementChild).toBe(sheet);
+    expect(panel?.lastElementChild).toBe(trigger);
+  });
+
   it("hydrates stored markdown into editor and task linkage", () => {
     const storedTasks = seedTasks();
     storedTasks[0] = {
