@@ -12,6 +12,7 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
 TAG="$1"
+PNPM_CMD=(corepack pnpm)
 
 if ! git rev-parse --git-dir >/dev/null 2>&1; then
   echo "错误: 不是 git 仓库" >&2
@@ -33,17 +34,31 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
+if ! command -v corepack >/dev/null 2>&1; then
+  echo "错误: 缺少 corepack，先安装 Node.js 18+ 或启用 corepack" >&2
+  exit 1
+fi
+
+echo "同步 main 和 tags"
+git fetch origin --tags
+git pull --ff-only origin main
+
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "错误: 同步后工作区不干净，停止发版" >&2
+  exit 1
+fi
+
 echo "安装依赖"
-pnpm install --frozen-lockfile
+"${PNPM_CMD[@]}" install --frozen-lockfile
 
 echo "测试 Go core"
 (cd apps/core && go test ./...)
 
 echo "测试 desktop"
-(cd apps/desktop && pnpm test)
+(cd apps/desktop && "${PNPM_CMD[@]}" test)
 
 echo "构建 desktop"
-(cd apps/desktop && pnpm build)
+(cd apps/desktop && "${PNPM_CMD[@]}" build)
 
 echo "推送 main"
 git push origin main
