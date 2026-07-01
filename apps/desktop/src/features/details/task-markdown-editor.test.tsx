@@ -1,9 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { TaskMarkdownEditor } from "./task-markdown-editor";
 
 describe("TaskMarkdownEditor", () => {
-  it("renders editable markdown input and preview", () => {
+  it("keeps the document editor primary while exposing markdown and preview as secondary panels", () => {
     const handleChange = vi.fn();
 
     render(
@@ -14,7 +14,11 @@ describe("TaskMarkdownEditor", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "文档" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("rich-editor")).toBeInTheDocument();
+    expect(screen.queryByLabelText("markdown-editor")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("markdown-preview")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "插入块" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "块操作" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Markdown" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
 
@@ -33,8 +37,9 @@ describe("TaskMarkdownEditor", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "预览" }));
 
-    expect(screen.queryByLabelText("markdown-editor")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("markdown-preview")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "重构任务" })).toBeInTheDocument();
+    expect(screen.getByLabelText("markdown-editor")).toBeInTheDocument();
+    const preview = screen.getByLabelText("markdown-preview");
+    expect(preview).toBeInTheDocument();
+    expect(within(preview).getByRole("heading", { name: "重构任务" })).toBeInTheDocument();
   });
 });

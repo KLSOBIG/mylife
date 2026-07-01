@@ -45,9 +45,11 @@ describe("AppShell", () => {
     expect(screen.getAllByText("自动保存任务").length).toBeGreaterThan(0);
   });
 
-  it("keeps markdown editor as the dominant editable area in details", () => {
+  it("keeps the rich document editor as the dominant editable area in details", () => {
     render(<AppShell />);
-    expect(screen.getByRole("button", { name: "文档" })).toBeInTheDocument();
+    expect(screen.getByLabelText("rich-editor")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "插入块" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "块操作" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Markdown" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
   });

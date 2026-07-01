@@ -34,6 +34,8 @@ describe("TaskDetailPane", () => {
     expect(screen.getByRole("tablist", { name: "task-detail-tabs" })).toBeInTheDocument();
     expect(screen.getByLabelText("rich-editor")).toBeInTheDocument();
     expect(screen.queryByLabelText("markdown-preview")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Markdown" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "预览" })).toBeInTheDocument();
     expect(screen.getByText("进行中")).toBeInTheDocument();
     expect(screen.getByText("1 条任务")).toBeInTheDocument();
     expect(screen.getByText("提醒")).toBeInTheDocument();
