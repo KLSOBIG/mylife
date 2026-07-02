@@ -136,15 +136,16 @@ export function applyStatus(task: TaskRecord, status: TaskStatus): TaskRecord {
     return task;
   }
 
-  const now = new Date().toISOString();
-  const mainRow = ensureMainTimelineRow(task, now);
+  const fallbackAt = new Date().toISOString();
+  const mainRow = ensureMainTimelineRow(task, fallbackAt);
   const previousSegments = mainRow.segments;
   const lastSegment = previousSegments[previousSegments.length - 1];
+  const transitionAt = buildTimelineTransitionAt(lastSegment, fallbackAt);
   const nextSegments = previousSegments.map((segment, index) =>
     index === previousSegments.length - 1
       ? {
           ...segment,
-          endAt: now
+          endAt: transitionAt
         }
       : segment
   );
@@ -153,8 +154,8 @@ export function applyStatus(task: TaskRecord, status: TaskStatus): TaskRecord {
     nextSegments.push({
       id: `${mainRow.id}_${nextSegments.length + 1}`,
       status,
-      startAt: now,
-      endAt: now
+      startAt: transitionAt,
+      endAt: transitionAt
     });
   }
 
@@ -467,6 +468,22 @@ function buildTimelineRows(task: TaskRecord): TimelineRow[] {
       title: task.title
     }
   ];
+}
+
+function buildTimelineTransitionAt(
+  lastSegment: TimelineRow["segments"][number] | undefined,
+  fallbackAt: string
+) {
+  if (!lastSegment) {
+    return fallbackAt;
+  }
+
+  const baseTimestamp = Date.parse(lastSegment.endAt || lastSegment.startAt);
+  if (Number.isNaN(baseTimestamp)) {
+    return fallbackAt;
+  }
+
+  return new Date(baseTimestamp + 30 * 60_000).toISOString();
 }
 
 function normalizeReminder(reminder: ReminderDetail): ReminderDetail {
