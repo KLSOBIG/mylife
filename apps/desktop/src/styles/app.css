@@ -1180,6 +1180,61 @@ body {
   pointer-events: auto;
 }
 
+.reminder-alert-stack {
+  position: fixed;
+  right: 20px;
+  bottom: 180px;
+  z-index: 29;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.reminder-alert {
+  width: min(320px, calc(100vw - 32px));
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(191, 144, 65, 0.22);
+  border-radius: 18px;
+  background: rgba(255, 250, 239, 0.96);
+  color: #5d4624;
+  box-shadow: 0 16px 30px rgba(25, 22, 19, 0.14);
+  pointer-events: auto;
+}
+
+.reminder-alert__title {
+  font-weight: 700;
+}
+
+.reminder-alert__body {
+  display: grid;
+  gap: 4px;
+}
+
+.reminder-alert__body span {
+  color: rgba(93, 70, 36, 0.72);
+  font-size: 13px;
+}
+
+.reminder-alert__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.reminder-alert__actions button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(191, 144, 65, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: inherit;
+  cursor: pointer;
+}
+
 .undo-toast__title {
   margin-bottom: 10px;
   font-weight: 600;

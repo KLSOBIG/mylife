@@ -119,4 +119,37 @@ describe("AppShell", () => {
     expect(screen.getByText("任务已切换到 进行中")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "撤销" })).toHaveLength(2);
   });
+
+  it("shows in-app reminder alert when a reminder is due", () => {
+    const storedTasks = seedTasks();
+    storedTasks[0] = {
+      ...storedTasks[0],
+      reminder: {
+        enabled: true,
+        dateTime: new Date(Date.now() - 60_000).toISOString(),
+        repeatKind: "none",
+        weekdays: [],
+        at: "刚刚",
+        repeat: "不重复"
+      }
+    };
+
+    window.localStorage.setItem(
+      APP_STATE_STORAGE_KEY,
+      JSON.stringify({
+        tasks: storedTasks,
+        selectedTaskId: storedTasks[0].id,
+        selectedDate: new Date().toISOString(),
+        selectedWorkspace: "my-work",
+        theme: "olive",
+        themeSettings: themePresets.olive
+      })
+    );
+
+    render(<AppShell />);
+
+    expect(screen.getByText("提醒到点")).toBeInTheDocument();
+    expect(screen.getByText("刚刚")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "打开任务" })).toBeInTheDocument();
+  });
 });

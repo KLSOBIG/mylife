@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { TaskDetailPane } from "../features/details/task-detail-pane";
 import { ThemeProvider } from "../features/theme/theme-provider";
 import { SettingsPanel, type ThemeSettings } from "../features/theme/settings-panel";
@@ -53,6 +53,13 @@ export function AppShell() {
     message: string;
     previous: TaskRecord[];
   }>>([]);
+  const [reminderAlerts, setReminderAlerts] = useState<Array<{
+    id: string;
+    taskId: string;
+    title: string;
+    scheduledAt: string;
+  }>>([]);
+  const seenReminderKeysRef = useRef(new Set<string>());
 
   useEffect(() => {
     if (undoQueue.length === 0) {
@@ -76,6 +83,52 @@ export function AppShell() {
       themeSettings
     });
   }, [selectedDate, selectedTaskId, selectedWorkspace, tasks, theme, themeSettings]);
+
+  useEffect(() => {
+    function collectDueReminders() {
+      const now = Date.now();
+      const dueAlerts = tasks.flatMap((task) => {
+        if (task.status === "completed" || task.status === "abandoned") {
+          return [];
+        }
+
+        const dateTime = task.reminder.dateTime;
+        if (!task.reminder.enabled || !dateTime) {
+          return [];
+        }
+
+        const scheduledAt = Date.parse(dateTime);
+        const reminderKey = `${task.id}:${dateTime}`;
+        if (Number.isNaN(scheduledAt) || scheduledAt > now || now - scheduledAt > 5 * 60_000) {
+          return [];
+        }
+
+        if (
+          seenReminderKeysRef.current.has(reminderKey) ||
+          reminderAlerts.some((alert) => alert.id === reminderKey)
+        ) {
+          return [];
+        }
+
+        return [
+          {
+            id: reminderKey,
+            taskId: task.id,
+            title: task.title,
+            scheduledAt: task.reminder.at || dateTime
+          }
+        ];
+      });
+
+      if (dueAlerts.length > 0) {
+        setReminderAlerts((current) => [...current, ...dueAlerts]);
+      }
+    }
+
+    collectDueReminders();
+    const timer = window.setInterval(collectDueReminders, 30_000);
+    return () => window.clearInterval(timer);
+  }, [reminderAlerts, tasks]);
 
   const filteredTasks = useMemo(
     () => tasks.filter((task) => task.workspaceId === selectedWorkspace),
@@ -191,6 +244,20 @@ export function AppShell() {
     );
   }
 
+  function dismissReminder(alertId: string) {
+    seenReminderKeysRef.current.add(alertId);
+    setReminderAlerts((current) => current.filter((item) => item.id !== alertId));
+  }
+
+  function openReminderTask(alertId: string, taskId: string) {
+    const task = tasks.find((item) => item.id === taskId);
+    if (task) {
+      setSelectedWorkspace(task.workspaceId);
+      setSelectedTaskId(task.id);
+    }
+    dismissReminder(alertId);
+  }
+
   const themeStyle = buildThemeStyle(themeSettings);
 
   return (
@@ -251,6 +318,25 @@ export function AppShell() {
         <div className="undo-toast-stack" aria-live="polite" aria-atomic="false">
           {undoQueue.map((item) => (
             <UndoToast key={item.id} message={item.message} onUndo={() => undoChange(item.id)} />
+          ))}
+        </div>
+        <div className="reminder-alert-stack" aria-live="polite" aria-atomic="false">
+          {reminderAlerts.map((alert) => (
+            <aside key={alert.id} role="status" className="reminder-alert">
+              <div className="reminder-alert__title">提醒到点</div>
+              <div className="reminder-alert__body">
+                <strong>{alert.title}</strong>
+                <span>{alert.scheduledAt}</span>
+              </div>
+              <div className="reminder-alert__actions">
+                <button type="button" onClick={() => openReminderTask(alert.id, alert.taskId)}>
+                  打开任务
+                </button>
+                <button type="button" onClick={() => dismissReminder(alert.id)}>
+                  忽略
+                </button>
+              </div>
+            </aside>
           ))}
         </div>
       </main>
