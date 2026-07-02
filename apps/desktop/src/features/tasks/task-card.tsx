@@ -123,10 +123,8 @@ function TaskCardBody({
               onToggleTree?.();
             }}
             className={`task-card__tree-toggle ${expanded ? "is-expanded" : ""}`}
-            style={{
-            }}
           >
-            <span aria-hidden="true">▾</span>
+            <span aria-hidden="true">▶</span>
           </button>
         ) : null}
         <button
@@ -182,9 +180,6 @@ function TaskCardBody({
           >
             今天
           </span>
-        ) : null}
-        {typeof task.checklistCount === "number" ? (
-          <span style={{ fontSize: 12, color: "#7c6a55" }}>{task.checklistCount} 子任务</span>
         ) : null}
         {task.reminderLabel ? (
           <span style={{ fontSize: 12, color: "#7c6a55" }}>{task.reminderLabel}</span>

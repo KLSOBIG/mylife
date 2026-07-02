@@ -20,8 +20,12 @@ export type ChecklistTreeNode = {
 };
 
 export type ReminderDetail = {
-  at: string;
-  repeat: string;
+  at?: string;
+  repeat?: string;
+  enabled?: boolean;
+  dateTime?: string;
+  repeatKind?: "none" | "daily" | "weekly";
+  weekdays?: number[];
 };
 
 export type TimelineSegment = {

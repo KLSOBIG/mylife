@@ -70,6 +70,15 @@ describe("TaskMarkdownEditor", () => {
     expect(handleChange).not.toHaveBeenCalled();
   });
 
+  it("shows direct-input placeholder when editor empty", () => {
+    render(<TaskMarkdownEditor documentId="task-empty" value="" onChange={vi.fn()} />);
+
+    expect(screen.getByLabelText("rich-editor").querySelector(".is-empty")).toHaveAttribute(
+      "data-placeholder",
+      "直接输入内容"
+    );
+  });
+
   it("renders component-style toolbar controls for required formatting actions", () => {
     render(<TaskMarkdownEditor documentId="task-toolbar" value="" onChange={vi.fn()} />);
 

@@ -16,11 +16,13 @@ import {
   shelveTask,
   statusMeta,
   themePresets,
+  updateTaskReminder,
   updateTaskDocument,
+  workspaceOptions,
   type TaskRecord,
   type ThemeName
 } from "../lib/task-state";
-import type { TaskMoveRequest } from "../lib/types";
+import type { ReminderDetail, TaskMoveRequest } from "../lib/types";
 import "../styles/app.css";
 
 const APP_TODAY = new Date(2026, 5, 30, 9, 0, 0);
@@ -46,22 +48,23 @@ export function AppShell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeName>(initialState.theme);
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(initialState.themeSettings);
-  const [undoState, setUndoState] = useState<{
+  const [undoQueue, setUndoQueue] = useState<Array<{
+    id: string;
     message: string;
     previous: TaskRecord[];
-  } | null>(null);
+  }>>([]);
 
   useEffect(() => {
-    if (!undoState) {
+    if (undoQueue.length === 0) {
       return;
     }
 
     const timer = window.setTimeout(() => {
-      setUndoState(null);
+      setUndoQueue((current) => current.slice(1));
     }, 5000);
 
     return () => window.clearTimeout(timer);
-  }, [undoState]);
+  }, [undoQueue]);
 
   useEffect(() => {
     writeAppState({
@@ -74,12 +77,27 @@ export function AppShell() {
     });
   }, [selectedDate, selectedTaskId, selectedWorkspace, tasks, theme, themeSettings]);
 
-  const selectedTask = useMemo(
-    () => tasks.find((task) => task.id === selectedTaskId) ?? tasks[0],
-    [selectedTaskId, tasks]
+  const filteredTasks = useMemo(
+    () => tasks.filter((task) => task.workspaceId === selectedWorkspace),
+    [selectedWorkspace, tasks]
   );
 
-  const summaries = tasks.map(buildTaskSummary);
+  useEffect(() => {
+    if (filteredTasks.length === 0) {
+      return;
+    }
+
+    if (!filteredTasks.some((task) => task.id === selectedTaskId)) {
+      setSelectedTaskId(filteredTasks[0].id);
+    }
+  }, [filteredTasks, selectedTaskId]);
+
+  const selectedTask = useMemo(
+    () => filteredTasks.find((task) => task.id === selectedTaskId) ?? filteredTasks[0] ?? null,
+    [filteredTasks, selectedTaskId]
+  );
+
+  const summaries = filteredTasks.map(buildTaskSummary);
   const detail = selectedTask ? buildTaskDetail(selectedTask) : null;
 
   function openComposer() {
@@ -91,12 +109,22 @@ export function AppShell() {
     setThemeSettings(themePresets[nextTheme]);
   }
 
-  function saveTask() {
-    if (!draftTitle.trim()) {
+  function openWidgetWindow() {
+    if (typeof window === "undefined") {
       return;
     }
 
-    const nextTask = createTaskRecord(draftTitle.trim(), tasks.length);
+    window.open("/widget.html", "mylife-widget", "popup=yes,width=420,height=620");
+  }
+
+  function saveTask() {
+    if (!draftTitle.trim()) {
+      setDraftTitle("");
+      setIsComposerOpen(false);
+      return;
+    }
+
+    const nextTask = createTaskRecord(draftTitle.trim(), tasks.length, selectedWorkspace);
     const nextTasks = [nextTask, ...tasks];
     setTasks(nextTasks);
     setSelectedTaskId(nextTask.id);
@@ -104,13 +132,21 @@ export function AppShell() {
     setIsComposerOpen(false);
   }
 
+  function pushUndo(message: string, previous: TaskRecord[]) {
+    setUndoQueue((current) => [
+      ...current,
+      {
+        id: `undo_${Date.now()}_${current.length}`,
+        message,
+        previous
+      }
+    ]);
+  }
+
   function commitTasks(nextTasks: TaskRecord[], message: string) {
     const previous = tasks;
     setTasks(nextTasks);
-    setUndoState({
-      message,
-      previous
-    });
+    pushUndo(message, previous);
   }
 
   function applyTaskChange(taskId: string, transformer: (task: TaskRecord) => TaskRecord) {
@@ -119,10 +155,7 @@ export function AppShell() {
     const changed = nextTasks.find((task) => task.id === taskId);
     setTasks(nextTasks);
     if (changed) {
-      setUndoState({
-        message: `任务已切换到 ${statusMeta[changed.status].label}`,
-        previous
-      });
+      pushUndo(`任务已切换到 ${statusMeta[changed.status].label}`, previous);
     }
   }
 
@@ -136,17 +169,25 @@ export function AppShell() {
     commitTasks(nextTasks, `任务已拖动到 ${statusMeta[moved.status].label}`);
   }
 
-  function undoLastChange() {
-    if (!undoState) {
+  function undoChange(undoId: string) {
+    const targetIndex = undoQueue.findIndex((item) => item.id === undoId);
+    if (targetIndex === -1) {
       return;
     }
-    setTasks(undoState.previous);
-    setUndoState(null);
+    const target = undoQueue[targetIndex];
+    setTasks(target.previous);
+    setUndoQueue((current) => current.slice(0, targetIndex));
   }
 
   function applyDocumentChange(taskId: string, document: string) {
     setTasks((current) =>
       current.map((task) => (task.id === taskId ? updateTaskDocument(task, document) : task))
+    );
+  }
+
+  function applyReminderChange(taskId: string, reminder: ReminderDetail) {
+    setTasks((current) =>
+      current.map((task) => (task.id === taskId ? updateTaskReminder(task, reminder) : task))
     );
   }
 
@@ -165,6 +206,7 @@ export function AppShell() {
               showWorkspaces
               activeWorkspaceId={selectedWorkspace}
               onSelectWorkspace={setSelectedWorkspace}
+              workspaces={[...workspaceOptions]}
             />
           </div>
           <div className="left-pane__footer">
@@ -175,6 +217,7 @@ export function AppShell() {
               onToggle={() => setSettingsOpen((current) => !current)}
               onPresetChange={applyThemePreset}
               onSettingsChange={setThemeSettings}
+              onOpenWidget={openWidgetWindow}
             />
           </div>
         </aside>
@@ -199,10 +242,17 @@ export function AppShell() {
               onShelveTask={(taskId) => applyTaskChange(taskId, shelveTask)}
               onResumeTask={(taskId) => applyTaskChange(taskId, resumeTask)}
               onDocumentChange={applyDocumentChange}
+              onReminderChange={applyReminderChange}
             />
-          ) : null}
+          ) : (
+            <section className="details-pane__empty">当前工作空间暂无任务</section>
+          )}
         </section>
-        {undoState ? <UndoToast message={undoState.message} onUndo={undoLastChange} /> : null}
+        <div className="undo-toast-stack" aria-live="polite" aria-atomic="false">
+          {undoQueue.map((item) => (
+            <UndoToast key={item.id} message={item.message} onUndo={() => undoChange(item.id)} />
+          ))}
+        </div>
       </main>
     </ThemeProvider>
   );
@@ -256,7 +306,10 @@ function readInitialAppState() {
     }
 
     const parsed = JSON.parse(raw) as Partial<AppStateSnapshot>;
-    const nextTasks = Array.isArray(parsed.tasks) && parsed.tasks.length > 0 ? parsed.tasks : fallback.tasks;
+    const nextTasks =
+      Array.isArray(parsed.tasks) && parsed.tasks.length > 0
+        ? parsed.tasks.map((task, index) => normalizeTaskRecord(task, index))
+        : fallback.tasks;
     const nextTheme = isThemeName(parsed.theme) ? parsed.theme : fallback.theme;
 
     return {
@@ -277,6 +330,48 @@ function readInitialAppState() {
   } catch {
     return fallback;
   }
+}
+
+function normalizeTaskRecord(task: TaskRecord, index: number): TaskRecord {
+  return {
+    ...task,
+    workspaceId: task.workspaceId || workspaceOptions[index % workspaceOptions.length].id,
+    reminder: {
+      enabled: task.reminder?.enabled ?? Boolean(task.reminder?.dateTime || task.reminder?.at),
+      dateTime: task.reminder?.dateTime ?? "",
+      repeatKind: task.reminder?.repeatKind ?? "none",
+      weekdays: task.reminder?.weekdays ?? [],
+      at: task.reminder?.at,
+      repeat: task.reminder?.repeat
+    },
+    timeline:
+      task.timeline && task.timeline.length > 0
+        ? task.timeline.map((row, rowIndex) => ({
+            ...row,
+            id: row.id || `row_${task.id}_${rowIndex}`,
+            title: task.title,
+            segments: row.segments
+              .filter((segment) => segment.startAt && segment.endAt)
+              .map((segment, segmentIndex) => ({
+                ...segment,
+                id: segment.id || `seg_${task.id}_${segmentIndex}`
+              }))
+          }))
+        : [
+            {
+              id: `row_${task.id}`,
+              title: task.title,
+              segments: [
+                {
+                  id: `row_${task.id}_1`,
+                  status: task.status,
+                  startAt: new Date().toISOString(),
+                  endAt: new Date().toISOString()
+                }
+              ]
+            }
+          ]
+  };
 }
 
 function writeAppState(snapshot: AppStateSnapshot) {

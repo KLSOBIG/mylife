@@ -250,7 +250,7 @@ export function TaskMarkdownEditor({
           nested: true
         }),
         Placeholder.configure({
-          placeholder: "像 Notion 一样直接输入内容，[] 会同步成任务树"
+          placeholder: "直接输入内容"
         }),
         Markdown.configure({
           indentation: {

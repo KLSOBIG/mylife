@@ -101,6 +101,15 @@ body {
   min-width: 0;
 }
 
+.details-pane__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  color: var(--text-subtle);
+  font-size: 14px;
+}
+
 .today-header {
   display: flex;
   align-items: flex-start;
@@ -298,7 +307,7 @@ body {
 }
 
 .task-card__tree-toggle.is-expanded span {
-  transform: rotate(180deg);
+  transform: rotate(90deg);
 }
 
 .task-card__tree-toggle span {
@@ -368,7 +377,6 @@ body {
   padding: 12px 18px 0;
 }
 
-.task-detail-pane__count-pill,
 .reminder-editor__pill {
   display: inline-flex;
   align-items: center;
@@ -382,10 +390,6 @@ body {
   font-size: 12px;
 }
 
-.task-detail-pane__count-pill {
-  color: var(--text-subtle);
-}
-
 .reminder-editor__pill span {
   color: var(--text-subtle);
 }
@@ -396,9 +400,79 @@ body {
 }
 
 .task-detail-pane__reminder-inline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.reminder-editor__summary {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.reminder-editor__panel {
+  display: grid;
+  gap: 12px;
+  min-width: min(320px, calc(100vw - 56px));
+  padding: 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow-soft);
+}
+
+.reminder-editor__toggle,
+.reminder-editor__field {
+  display: grid;
+  gap: 8px;
+  color: var(--text-body);
+  font-size: 13px;
+}
+
+.reminder-editor__toggle {
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+}
+
+.reminder-editor__field input,
+.reminder-editor__field select {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-strong);
+}
+
+.reminder-editor__weekday-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.reminder-editor__weekday {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--text-body);
+  cursor: pointer;
+}
+
+.reminder-editor__weekday.is-active {
+  border-color: transparent;
+  background: var(--accent);
+  color: #fff;
 }
 
 .task-detail-pane__content {
@@ -487,6 +561,7 @@ body {
   color: var(--text-strong);
   font-size: 16px;
   line-height: 1.8;
+  caret-color: var(--text-strong);
 }
 
 .task-tiptap__content .ProseMirror p {
@@ -573,7 +648,17 @@ body {
 }
 
 .task-tiptap__content .ProseMirror ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
   margin-top: 0.18em;
+}
+
+.task-tiptap__content .ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.task-tiptap__content .ProseMirror ul[data-type="taskList"] li > div > * + * {
+  margin-top: 0.78em;
 }
 
 .task-tiptap__content .ProseMirror .is-empty::before {
@@ -1050,6 +1135,17 @@ body {
   border-radius: 10px;
 }
 
+.settings-panel__widget-button {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-strong);
+  cursor: pointer;
+}
+
 .task-card {
   transition:
     transform 180ms ease,
@@ -1059,15 +1155,29 @@ body {
     opacity 180ms ease;
 }
 
-.undo-toast {
+.undo-toast-stack {
   position: fixed;
   right: 20px;
   bottom: 20px;
-  width: 280px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.undo-toast {
+  width: min(320px, calc(100vw - 32px));
+  display: grid;
+  gap: 10px;
   padding: 14px;
   background: rgba(39, 37, 44, 0.94);
   color: #fff;
   border-color: rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 16px 30px rgba(25, 22, 19, 0.24);
+  pointer-events: auto;
 }
 
 .undo-toast__title {
@@ -1076,9 +1186,73 @@ body {
 }
 
 .undo-toast__row {
+  display: flex;
   justify-content: space-between;
   color: rgba(255, 255, 255, 0.72);
   font-size: 13px;
+}
+
+.today-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  color: #efe8db;
+}
+
+.today-widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.today-widget__header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.today-widget__header p {
+  margin: 4px 0 0;
+  color: rgba(239, 232, 219, 0.72);
+  font-size: 12px;
+}
+
+.today-widget__header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.today-widget__header-actions button,
+.today-widget__actions button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+}
+
+.today-widget__list {
+  display: grid;
+  gap: 10px;
+}
+
+.today-widget__card,
+.today-widget__empty {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.today-widget__card h3 {
+  margin: 0 0 10px;
+}
+
+.today-widget__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 @media (max-width: 1260px) {

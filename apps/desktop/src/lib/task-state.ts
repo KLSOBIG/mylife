@@ -37,8 +37,15 @@ export const themePresets: Record<ThemeName, { accentColor: string; backgroundCo
   slate: { accentColor: "#45596d", backgroundColor: "#f2f5f8" }
 };
 
+export const workspaceOptions = [
+  { id: "my-work", name: "我的工作" },
+  { id: "product-lab", name: "产品实验" },
+  { id: "study", name: "个人学习" }
+] as const;
+
 export type TaskRecord = {
   id: string;
+  workspaceId: string;
   title: string;
   status: TaskStatus;
   isToday: boolean;
@@ -55,7 +62,7 @@ export function buildTaskSummary(task: TaskRecord): TaskSummary {
     title: task.title,
     status: task.status,
     isToday: task.isToday,
-    reminderLabel: task.reminder.at,
+    reminderLabel: formatReminderLabel(task.reminder),
     checklistCount: countChecklistTree(checklistTree),
     checklistTree
   };
@@ -67,34 +74,31 @@ export function buildTaskDetail(task: TaskRecord): TaskDetail {
     title: task.title,
     status: task.status,
     document: task.document,
-    reminder: task.reminder,
+    reminder: normalizeReminder(task.reminder),
     checklist: task.checklist,
     timeline: {
-      rows: task.timeline
+      rows: buildTimelineRows(task)
     }
   };
 }
 
-export function createTaskRecord(title: string, index: number): TaskRecord {
-  const base = new Date(2026, 5, 30 + index, 9, 0, 0).toISOString();
-  const end = new Date(2026, 5, 30 + index, 18, 0, 0).toISOString();
+export function createTaskRecord(title: string, index: number, workspaceId: string): TaskRecord {
+  const createdAt = new Date().toISOString();
 
   return {
     id: `task_${Date.now()}_${index}`,
+    workspaceId,
     title,
     status: "not_started",
     isToday: true,
-    reminder: {
-      at: "今天 18:00",
-      repeat: "每周一 / 每周三 / 每周五"
-    },
+    reminder: normalizeReminder({ enabled: false, dateTime: "", repeatKind: "none", weekdays: [] }),
     checklist: [{ id: `item_${Date.now()}_${index}`, title: `拆解：${title}`, status: "not_started" }],
     document: `- [ ] 拆解：${title}`,
     timeline: [
       {
         id: `row_${Date.now()}_${index}`,
         title,
-        segments: [{ id: `seg_${Date.now()}_${index}`, status: "not_started", startAt: base, endAt: end }]
+        segments: [{ id: `seg_${Date.now()}_${index}`, status: "not_started", startAt: createdAt, endAt: createdAt }]
       }
     ]
   };
@@ -120,30 +124,50 @@ export function updateTaskDocument(task: TaskRecord, document: string): TaskReco
   };
 }
 
+export function updateTaskReminder(task: TaskRecord, reminder: ReminderDetail): TaskRecord {
+  return {
+    ...task,
+    reminder: normalizeReminder(reminder)
+  };
+}
+
 export function applyStatus(task: TaskRecord, status: TaskStatus): TaskRecord {
   if (task.status === status) {
     return task;
   }
 
+  const now = new Date().toISOString();
+  const mainRow = ensureMainTimelineRow(task, now);
+  const previousSegments = mainRow.segments;
+  const lastSegment = previousSegments[previousSegments.length - 1];
+  const nextSegments = previousSegments.map((segment, index) =>
+    index === previousSegments.length - 1
+      ? {
+          ...segment,
+          endAt: now
+        }
+      : segment
+  );
+
+  if (!lastSegment || lastSegment.status !== status) {
+    nextSegments.push({
+      id: `${mainRow.id}_${nextSegments.length + 1}`,
+      status,
+      startAt: now,
+      endAt: now
+    });
+  }
+
   return {
     ...task,
     status,
-    timeline: task.timeline.map((row) =>
-      row.id.startsWith("row_")
-        ? {
-            ...row,
-            segments: [
-              ...row.segments,
-              {
-                id: `${row.id}_${row.segments.length + 1}`,
-                status,
-                startAt: buildSegmentStart(row.segments, task.id),
-                endAt: buildSegmentEnd(row.segments, task.id, status)
-              }
-            ]
-          }
-        : row
-    )
+    timeline: [
+      {
+        ...mainRow,
+        title: task.title,
+        segments: nextSegments
+      }
+    ]
   };
 }
 
@@ -151,10 +175,16 @@ export function seedTasks(): TaskRecord[] {
   return [
     {
       id: "task_seed_1",
+      workspaceId: "my-work",
       title: "重构任务时间轴存储",
       status: "in_progress",
       isToday: true,
-      reminder: { at: "今天 14:00", repeat: "每周一 / 每周三 / 每周五" },
+      reminder: normalizeReminder({
+        enabled: true,
+        dateTime: "2026-06-30T14:00",
+        repeatKind: "weekly",
+        weekdays: [1, 3, 5]
+      }),
       checklist: [
         { id: "check_1", title: "定义 task_events 表", status: "not_started" },
         { id: "check_2", title: "补状态颜色映射", status: "completed" }
@@ -163,38 +193,85 @@ export function seedTasks(): TaskRecord[] {
       timeline: [
         {
           id: "row_main_1",
-          title: "主任务",
+          title: "重构任务时间轴存储",
           segments: [
             { id: "seg_1", status: "not_started", startAt: "2026-06-28T09:00:00.000Z", endAt: "2026-06-29T12:00:00.000Z" },
-            { id: "seg_2", status: "in_progress", startAt: "2026-06-30T09:00:00.000Z", endAt: "2026-07-03T18:00:00.000Z" }
-          ]
-        },
-        {
-          id: "row_child_1",
-          title: "子任务 A",
-          segments: [
-            { id: "seg_3", status: "not_started", startAt: "2026-06-28T09:00:00.000Z", endAt: "2026-06-28T18:00:00.000Z" },
-            { id: "seg_4", status: "completed", startAt: "2026-06-29T09:00:00.000Z", endAt: "2026-06-30T16:00:00.000Z" }
+            { id: "seg_2", status: "in_progress", startAt: "2026-06-30T09:00:00.000Z", endAt: "2026-06-30T09:00:00.000Z" }
           ]
         }
       ]
     },
     {
       id: "task_seed_2",
+      workspaceId: "my-work",
       title: "设计桌面小窗交互",
       status: "shelved",
       isToday: true,
-      reminder: { at: "明天 09:00", repeat: "每天" },
+      reminder: normalizeReminder({
+        enabled: true,
+        dateTime: "2026-07-01T09:00",
+        repeatKind: "daily",
+        weekdays: []
+      }),
       checklist: [{ id: "check_3", title: "定义小窗按钮状态", status: "not_started" }],
       document: "- [ ] 定义小窗按钮状态",
       timeline: [
         {
           id: "row_main_2",
-          title: "主任务",
+          title: "设计桌面小窗交互",
           segments: [
             { id: "seg_5", status: "not_started", startAt: "2026-06-29T08:00:00.000Z", endAt: "2026-06-29T16:00:00.000Z" },
             { id: "seg_6", status: "in_progress", startAt: "2026-06-30T10:00:00.000Z", endAt: "2026-07-01T12:00:00.000Z" },
-            { id: "seg_7", status: "shelved", startAt: "2026-07-01T12:00:00.000Z", endAt: "2026-07-03T17:00:00.000Z" }
+            { id: "seg_7", status: "shelved", startAt: "2026-07-01T12:00:00.000Z", endAt: "2026-07-01T12:00:00.000Z" }
+          ]
+        }
+      ]
+    },
+    {
+      id: "task_seed_3",
+      workspaceId: "product-lab",
+      title: "整理产品实验路线图",
+      status: "not_started",
+      isToday: true,
+      reminder: normalizeReminder({
+        enabled: false,
+        dateTime: "",
+        repeatKind: "none",
+        weekdays: []
+      }),
+      checklist: [{ id: "check_4", title: "列出实验假设", status: "not_started" }],
+      document: "- [ ] 列出实验假设",
+      timeline: [
+        {
+          id: "row_main_3",
+          title: "整理产品实验路线图",
+          segments: [
+            { id: "seg_8", status: "not_started", startAt: "2026-06-30T08:00:00.000Z", endAt: "2026-06-30T08:00:00.000Z" }
+          ]
+        }
+      ]
+    },
+    {
+      id: "task_seed_4",
+      workspaceId: "study",
+      title: "复习 Go 并发模式",
+      status: "in_progress",
+      isToday: true,
+      reminder: normalizeReminder({
+        enabled: true,
+        dateTime: "2026-06-30T20:00",
+        repeatKind: "weekly",
+        weekdays: [2, 4]
+      }),
+      checklist: [{ id: "check_5", title: "整理 worker pool 笔记", status: "not_started" }],
+      document: "- [ ] 整理 worker pool 笔记",
+      timeline: [
+        {
+          id: "row_main_4",
+          title: "复习 Go 并发模式",
+          segments: [
+            { id: "seg_9", status: "not_started", startAt: "2026-06-29T19:00:00.000Z", endAt: "2026-06-30T10:00:00.000Z" },
+            { id: "seg_10", status: "in_progress", startAt: "2026-06-30T10:00:00.000Z", endAt: "2026-06-30T10:00:00.000Z" }
           ]
         }
       ]
@@ -363,22 +440,118 @@ function countChecklistTree(nodes: ChecklistTreeNode[]) {
   return count;
 }
 
-function buildSegmentStart(segments: TimelineRow["segments"], _seed: string) {
-  const lastSegment = segments[segments.length - 1];
-  if (lastSegment) {
-    return lastSegment.endAt;
+function ensureMainTimelineRow(task: TaskRecord, fallbackAt: string): TimelineRow {
+  const firstRow = task.timeline[0];
+  if (firstRow) {
+    return {
+      ...firstRow,
+      title: task.title,
+      segments: firstRow.segments.length > 0
+        ? firstRow.segments
+        : [{ id: `${firstRow.id}_1`, status: task.status, startAt: fallbackAt, endAt: fallbackAt }]
+    };
   }
 
-  return new Date("2026-06-30T09:00:00.000Z").toISOString();
+  return {
+    id: `row_${task.id}`,
+    title: task.title,
+    segments: [{ id: `row_${task.id}_1`, status: task.status, startAt: fallbackAt, endAt: fallbackAt }]
+  };
 }
 
-function buildSegmentEnd(
-  segments: TimelineRow["segments"],
-  seed: string,
-  status: TaskStatus
-) {
-  const startAt = new Date(buildSegmentStart(segments, seed));
-  const durationHours = status === "completed" ? 20 : 12;
-  startAt.setHours(startAt.getHours() + durationHours);
-  return startAt.toISOString();
+function buildTimelineRows(task: TaskRecord): TimelineRow[] {
+  const mainRow = ensureMainTimelineRow(task, new Date().toISOString());
+  return [
+    {
+      ...mainRow,
+      title: task.title
+    }
+  ];
+}
+
+function normalizeReminder(reminder: ReminderDetail): ReminderDetail {
+  const repeatKind = reminder.repeatKind ?? inferRepeatKind(reminder.repeat);
+  const dateTime = reminder.dateTime ?? inferDateTime(reminder.at);
+  const weekdays = reminder.weekdays ?? inferWeekdays(reminder.repeat);
+  const enabled = reminder.enabled ?? Boolean(dateTime || reminder.at);
+
+  return {
+    enabled,
+    dateTime,
+    repeatKind,
+    weekdays,
+    at: formatReminderAt(dateTime),
+    repeat: formatReminderRepeat(repeatKind, weekdays)
+  };
+}
+
+function formatReminderLabel(reminder: ReminderDetail) {
+  const normalized = normalizeReminder(reminder);
+  if (!normalized.enabled || !normalized.at) {
+    return undefined;
+  }
+
+  return normalized.repeat && normalized.repeat !== "不重复"
+    ? `${normalized.at} · ${normalized.repeat}`
+    : normalized.at;
+}
+
+function formatReminderAt(dateTime?: string) {
+  if (!dateTime) {
+    return "";
+  }
+
+  const date = new Date(dateTime);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+function formatReminderRepeat(repeatKind?: ReminderDetail["repeatKind"], weekdays: number[] = []) {
+  switch (repeatKind) {
+    case "daily":
+      return "每天";
+    case "weekly":
+      return weekdays.length > 0 ? weekdays.map((day) => `周${"日一二三四五六"[day]}`).join(" / ") : "每周";
+    default:
+      return "不重复";
+  }
+}
+
+function inferRepeatKind(repeat?: string): ReminderDetail["repeatKind"] {
+  if (repeat?.includes("每天")) {
+    return "daily";
+  }
+
+  if (repeat?.includes("周")) {
+    return "weekly";
+  }
+
+  return "none";
+}
+
+function inferWeekdays(repeat?: string) {
+  if (!repeat || !repeat.includes("周")) {
+    return [] as number[];
+  }
+
+  return Array.from(repeat.matchAll(/周([日一二三四五六])/g)).map((match) => "日一二三四五六".indexOf(match[1]));
+}
+
+function inferDateTime(at?: string) {
+  if (!at) {
+    return "";
+  }
+
+  const match = at.match(/(\d{1,2}):(\d{2})/);
+  if (!match) {
+    return "";
+  }
+
+  const hours = match[1].padStart(2, "0");
+  const minutes = match[2];
+  const baseDate = at.includes("明天") ? "2026-07-01" : "2026-06-30";
+  return `${baseDate}T${hours}:${minutes}`;
 }

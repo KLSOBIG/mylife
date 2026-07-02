@@ -12,7 +12,8 @@ export function TaskDetailPane({
   onCompleteTask,
   onShelveTask,
   onResumeTask,
-  onDocumentChange
+  onDocumentChange,
+  onReminderChange
 }: {
   task: TaskDetail;
   activeTab?: "details" | "gantt";
@@ -21,6 +22,7 @@ export function TaskDetailPane({
   onShelveTask?: (taskId: string) => void;
   onResumeTask?: (taskId: string) => void;
   onDocumentChange?: (taskId: string, document: string) => void;
+  onReminderChange?: (taskId: string, reminder: TaskDetail["reminder"]) => void;
 }) {
   const [internalTab, setInternalTab] = useState<"details" | "gantt">("details");
   const [document, setDocument] = useState(task.document);
@@ -30,7 +32,6 @@ export function TaskDetailPane({
   }, [task.document, task.id]);
 
   const resolvedTab = activeTab ?? internalTab;
-  const checklistCount = task.checklist.length;
   const statusLabel =
     task.status === "completed"
       ? "已完成"
@@ -76,7 +77,6 @@ export function TaskDetailPane({
               <h2>{task.title}</h2>
             </div>
             <div className="task-detail-pane__summary">
-              <span>{checklistCount} 条子任务</span>
               <div className="task-detail-pane__header-actions">
                 {task.status !== "completed" && task.status !== "abandoned" ? (
                   <button type="button" onClick={() => onCompleteTask?.(task.id)}>
@@ -100,8 +100,11 @@ export function TaskDetailPane({
             <span className={`task-chip ${statusChipClass}`}>
               {statusLabel}
             </span>
-            <span className="task-detail-pane__count-pill">{checklistCount} 条任务</span>
-            <ReminderEditor reminder={task.reminder} className="task-detail-pane__reminder-inline" />
+            <ReminderEditor
+              reminder={task.reminder}
+              className="task-detail-pane__reminder-inline"
+              onChange={(nextReminder) => onReminderChange?.(task.id, nextReminder)}
+            />
           </div>
           <div className="task-detail-pane__content">
             <TaskMarkdownEditor

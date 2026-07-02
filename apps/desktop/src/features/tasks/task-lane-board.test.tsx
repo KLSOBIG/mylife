@@ -9,6 +9,7 @@ import { TodayBoard } from "./today-board";
 const sampleRecords: TaskRecord[] = [
   {
     id: "task-1",
+    workspaceId: "my-work",
     title: "重构任务时间轴存储",
     status: "in_progress",
     isToday: true,
@@ -27,6 +28,7 @@ const sampleRecords: TaskRecord[] = [
   },
   {
     id: "task-2",
+    workspaceId: "my-work",
     title: "设计桌面小窗交互",
     status: "in_progress",
     isToday: false,
@@ -37,6 +39,7 @@ const sampleRecords: TaskRecord[] = [
   },
   {
     id: "task-3",
+    workspaceId: "study",
     title: "清理旧提醒",
     status: "not_started",
     isToday: true,
@@ -68,7 +71,6 @@ describe("TaskLaneBoard", () => {
     expect(screen.getByRole("button", { name: "废弃 · 0" })).toBeInTheDocument();
     expect(screen.getByText("重构任务时间轴存储")).toBeInTheDocument();
     expect(screen.getAllByText("今天")).toHaveLength(2);
-    expect(screen.getByText(/4\s*子任务/)).toBeInTheDocument();
     expect(sampleTasks[0].checklistTree?.[0].title).toBe("定义 task_events 表");
     expect(screen.queryByRole("tree", { name: "重构任务时间轴存储 任务树预览" })).not.toBeInTheDocument();
   });
@@ -140,8 +142,7 @@ describe("TodayBoard inline creator", () => {
           id: `task-${current.length + 1}`,
           title: draftTitle.trim(),
           status: "not_started",
-          isToday: true,
-          checklistCount: 0
+          isToday: true
         },
         ...current
       ]);
@@ -182,5 +183,19 @@ describe("TodayBoard inline creator", () => {
     fireEvent.blur(blankInput);
 
     expect(screen.getByLabelText("save-count")).toHaveTextContent("1");
+  });
+
+  it("reopens creator after blank discard when create is clicked again", async () => {
+    render(<Harness />);
+
+    fireEvent.click(screen.getByRole("button", { name: /快速新增/i }));
+    const input = screen.getByPlaceholderText("输入任务标题");
+    fireEvent.change(input, { target: { value: "   " } });
+    fireEvent.blur(input);
+
+    expect(screen.queryByPlaceholderText("输入任务标题")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /快速新增/i }));
+    expect(screen.getByPlaceholderText("输入任务标题")).toBeInTheDocument();
   });
 });

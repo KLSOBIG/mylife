@@ -13,6 +13,8 @@ describe("TodayWidget", () => {
   it("renders in-progress today tasks with action buttons", () => {
     render(<TodayWidget tasks={[fakeInProgressTask]} />);
     expect(screen.getByText("今天进行中")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "刷新" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "打开主窗口" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "完成" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "搁置" })).toBeInTheDocument();
   });

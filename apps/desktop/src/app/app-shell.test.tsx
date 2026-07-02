@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { seedTasks, themePresets } from "../lib/task-state";
@@ -91,5 +91,32 @@ describe("AppShell", () => {
     expect(screen.getByLabelText("rich-editor").textContent).toContain("已自动保存");
     expect(screen.getAllByText("刷新后还在").length).toBeGreaterThan(0);
     expect(screen.getAllByText("已完成联动项").length).toBeGreaterThan(0);
+  });
+
+  it("switches workspaces like tenants and filters task set", async () => {
+    const user = userEvent.setup();
+    render(<AppShell />);
+
+    expect(screen.getByRole("button", { name: "重构任务时间轴存储" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "整理产品实验路线图" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "产品实验" }));
+
+    expect(screen.getByRole("button", { name: "整理产品实验路线图" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "重构任务时间轴存储" })).not.toBeInTheDocument();
+  });
+
+  it("stacks multiple undo toasts instead of replacing earlier ones", async () => {
+    const user = userEvent.setup();
+    render(<AppShell />);
+
+    await user.click(screen.getByRole("button", { name: "重构任务时间轴存储" }));
+    await user.click(within(screen.getByLabelText("details-pane")).getByRole("button", { name: "完成" }));
+    await user.click(screen.getByRole("button", { name: "设计桌面小窗交互" }));
+    await user.click(within(screen.getByLabelText("details-pane")).getByRole("button", { name: "恢复进行" }));
+
+    expect(screen.getByText("任务已切换到 已完成")).toBeInTheDocument();
+    expect(screen.getByText("任务已切换到 进行中")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "撤销" })).toHaveLength(2);
   });
 });

@@ -17,7 +17,8 @@ export function SettingsPanel({
   settings,
   onToggle,
   onPresetChange,
-  onSettingsChange
+  onSettingsChange,
+  onOpenWidget
 }: {
   open: boolean;
   preset: ThemeName;
@@ -25,6 +26,7 @@ export function SettingsPanel({
   onToggle: () => void;
   onPresetChange: (preset: ThemeName) => void;
   onSettingsChange: (settings: ThemeSettings) => void;
+  onOpenWidget?: () => void;
 }) {
   return (
     <div className="settings-panel">
@@ -91,6 +93,12 @@ export function SettingsPanel({
                 <code>{settings.backgroundColor}</code>
               </div>
             </label>
+          </div>
+          <div className="settings-panel__group">
+            <p className="settings-panel__label">桌面小窗</p>
+            <button type="button" className="settings-panel__widget-button" onClick={onOpenWidget}>
+              打开今天进行中小窗
+            </button>
           </div>
         </section>
       ) : null}

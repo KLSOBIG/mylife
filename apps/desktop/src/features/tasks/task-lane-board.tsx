@@ -33,6 +33,7 @@ export function TaskLaneBoard({
   tasks = [],
   draftTitle = "",
   isComposerOpen = false,
+  composerRequestId = 0,
   onDraftTitleChange,
   onCreateSave,
   onSelectTask,
@@ -44,6 +45,7 @@ export function TaskLaneBoard({
   tasks?: TaskSummary[];
   draftTitle?: string;
   isComposerOpen?: boolean;
+  composerRequestId?: number;
   onDraftTitleChange?: (value: string) => void;
   onCreateSave?: () => void;
   onSelectTask?: (taskId: string) => void;
@@ -69,7 +71,7 @@ export function TaskLaneBoard({
 
   useEffect(() => {
     setComposerOpen(isComposerOpen);
-  }, [isComposerOpen]);
+  }, [isComposerOpen, composerRequestId]);
 
   const lanes = useMemo(() => buildTaskLanes(orderedTasks), [orderedTasks]);
   const activeTask = activeTaskId

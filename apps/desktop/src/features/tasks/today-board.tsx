@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { TaskMoveRequest, TaskSummary } from "../../lib/types";
 import { TaskLaneBoard } from "./task-lane-board";
 
@@ -26,6 +27,8 @@ export function TodayBoard({
   onResumeTask?: (taskId: string) => void;
   onTaskMove?: (request: TaskMoveRequest) => void;
 }) {
+  const [composerRequestId, setComposerRequestId] = useState(0);
+
   return (
     <section className="today-board">
       <header className="today-header">
@@ -34,7 +37,14 @@ export function TodayBoard({
           <h1>今天</h1>
         </div>
         <div className="today-header__actions">
-          <button type="button" className="toolbar-button toolbar-button--primary" onClick={onCreateClick}>
+          <button
+            type="button"
+            className="toolbar-button toolbar-button--primary"
+            onClick={() => {
+              setComposerRequestId((current) => current + 1);
+              onCreateClick?.();
+            }}
+          >
             快速新增 +
           </button>
         </div>
@@ -43,6 +53,7 @@ export function TodayBoard({
         tasks={tasks}
         draftTitle={draftTitle}
         isComposerOpen={isComposerOpen}
+        composerRequestId={composerRequestId}
         onDraftTitleChange={onDraftTitleChange}
         onCreateSave={onCreateSave}
         onSelectTask={onSelectTask}

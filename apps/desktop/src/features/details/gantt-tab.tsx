@@ -20,10 +20,18 @@ export function GanttTab({
   };
 }) {
   const [activeFilter, setActiveFilter] = useState<TaskStatus | "all">("all");
-  const rows =
-    activeFilter === "all"
-      ? task.rows
-      : task.rows.filter((row) => row.segments.some((segment) => segment.status === activeFilter));
+  const rows = useMemo(
+    () =>
+      activeFilter === "all"
+        ? task.rows
+        : task.rows
+            .map((row) => ({
+              ...row,
+              segments: row.segments.filter((segment) => segment.status === activeFilter)
+            }))
+            .filter((row) => row.segments.length > 0),
+    [activeFilter, task.rows]
+  );
   const axis = useMemo(() => buildAxis(rows), [rows]);
 
   return (
