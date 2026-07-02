@@ -6,6 +6,10 @@ import type { WidgetTask } from "./lib/types";
 import "./styles/app.css";
 
 const APP_STATE_STORAGE_KEY = "mylife.desktop.app-state.v1";
+const PREVIEW_WIDGET_TASKS: WidgetTask[] = [
+  { id: "preview_1", title: "整理今天进行中的任务焦点", status: "in_progress" },
+  { id: "preview_2", title: "补桌面小窗交互打磨", status: "in_progress" }
+];
 
 export function readTodayWidgetTasks(storage?: Storage): WidgetTask[] {
   if (!storage) {
@@ -65,12 +69,23 @@ function writeAppState(storage: Storage, nextState: { tasks: TaskRecord[]; selec
 }
 
 function readAndRender(setTasks: (tasks: WidgetTask[]) => void) {
-  setTasks(typeof window === "undefined" ? [] : readTodayWidgetTasks(window.localStorage));
+  if (typeof window === "undefined") {
+    setTasks([]);
+    return;
+  }
+
+  const tasks = readTodayWidgetTasks(window.localStorage);
+  setTasks(tasks.length > 0 ? tasks : getPreviewWidgetTasks());
 }
 
 function WidgetRoot() {
   const [tasks, setTasks] = React.useState<WidgetTask[]>(() =>
-    typeof window === "undefined" ? [] : readTodayWidgetTasks(window.localStorage)
+    typeof window === "undefined"
+      ? []
+      : (() => {
+          const currentTasks = readTodayWidgetTasks(window.localStorage);
+          return currentTasks.length > 0 ? currentTasks : getPreviewWidgetTasks();
+        })()
   );
 
   React.useEffect(() => {
@@ -125,6 +140,24 @@ function WidgetRoot() {
       }}
     />
   );
+}
+
+function getPreviewWidgetTasks() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const runtimeWindow = window as typeof window & { __TAURI_INTERNALS__?: unknown };
+  if (runtimeWindow.__TAURI_INTERNALS__) {
+    return [];
+  }
+
+  const host = window.location.hostname;
+  if (host === "127.0.0.1" || host === "localhost") {
+    return PREVIEW_WIDGET_TASKS;
+  }
+
+  return [];
 }
 
 const widgetRoot = typeof document === "undefined" ? null : document.getElementById("widget-root");

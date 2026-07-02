@@ -20,4 +20,9 @@ describe("readTodayWidgetTasks", () => {
       { id: "1", title: "今天进行中", status: "in_progress" }
     ]);
   });
+
+  it("returns no live tasks when local storage is empty", () => {
+    window.localStorage.removeItem(APP_STATE_STORAGE_KEY);
+    expect(readTodayWidgetTasks(window.localStorage)).toEqual([]);
+  });
 });
