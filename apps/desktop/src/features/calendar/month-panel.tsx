@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./month-panel.css";
 
 const WEEKDAY_LABELS = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
@@ -19,6 +19,7 @@ export type MonthPanelProps = {
   initialSelectedDate?: Date;
   onSelectDate?: (date: Date) => void;
   onSelectWorkspace?: (workspaceId: string) => void;
+  onAddWorkspace?: (name: string) => void;
   showWorkspaces?: boolean;
   title?: string;
   today?: Date;
@@ -36,6 +37,7 @@ export function MonthPanel({
   initialSelectedDate,
   onSelectDate,
   onSelectWorkspace,
+  onAddWorkspace,
   showWorkspaces = false,
   title = "日历",
   today,
@@ -49,9 +51,26 @@ export function MonthPanel({
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(
     activeWorkspaceId ?? workspaces[0]?.id ?? ""
   );
+  const [draftWorkspaceName, setDraftWorkspaceName] = useState("");
+
+  useEffect(() => {
+    if (activeWorkspaceId) {
+      setSelectedWorkspaceId(activeWorkspaceId);
+    }
+  }, [activeWorkspaceId]);
 
   const monthStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
   const days = buildCalendarDays(monthStart);
+
+  function submitWorkspace() {
+    const trimmed = draftWorkspaceName.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    onAddWorkspace?.(trimmed);
+    setDraftWorkspaceName("");
+  }
 
   return (
     <div className="month-panel">
@@ -126,6 +145,24 @@ export function MonthPanel({
                 </button>
               );
             })}
+          </div>
+          <div className="month-panel__workspace-create">
+            <input
+              type="text"
+              value={draftWorkspaceName}
+              placeholder="新增工作空间"
+              aria-label="新增工作空间"
+              onChange={(event) => setDraftWorkspaceName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  submitWorkspace();
+                }
+              }}
+            />
+            <button type="button" className="month-panel__workspace-add" onClick={submitWorkspace}>
+              新增
+            </button>
           </div>
         </section>
       ) : null}

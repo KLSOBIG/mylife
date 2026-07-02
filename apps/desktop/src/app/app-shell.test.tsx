@@ -152,4 +152,15 @@ describe("AppShell", () => {
     expect(screen.getByText("刚刚")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "打开任务" })).toBeInTheDocument();
   });
+
+  it("adds a new workspace and switches to it", async () => {
+    const user = userEvent.setup();
+    render(<AppShell />);
+
+    await user.type(screen.getByLabelText("新增工作空间"), "新空间");
+    await user.click(screen.getByRole("button", { name: "新增" }));
+
+    expect(screen.getByRole("button", { name: "新空间" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("当前工作空间暂无任务")).toBeInTheDocument();
+  });
 });

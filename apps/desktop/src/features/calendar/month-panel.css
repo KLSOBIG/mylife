@@ -99,6 +99,31 @@
   gap: 6px;
 }
 
+.month-panel__workspace-create {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.month-panel__workspace-create input,
+.month-panel__workspace-add {
+  min-height: 36px;
+  border: 1px solid #ddd6cb;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #2b2830;
+}
+
+.month-panel__workspace-create input {
+  padding: 0 12px;
+}
+
+.month-panel__workspace-add {
+  padding: 0 12px;
+  cursor: pointer;
+}
+
 .month-panel__workspace {
   justify-content: flex-start;
   width: 100%;

@@ -1,4 +1,6 @@
+import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import type { WorkspaceOption } from "../features/calendar/month-panel";
 import { TaskDetailPane } from "../features/details/task-detail-pane";
 import { ThemeProvider } from "../features/theme/theme-provider";
 import { SettingsPanel, type ThemeSettings } from "../features/theme/settings-panel";
@@ -30,6 +32,7 @@ const APP_STATE_STORAGE_KEY = "mylife.desktop.app-state.v1";
 
 type AppStateSnapshot = {
   tasks: TaskRecord[];
+  workspaces: WorkspaceOption[];
   selectedTaskId: string;
   selectedDate: string;
   selectedWorkspace: string;
@@ -40,6 +43,7 @@ type AppStateSnapshot = {
 export function AppShell() {
   const initialState = useMemo(readInitialAppState, []);
   const [tasks, setTasks] = useState<TaskRecord[]>(initialState.tasks);
+  const [workspaces, setWorkspaces] = useState<WorkspaceOption[]>(initialState.workspaces);
   const [selectedTaskId, setSelectedTaskId] = useState<string>(initialState.selectedTaskId);
   const [selectedDate, setSelectedDate] = useState<Date>(initialState.selectedDate);
   const [selectedWorkspace, setSelectedWorkspace] = useState(initialState.selectedWorkspace);
@@ -76,13 +80,14 @@ export function AppShell() {
   useEffect(() => {
     writeAppState({
       tasks,
+      workspaces,
       selectedTaskId,
       selectedDate: selectedDate.toISOString(),
       selectedWorkspace,
       theme,
       themeSettings
     });
-  }, [selectedDate, selectedTaskId, selectedWorkspace, tasks, theme, themeSettings]);
+  }, [selectedDate, selectedTaskId, selectedWorkspace, tasks, theme, themeSettings, workspaces]);
 
   useEffect(() => {
     function collectDueReminders() {
@@ -136,6 +141,16 @@ export function AppShell() {
   );
 
   useEffect(() => {
+    if (workspaces.length === 0) {
+      return;
+    }
+
+    if (!workspaces.some((workspace) => workspace.id === selectedWorkspace)) {
+      setSelectedWorkspace(workspaces[0].id);
+    }
+  }, [selectedWorkspace, workspaces]);
+
+  useEffect(() => {
     if (filteredTasks.length === 0) {
       return;
     }
@@ -162,9 +177,33 @@ export function AppShell() {
     setThemeSettings(themePresets[nextTheme]);
   }
 
-  function openWidgetWindow() {
+  function addWorkspace(name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    const nextWorkspace = {
+      id: `workspace_${Date.now()}`,
+      name: trimmed
+    };
+    setWorkspaces((current) => [...current, nextWorkspace]);
+    setSelectedWorkspace(nextWorkspace.id);
+  }
+
+  async function openWidgetWindow() {
     if (typeof window === "undefined") {
       return;
+    }
+
+    try {
+      const runtimeWindow = window as typeof window & { __TAURI_INTERNALS__?: unknown };
+      if (runtimeWindow.__TAURI_INTERNALS__) {
+        await invoke("open_widget_window");
+        return;
+      }
+    } catch {
+      // H5 fallback below.
     }
 
     window.open("/widget.html", "mylife-widget", "popup=yes,width=420,height=620");
@@ -273,7 +312,8 @@ export function AppShell() {
               showWorkspaces
               activeWorkspaceId={selectedWorkspace}
               onSelectWorkspace={setSelectedWorkspace}
-              workspaces={[...workspaceOptions]}
+              onAddWorkspace={addWorkspace}
+              workspaces={workspaces}
             />
           </div>
           <div className="left-pane__footer">
@@ -367,6 +407,7 @@ function readInitialAppState() {
   const fallbackTasks = seedTasks();
   const fallback: {
     tasks: TaskRecord[];
+    workspaces: WorkspaceOption[];
     selectedTaskId: string;
     selectedDate: Date;
     selectedWorkspace: string;
@@ -374,6 +415,7 @@ function readInitialAppState() {
     themeSettings: ThemeSettings;
   } = {
     tasks: fallbackTasks,
+    workspaces: [...workspaceOptions],
     selectedTaskId: fallbackTasks[0]?.id ?? "",
     selectedDate: APP_TODAY,
     selectedWorkspace: "my-work",
@@ -400,6 +442,10 @@ function readInitialAppState() {
 
     return {
       tasks: nextTasks,
+      workspaces:
+        Array.isArray(parsed.workspaces) && parsed.workspaces.length > 0
+          ? parsed.workspaces.filter(isWorkspaceOption)
+          : fallback.workspaces,
       selectedTaskId:
         typeof parsed.selectedTaskId === "string" && nextTasks.some((task) => task.id === parsed.selectedTaskId)
           ? parsed.selectedTaskId
@@ -409,7 +455,14 @@ function readInitialAppState() {
           ? new Date(parsed.selectedDate)
           : fallback.selectedDate,
       selectedWorkspace:
-        typeof parsed.selectedWorkspace === "string" ? parsed.selectedWorkspace : fallback.selectedWorkspace,
+        typeof parsed.selectedWorkspace === "string" &&
+        (
+          Array.isArray(parsed.workspaces) && parsed.workspaces.length > 0
+            ? parsed.workspaces.filter(isWorkspaceOption)
+            : fallback.workspaces
+        ).some((workspace) => workspace.id === parsed.selectedWorkspace)
+          ? parsed.selectedWorkspace
+          : fallback.selectedWorkspace,
       theme: nextTheme,
       themeSettings: isThemeSettings(parsed.themeSettings) ? parsed.themeSettings : themePresets[nextTheme]
     };
@@ -466,6 +519,17 @@ function writeAppState(snapshot: AppStateSnapshot) {
   }
 
   window.localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(snapshot));
+}
+
+function isWorkspaceOption(value: unknown): value is WorkspaceOption {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "id" in value &&
+      typeof (value as WorkspaceOption).id === "string" &&
+      "name" in value &&
+      typeof (value as WorkspaceOption).name === "string"
+  );
 }
 
 function isThemeName(value: unknown): value is ThemeName {

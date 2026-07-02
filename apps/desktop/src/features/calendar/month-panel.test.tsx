@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MonthFilter } from "./month-filter";
 import { MonthPanel } from "./month-panel";
 
@@ -58,6 +58,27 @@ describe("MonthPanel", () => {
     expect(screen.getByRole("button", { name: "我的工作" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "产品实验" })).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("button", { name: "个人学习" })).toBeInTheDocument();
+  });
+
+  it("adds workspace from inline creator", () => {
+    const handleAddWorkspace = vi.fn();
+
+    render(
+      <MonthPanel
+        showWorkspaces
+        today={new Date(2026, 5, 30)}
+        workspaces={[
+          { id: "my-work", name: "我的工作" }
+        ]}
+        activeWorkspaceId="my-work"
+        onAddWorkspace={handleAddWorkspace}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("新增工作空间"), { target: { value: "新租户" } });
+    fireEvent.click(screen.getByRole("button", { name: "新增" }));
+
+    expect(handleAddWorkspace).toHaveBeenCalledWith("新租户");
   });
 });
 

@@ -1,5 +1,11 @@
 #[tauri::command]
 fn open_widget_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("widget") {
+        let _ = window.show();
+        let _ = window.set_focus();
+        return Ok(());
+    }
+
     tauri::WebviewWindowBuilder::new(
         &app,
         "widget",
