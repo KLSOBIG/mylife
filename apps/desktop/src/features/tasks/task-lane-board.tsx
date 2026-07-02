@@ -10,6 +10,7 @@ import {
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { buildTaskLanes, moveTaskSummaries } from "../../lib/task-state";
 import type { TaskMoveRequest, TaskStatus, TaskSummary } from "../../lib/types";
 import { TaskCardOverlay } from "./task-card";
@@ -22,6 +23,11 @@ const defaultCollapsedState: Record<TaskStatus, boolean> = {
   completed: false,
   abandoned: false
 };
+
+export const taskCardPointerActivationConstraint = {
+  // Large distance thresholds make the overlay appear to "jump" before drag starts.
+  distance: 1
+} as const;
 
 export function TaskLaneBoard({
   tasks = [],
@@ -51,7 +57,9 @@ export function TaskLaneBoard({
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(isComposerOpen);
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, {
+      activationConstraint: taskCardPointerActivationConstraint
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -67,6 +75,11 @@ export function TaskLaneBoard({
   const activeTask = activeTaskId
     ? orderedTasks.find((task) => task.id === activeTaskId) ?? null
     : null;
+  // Keep the drag overlay out of filtered panels like `.today-board`, otherwise
+  // browsers can treat the fixed overlay as positioned relative to that panel.
+  const dragOverlay = (
+    <DragOverlay>{activeTask ? <TaskCardOverlay task={activeTask} /> : null}</DragOverlay>
+  );
 
   function handleCreateSave() {
     if (!draftTitle.trim()) {
@@ -142,9 +155,7 @@ export function TaskLaneBoard({
           />
         ))}
       </section>
-      <DragOverlay>
-        {activeTask ? <TaskCardOverlay task={activeTask} /> : null}
-      </DragOverlay>
+      {typeof document === "undefined" ? dragOverlay : createPortal(dragOverlay, document.body)}
     </DndContext>
   );
 }

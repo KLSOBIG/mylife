@@ -3,7 +3,7 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { buildTaskSummary, moveTaskSummaries, type TaskRecord } from "../../lib/task-state";
 import type { TaskSummary } from "../../lib/types";
-import { TaskLaneBoard } from "./task-lane-board";
+import { TaskLaneBoard, taskCardPointerActivationConstraint } from "./task-lane-board";
 import { TodayBoard } from "./today-board";
 
 const sampleRecords: TaskRecord[] = [
@@ -50,6 +50,10 @@ const sampleRecords: TaskRecord[] = [
 const sampleTasks: TaskSummary[] = sampleRecords.map(buildTaskSummary);
 
 describe("TaskLaneBoard", () => {
+  it("uses near-immediate pointer activation so drag starts in place", () => {
+    expect(taskCardPointerActivationConstraint.distance).toBe(1);
+  });
+
   it("renders compact vertical lanes with status counts", () => {
     render(<TaskLaneBoard tasks={sampleTasks} />);
 
