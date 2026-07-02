@@ -89,12 +89,17 @@ function WidgetRoot() {
   );
 
   React.useEffect(() => {
+    document.body.classList.add("widget-page");
+
     function handleStorage() {
       readAndRender(setTasks);
     }
 
     window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    return () => {
+      document.body.classList.remove("widget-page");
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
   function updateTask(taskId: string, transformer: (task: TaskRecord) => TaskRecord) {
