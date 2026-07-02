@@ -12,7 +12,7 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
 TAG="$1"
-PNPM_CMD=(corepack pnpm)
+PNPM_CMD=()
 
 if ! git rev-parse --git-dir >/dev/null 2>&1; then
   echo "错误: 不是 git 仓库" >&2
@@ -34,8 +34,12 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
-if ! command -v corepack >/dev/null 2>&1; then
-  echo "错误: 缺少 corepack，先安装 Node.js 18+ 或启用 corepack" >&2
+if command -v corepack >/dev/null 2>&1; then
+  PNPM_CMD=(corepack pnpm)
+elif command -v pnpm >/dev/null 2>&1; then
+  PNPM_CMD=(pnpm)
+else
+  echo "错误: 缺少 pnpm/corepack，先安装 Node.js 18+ 并启用 pnpm" >&2
   exit 1
 fi
 
