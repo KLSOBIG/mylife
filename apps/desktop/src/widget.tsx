@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { TodayWidget } from "./features/widget/today-widget";
 import { completeTask, shelveTask, type TaskRecord } from "./lib/task-state";
 import type { WidgetTask } from "./lib/types";
+import "./styles/app.css";
 
 const APP_STATE_STORAGE_KEY = "mylife.desktop.app-state.v1";
 
