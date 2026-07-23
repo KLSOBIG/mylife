@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus v6 — 事件协同中心</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#ffffff;--bg2:#f8f9fa;--bg3:#f1f3f5;--bg-hover:#e9ecef;--bg-active:#dee2e6;
+  --border:#e0e0e0;--border-light:#f0f0f0;
+  --t1:#1a1a1a;--t2:#6b7280;--t3:#9ca3af;
+  --accent:#7c3aed;--accent-h:#6d28d9;--accent-bg:rgba(124,58,237,0.08);
+  --green:#16a34a;--green-bg:rgba(22,163,74,0.08);
+  --yellow:#ca8a04;--yellow-bg:rgba(202,138,4,0.08);
+  --orange:#ea580c;--orange-bg:rgba(234,88,12,0.08);
+  --red:#dc2626;--red-bg:rgba(220,38,38,0.08);
+  --blue:#2563eb;--blue-bg:rgba(37,99,235,0.08);
+  --sidebar:220px;--r:6px;--rl:10px;
+}
+html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--t1);font-size:13px;overflow:hidden}
+::selection{background:var(--accent);color:#fff}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.app{display:flex;height:100vh}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-hd{padding:16px;display:flex;align-items:center;gap:10px}
+.logo{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),#6366f1);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
+.app-name{font-weight:700;font-size:15px;letter-spacing:-0.5px}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px}
+.nav-s{margin-bottom:8px}
+.nav-st{padding:8px 10px 4px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.8px}
+.nav-i{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r);cursor:pointer;color:var(--t2);transition:all .15s;font-size:13px}
+.nav-i:hover{background:var(--bg-hover);color:var(--t1)}
+.nav-i.active{background:var(--accent-bg);color:var(--accent)}
+.nav-i .ic{width:18px;text-align:center;font-size:14px}
+.nav-i .cnt{margin-left:auto;font-size:11px;background:var(--bg-active);padding:1px 6px;border-radius:10px;color:var(--t3);min-width:20px;text-align:center}
+.nav-i.active .cnt{background:var(--accent);color:#fff}
+.nav-i .dot{width:6px;height:6px;border-radius:50%;margin-left:auto;background:var(--green)}
+.sidebar-ft{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--blue));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+
+/* Workspace Switcher */
+.workspace-switcher{padding:12px 16px;border-bottom:1px solid var(--border);position:relative}
+.workspace-btn{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);cursor:pointer;transition:all .15s;width:100%}
+.workspace-btn:hover{background:var(--bg-hover)}
+.workspace-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.workspace-info{flex:1;min-width:0}
+.workspace-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.workspace-type{font-size:10px;color:var(--t3)}
+.workspace-arrow{color:var(--t3);font-size:10px;transition:transform .15s}
+.workspace-dropdown{position:absolute;left:16px;right:16px;top:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:50;display:none;overflow:hidden}
+.workspace-dropdown.show{display:block}
+.workspace-dropdown-item{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:all .15s}
+.workspace-dropdown-item:hover{background:var(--bg-hover)}
+.workspace-dropdown-item.active{background:var(--accent-bg)}
+.workspace-dropdown-item .ws-icon{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.workspace-dropdown-item .ws-info{flex:1}
+.workspace-dropdown-item .ws-name{font-size:12px;font-weight:500}
+.workspace-dropdown-item .ws-desc{font-size:10px;color:var(--t3)}
+.workspace-dropdown-item .ws-check{color:var(--accent);font-size:12px;opacity:0}
+.workspace-dropdown-item.active .ws-check{opacity:1}
+.workspace-divider{height:1px;background:var(--border);margin:4px 0}
+.workspace-add{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:all .15s;color:var(--t3)}
+.workspace-add:hover{background:var(--bg-hover);color:var(--t1)}
+
+/* Dialog Modal */
+.dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:none;align-items:center;justify-content:center}
+.dialog-overlay.show{display:flex}
+.dialog{width:480px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,0.6);overflow:hidden;max-height:80vh;display:flex;flex-direction:column}
+.dialog-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.dialog-hd-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.dialog-hd-title{font-size:14px;font-weight:600;flex:1}
+.dialog-hd-close{background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:4px;border-radius:var(--r)}
+.dialog-hd-close:hover{background:var(--bg-hover);color:var(--t1)}
+.dialog-body{padding:20px;overflow-y:auto;flex:1}
+.dialog-body p{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:12px}
+.dialog-options{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.dialog-option{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);cursor:pointer;transition:all .15s;border:1px solid var(--border)}
+.dialog-option:hover{border-color:var(--accent);background:var(--accent-bg)}
+.dialog-option .opt-icon{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px}
+.dialog-option .opt-info{flex:1}
+.dialog-option .opt-name{font-size:12px;font-weight:500}
+.dialog-option .opt-desc{font-size:10px;color:var(--t3)}
+.dialog-input{margin-bottom:16px}
+.dialog-input label{display:block;font-size:11px;font-weight:600;color:var(--t3);margin-bottom:6px}
+.dialog-input input,.dialog-input select,.dialog-input textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;color:var(--t1);font-size:12px;outline:none;font-family:inherit}
+.dialog-input input:focus,.dialog-input select:focus,.dialog-input textarea:focus{border-color:var(--accent)}
+.dialog-input textarea{min-height:60px;resize:vertical}
+.dialog-ft{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+.dialog-ai{background:var(--accent-bg);border:1px solid rgba(139,92,246,0.2);border-radius:var(--r);padding:12px;margin-bottom:16px;display:flex;gap:10px}
+.dialog-ai .ai-icon{width:24px;height:24px;border-radius:5px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.dialog-ai .ai-text{font-size:12px;color:var(--t2);line-height:1.5}
+.dialog-ai .ai-text strong{color:var(--accent)}
+
+/* Side Panel Dialog */
+.side-panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:90;display:none}
+.side-panel-overlay.show{display:block}
+.side-panel{position:fixed;top:0;right:0;bottom:0;width:480px;background:var(--bg2);border-left:1px solid var(--border);z-index:91;display:none;flex-direction:column;box-shadow:-8px 0 24px rgba(0,0,0,0.3)}
+.side-panel.show{display:flex}
+.side-panel .dialog-hd{border-bottom:1px solid var(--border)}
+.side-panel .dialog-body{flex:1;overflow-y:auto;padding:20px}
+.side-panel .dialog-ft{border-top:1px solid var(--border)}
+.resize-handle{position:absolute;left:-3px;top:0;bottom:0;width:6px;cursor:col-resize;z-index:92;transition:background .15s}
+.resize-handle:hover,.resize-handle.active{background:var(--accent)}
+.panel-mode-toggle{display:flex;gap:2px;background:var(--bg);border-radius:var(--r);padding:2px}
+.panel-mode-btn{padding:4px 8px;border-radius:4px;border:none;background:transparent;color:var(--t3);cursor:pointer;font-size:11px;transition:all .15s;font-family:inherit}
+.panel-mode-btn:hover{color:var(--t2)}
+.panel-mode-btn.active{background:var(--bg-active);color:var(--t1)}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.header{height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;background:var(--bg2)}
+.header-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.header-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
+.btn{padding:6px 12px;border-radius:var(--r);border:1px solid var(--border);background:transparent;color:var(--t2);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;font-family:inherit;white-space:nowrap}
+.btn:hover{background:var(--bg-hover);color:var(--t1);border-color:var(--t3)}
+.btn-p{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-p:hover{background:var(--accent-h);border-color:var(--accent-h)}
+.btn-ghost{border-color:transparent}
+.btn-sm{padding:4px 8px;font-size:11px}
+.btn-icon{width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center}
+.kbd{padding:1px 5px;background:var(--bg-active);border:1px solid var(--border);border-radius:3px;font-size:10px;font-family:'SF Mono',monospace;color:var(--t3)}
+.badge{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600}
+.badge-r{background:var(--red-bg);color:var(--red)}
+.badge-o{background:var(--orange-bg);color:var(--orange)}
+.badge-y{background:var(--yellow-bg);color:var(--yellow)}
+.badge-g{background:var(--green-bg);color:var(--green)}
+
+/* Content */
+.content{flex:1;overflow:hidden;display:flex}
+.page{display:none;flex:1;flex-direction:column;overflow:hidden}
+.page.active{display:flex}
+.page-scroll{flex:1;overflow-y:auto;padding:20px}
+
+/* Dashboard */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:16px;cursor:pointer;transition:all .15s}
+.stat-card:hover{border-color:var(--t3);transform:translateY(-1px)}
+.stat-label{font-size:11px;color:var(--t3);margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:700;letter-spacing:-1px}
+.stat-change{font-size:11px;margin-top:4px;color:var(--green)}
+.dashboard-grid{display:grid;grid-template-columns:1fr 300px;gap:16px}
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.card-header{padding:14px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:600}
+.card-action{font-size:11px;color:var(--accent);cursor:pointer}
+.card-body{padding:12px 16px}
+.chart-area{height:180px;background:var(--bg);border-radius:var(--r);display:flex;align-items:flex-end;padding:16px;gap:8px}
+.chart-bar{flex:1;background:linear-gradient(to top,var(--accent),var(--accent-h));border-radius:3px 3px 0 0;min-height:20px}
+.event-mini{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);cursor:pointer}
+.event-mini:last-child{border-bottom:none}
+.event-mini:hover{background:var(--bg-hover);margin:0 -16px;padding:8px 16px;border-radius:var(--r)}
+.event-mini-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.event-mini-content{flex:1;min-width:0}
+.event-mini-title{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.event-mini-meta{font-size:11px;color:var(--t3);margin-top:2px}
+.event-mini-time{font-size:11px;color:var(--t3)}
+.agent-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r);background:var(--bg);margin-bottom:6px}
+.agent-avatar{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.agent-info{flex:1}
+.agent-name{font-size:12px;font-weight:500}
+.agent-status{font-size:11px;display:flex;align-items:center;gap:4px}
+.agent-status .dot{width:6px;height:6px;border-radius:50%}
+
+/* Events Page */
+.events-toolbar{padding:12px 20px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.chips{display:flex;gap:4px}
+.chip{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--t2);font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit}
+.chip:hover{border-color:var(--t3)}
+.chip.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.search{margin-left:auto;position:relative}
+.search input{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:6px 12px 6px 30px;color:var(--t1);font-size:12px;width:200px;outline:none;font-family:inherit;transition:all .15s}
+.search input:focus{border-color:var(--accent);width:260px}
+.search input::placeholder{color:var(--t3)}
+.search .si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:12px}
+.events-list{flex:1;overflow-y:auto;padding:12px 20px}
+.event-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:all .15s;display:flex;gap:12px}
+.event-card:hover{border-color:var(--t3)}
+.event-card.selected{border-color:var(--accent);background:var(--accent-bg)}
+.event-priority{font-size:14px;flex-shrink:0;width:20px;text-align:center}
+.event-content{flex:1;min-width:0}
+.event-title{font-size:13px;font-weight:500;margin-bottom:4px}
+.event-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t3)}
+.event-tags{display:flex;gap:4px;margin-left:auto}
+.tag{padding:2px 6px;border-radius:3px;font-size:10px;font-weight:500}
+
+/* Tasks Page */
+.view-toggle{display:flex;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-left:16px}
+.view-btn{padding:5px 10px;background:transparent;border:none;color:var(--t3);cursor:pointer;font-size:12px;transition:all .15s;font-family:inherit}
+.view-btn:hover{color:var(--t2)}
+.view-btn.active{background:var(--bg-active);color:var(--t1)}
+.kanban{flex:1;display:flex;overflow-x:auto;padding:16px 20px;gap:12px}
+.kanban-col{min-width:260px;flex:1;display:flex;flex-direction:column}
+.kanban-col-hd{padding:8px 0 12px;display:flex;align-items:center;gap:8px}
+.kanban-col-hd .dot{width:8px;height:8px;border-radius:50%}
+.kanban-col-hd h4{font-size:12px;font-weight:600;color:var(--t2)}
+.kanban-col-hd .count{font-size:11px;color:var(--t3)}
+.kanban-cards{flex:1;display:flex;flex-direction:column;gap:6px}
+.kanban-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px;cursor:pointer;transition:all .15s}
+.kanban-card:hover{border-color:var(--t3)}
+.kanban-card-title{font-size:12px;font-weight:500;margin-bottom:8px}
+.kanban-card-meta{display:flex;align-items:center;gap:6px;font-size:10px}
+.kanban-card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--t3)}
+
+/* Agents Page */
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding:20px}
+.agent-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:18px}
+.agent-card-hd{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.agent-card-avatar{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.agent-card-info{flex:1}
+.agent-card-name{font-size:14px;font-weight:600}
+.agent-card-role{font-size:11px;color:var(--t3)}
+.agent-card-status{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500}
+.agent-caps{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
+.cap{padding:3px 8px;border-radius:4px;font-size:10px;background:var(--bg);color:var(--t2)}
+.agent-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:14px;border-top:1px solid var(--border-light)}
+.agent-stat{text-align:center}
+.agent-stat-val{font-size:16px;font-weight:700}
+.agent-stat-lbl{font-size:10px;color:var(--t3);margin-top:2px}
+
+/* Rules Page */
+.rules-page{padding:20px}
+.rule-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px;margin-bottom:8px}
+.rule-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.rule-name{font-size:13px;font-weight:600;flex:1}
+.rule-level{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+.rule-toggle{width:32px;height:18px;border-radius:9px;background:var(--bg-active);cursor:pointer;position:relative;transition:background .2s}
+.rule-toggle.on{background:var(--green)}
+.rule-toggle::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .2s}
+.rule-toggle.on::after{transform:translateX(14px)}
+.rule-cond{font-size:11px;color:var(--t2);padding:6px 8px;background:var(--bg);border-radius:var(--r);font-family:'SF Mono',monospace;line-height:1.5}
+.rule-action{font-size:11px;color:var(--accent);padding:6px 8px;background:var(--accent-bg);border-radius:var(--r);font-family:'SF Mono',monospace;margin-top:4px}
+.rule-meta{display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--t3)}
+
+/* Sources Page */
+.sources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:20px}
+.source-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:16px}
+.source-card-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.source-card-icon{font-size:20px}
+.source-card-info{flex:1}
+.source-card-name{font-size:14px;font-weight:600}
+.source-card-type{font-size:11px;color:var(--t3)}
+.source-card-status{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:500}
+.source-card-desc{font-size:12px;color:var(--t2);margin-bottom:8px}
+.source-card-stats{font-size:11px;color:var(--t3)}
+
+/* Detail Panel (right) */
+.detail{width:0;overflow:hidden;border-left:1px solid var(--border);background:var(--bg2);transition:width .2s;flex-shrink:0}
+.detail.open{width:420px}
+.detail-hd{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.detail-close{background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:4px;border-radius:var(--r)}
+.detail-close:hover{background:var(--bg-hover);color:var(--t1)}
+.detail-body{padding:16px;overflow-y:auto;height:calc(100vh - 52px - 47px)}
+.detail-title{font-size:15px;font-weight:600;margin-bottom:16px;line-height:1.4}
+.detail-section{margin-bottom:16px}
+.detail-label{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.detail-value{font-size:12px}
+.detail-value select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:6px 8px;color:var(--t1);font-size:12px;outline:none;font-family:inherit}
+.detail-value select:focus{border-color:var(--accent)}
+.detail-desc{font-size:12px;line-height:1.6;color:var(--t2);padding:10px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border)}
+.detail-divider{height:1px;background:var(--border);margin:16px 0}
+
+/* Thread in detail */
+.thread{margin-top:16px}
+.thread-hd{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.thread-hd h3{font-size:13px;font-weight:600}
+.thread-hd .count{font-size:11px;color:var(--t3)}
+.comment{display:flex;gap:8px;margin-bottom:12px}
+.comment-avatar{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.comment-avatar.ai{background:var(--accent-bg)}
+.comment-avatar.user{background:var(--blue-bg)}
+.comment-body{flex:1;min-width:0}
+.comment-hd{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.comment-name{font-size:11px;font-weight:600}
+.comment-time{font-size:10px;color:var(--t3)}
+.comment-text{font-size:12px;line-height:1.5;color:var(--t2)}
+.comment-text p{margin-bottom:4px}
+.comment-card{background:var(--bg);border:1px solid var(--border-light);border-radius:var(--r);padding:8px;margin-top:6px}
+.comment-card-title{font-size:11px;font-weight:600;margin-bottom:2px}
+.comment-card-meta{font-size:10px;color:var(--t3)}
+.comment-status{display:flex;align-items:center;gap:4px;padding:4px 6px;background:var(--bg);border:1px solid var(--border-light);border-radius:var(--r);margin-top:6px;font-size:10px}
+.comment-status .dot{width:4px;height:4px;border-radius:50%}
+.comment-actions{display:flex;gap:4px;margin-top:6px}
+.comment-input{margin-top:12px}
+.comment-input textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;color:var(--t1);font-size:12px;outline:none;font-family:inherit;resize:none;min-height:50px;max-height:100px;line-height:1.4;transition:border-color .15s}
+.comment-input textarea:focus{border-color:var(--accent)}
+.comment-input textarea::placeholder{color:var(--t3)}
+.comment-input-actions{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.comment-quick{display:flex;gap:3px}
+.quick-btn{padding:3px 7px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--t3);font-size:10px;cursor:pointer;transition:all .15s;font-family:inherit}
+.quick-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+
+/* Command Palette */
+.cmd-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:none;align-items:flex-start;justify-content:center;padding-top:18vh}
+.cmd-overlay.show{display:flex}
+.cmd{width:520px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,0.6);overflow:hidden}
+.cmd-input{width:100%;padding:14px 16px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--t1);font-size:14px;outline:none;font-family:inherit}
+.cmd-input::placeholder{color:var(--t3)}
+.cmd-list{max-height:320px;overflow-y:auto;padding:4px}
+.cmd-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r);cursor:pointer;color:var(--t2);font-size:13px}
+.cmd-item:hover,.cmd-item.active{background:var(--bg-hover);color:var(--t1)}
+.cmd-item .ci{width:20px;text-align:center}
+.cmd-item .cs{margin-left:auto}
+.cmd-gt{padding:8px 12px 4px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;color:var(--t1);font-size:13px;z-index:200;transition:transform .3s;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@keyframes fade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fade .15s}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-hd"><div class="logo">N</div><span class="app-name">Nexus</span></div>
+
+    <!-- Workspace Switcher -->
+    <div class="workspace-switcher">
+      <div class="workspace-btn" onclick="toggleWorkspace()">
+        <div class="workspace-icon" style="background:linear-gradient(135deg,#8b5cf6,#6366f1)">K</div>
+        <div class="workspace-info">
+          <div class="workspace-name">Kael 个人空间</div>
+          <div class="workspace-type">个人工作空间</div>
+        </div>
+        <div class="workspace-arrow">▼</div>
+      </div>
+      <div class="workspace-dropdown" id="workspaceDropdown">
+        <div class="workspace-dropdown-item active" onclick="switchWorkspace(this,'个人')">
+          <div class="ws-icon" style="background:linear-gradient(135deg,#8b5cf6,#6366f1)">K</div>
+          <div class="ws-info"><div class="ws-name">Kael 个人空间</div><div class="ws-desc">个人工作空间 · 3个Agent</div></div>
+          <div class="ws-check">✓</div>
+        </div>
+        <div class="workspace-dropdown-item" onclick="switchWorkspace(this,'团队')">
+          <div class="ws-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">T</div>
+          <div class="ws-info"><div class="ws-name">团队空间</div><div class="ws-desc">团队协作 · 5人 · 8个Agent</div></div>
+          <div class="ws-check">✓</div>
+        </div>
+        <div class="workspace-dropdown-item" onclick="switchWorkspace(this,'学习')">
+          <div class="ws-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a)">L</div>
+          <div class="ws-info"><div class="ws-name">学习空间</div><div class="ws-desc">学习资料 · 读书笔记</div></div>
+          <div class="ws-check">✓</div>
+        </div>
+        <div class="workspace-dropdown-item" onclick="switchWorkspace(this,'生活')">
+          <div class="ws-icon" style="background:linear-gradient(135deg,#f97316,#ea580c)">🏠</div>
+          <div class="ws-info"><div class="ws-name">生活空间</div><div class="ws-desc">生活事务 · 健康 · 财务</div></div>
+          <div class="ws-check">✓</div>
+        </div>
+        <div class="workspace-divider"></div>
+        <div class="workspace-add" onclick="openDialog('new-workspace')">
+          <span style="font-size:14px">+</span>
+          <span>创建工作空间</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-s">
+        <div class="nav-i active" data-page="dashboard"><span class="ic">📊</span><span>仪表盘</span></div>
+        <div class="nav-i" data-page="events"><span class="ic">📥</span><span>事件流</span><span class="cnt">12</span></div>
+        <div class="nav-i" data-page="tasks"><span class="ic">📋</span><span>任务</span><span class="cnt">8</span></div>
+      </div>
+      <div class="nav-s"><div class="nav-st">AI 治理</div>
+        <div class="nav-i" data-page="agents"><span class="ic">🤖</span><span>执行器</span><span class="dot"></span></div>
+        <div class="nav-i" data-page="rules"><span class="ic">⚙️</span><span>规则引擎</span></div>
+      </div>
+      <div class="nav-s"><div class="nav-st">接入</div>
+        <div class="nav-i" data-page="sources"><span class="ic">🔗</span><span>信息源</span></div>
+      </div>
+    </nav>
+    <div class="sidebar-ft"><div class="avatar">K</div><div style="flex:1"><div style="font-size:12px;font-weight:500">Kael</div><div style="font-size:10px;color:var(--t3)">保守模式</div></div></div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="header">
+      <div class="header-title"><span>📊 仪表盘</span></div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" id="cmdTrigger" title="⌘K"><span class="kbd">⌘K</span></button>
+        <button class="btn" onclick="openDialog('new-event')">+ 新建事件</button>
+        <button class="btn btn-icon" title="通知">🔔</button>
+        <button class="btn btn-icon" title="设置">⚙️</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-scroll">
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-label">📥 今日接收</div><div class="stat-value">156</div><div class="stat-change" style="color:var(--t3)">条信息</div></div>
+            <div class="stat-card" style="border-left:3px solid var(--red)"><div class="stat-label">🔴 必须你</div><div class="stat-value" style="color:var(--red)">3</div><div class="stat-change">L3 · 需要你处理</div></div>
+            <div class="stat-card" style="border-left:3px solid var(--yellow)"><div class="stat-label">🟡 Agent 处理中</div><div class="stat-value" style="color:var(--yellow)">5</div><div class="stat-change">L2 · 自动处理</div></div>
+            <div class="stat-card" style="border-left:3px solid var(--green)"><div class="stat-label">🟢 AI 已完成</div><div class="stat-value" style="color:var(--green)">23</div><div class="stat-change">L1/L2 · 已处理</div></div>
+          </div>
+          <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,rgba(139,92,246,0.05),rgba(59,130,246,0.05))">
+            <div class="card-header"><div class="card-title">🛡️ AI 注意力隔离</div><span class="card-action" data-goto="events">查看详情</span></div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center">
+                <div><div style="font-size:20px;font-weight:700;color:var(--t3)">125</div><div style="font-size:11px;color:var(--t3)">L0 已隔离</div><div style="font-size:10px;color:var(--t3);margin-top:2px">营销/噪音/无关</div></div>
+                <div><div style="font-size:20px;font-weight:700;color:var(--blue)">18</div><div style="font-size:11px;color:var(--t3)">L1 已追踪</div><div style="font-size:10px;color:var(--t3);margin-top:2px">有结果再汇报</div></div>
+                <div><div style="font-size:20px;font-weight:700;color:var(--yellow)">10</div><div style="font-size:11px;color:var(--t3)">L2 Agent处理</div><div style="font-size:10px;color:var(--t3);margin-top:2px">自动处理中</div></div>
+                <div><div style="font-size:20px;font-weight:700;color:var(--red)">3</div><div style="font-size:11px;color:var(--t3)">L3 必须你</div><div style="font-size:10px;color:var(--t3);margin-top:2px">需要你关注</div></div>
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light);font-size:11px;color:var(--green);text-align:center">✅ 今日为你节省约 2.5 小时注意力</div>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <div>
+              <div class="card" style="margin-bottom:16px">
+                <div class="card-header"><div class="card-title">📈 事件趋势</div><span class="card-action">查看详情</span></div>
+                <div class="card-body"><div class="chart-area"><div class="chart-bar" style="height:40%"></div><div class="chart-bar" style="height:55%"></div><div class="chart-bar" style="height:35%"></div><div class="chart-bar" style="height:70%"></div><div class="chart-bar" style="height:50%"></div><div class="chart-bar" style="height:85%"></div><div class="chart-bar" style="height:60%"></div></div></div>
+              </div>
+              <div class="card">
+                <div class="card-header"><div class="card-title">🕐 最近事件</div><span class="card-action" data-goto="events">查看全部</span></div>
+                <div class="card-body">
+                  <div class="event-mini"><div class="event-mini-icon" style="background:var(--blue-bg)">💬</div><div class="event-mini-content"><div class="event-mini-title">服务器CPU使用率超过90%</div><div class="event-mini-meta">钉钉 · 运维群</div></div><div class="event-mini-time">2分钟前</div></div>
+                  <div class="event-mini"><div class="event-mini-icon" style="background:var(--orange-bg)">📧</div><div class="event-mini-content"><div class="event-mini-title">客户投诉：产品功能异常</div><div class="event-mini-meta">Gmail · client@example.com</div></div><div class="event-mini-time">15分钟前</div></div>
+                  <div class="event-mini"><div class="event-mini-icon" style="background:var(--green-bg)">📰</div><div class="event-mini-content"><div class="event-mini-title">Anthropic发布Claude 4</div><div class="event-mini-meta">RSS · AI新闻</div></div><div class="event-mini-time">1小时前</div></div>
+                  <div class="event-mini"><div class="event-mini-icon" style="background:var(--accent-bg)">💬</div><div class="event-mini-content"><div class="event-mini-title">周报提交提醒</div><div class="event-mini-meta">飞书 · 系统通知</div></div><div class="event-mini-time">2小时前</div></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:16px">
+                <div class="card-header"><div class="card-title">🤖 Agent 状态</div><span class="card-action" data-goto="agents">管理</span></div>
+                <div class="card-body">
+                  <div class="agent-item"><div class="agent-avatar" style="background:var(--red-bg)">🦞</div><div class="agent-info"><div class="agent-name">龙虾</div><div class="agent-status"><span class="dot" style="background:var(--green)"></span> 空闲</div></div></div>
+                  <div class="agent-item"><div class="agent-avatar" style="background:var(--yellow-bg)">🎯</div><div class="agent-info"><div class="agent-name">Harness</div><div class="agent-status"><span class="dot" style="background:var(--yellow)"></span> 处理中</div></div></div>
+                  <div class="agent-item"><div class="agent-avatar" style="background:var(--accent-bg)">🤖</div><div class="agent-info"><div class="agent-name">Codex</div><div class="agent-status"><span class="dot" style="background:var(--t3)"></span> 离线</div></div></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><div class="card-title">📊 来源分布</div></div>
+                <div class="card-body">
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;width:40px">钉钉</span><div style="flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="width:35%;height:100%;background:var(--blue);border-radius:3px"></div></div><span style="font-size:10px;color:var(--t3)">35%</span></div>
+                    <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;width:40px">邮件</span><div style="flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="width:25%;height:100%;background:var(--orange);border-radius:3px"></div></div><span style="font-size:10px;color:var(--t3)">25%</span></div>
+                    <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;width:40px">RSS</span><div style="flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="width:20%;height:100%;background:var(--green);border-radius:3px"></div></div><span style="font-size:10px;color:var(--t3)">20%</span></div>
+                    <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;width:40px">飞书</span><div style="flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden"><div style="width:15%;height:100%;background:var(--accent);border-radius:3px"></div></div><span style="font-size:10px;color:var(--t3)">15%</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events -->
+      <div class="page" id="page-events">
+        <div class="events-toolbar">
+          <div class="chips">
+            <button class="chip active" data-filter="all">全部</button>
+            <button class="chip" data-filter="l3" style="border-color:var(--red);color:var(--red)">L3 必须你</button>
+            <button class="chip" data-filter="l2" style="border-color:var(--yellow);color:var(--yellow)">L2 Agent</button>
+            <button class="chip" data-filter="l1" style="border-color:var(--blue);color:var(--blue)">L1 追踪</button>
+            <button class="chip" data-filter="l0" style="border-color:var(--t3);color:var(--t3)">L0 隔离</button>
+          </div>
+          <div class="search"><span class="si">🔍</span><input type="text" placeholder="搜索事件..."></div>
+        </div>
+        <div class="events-list" id="eventsList">
+          <!-- L3 必须你 -->
+          <div style="padding:8px 0 4px;font-size:11px;font-weight:600;color:var(--red);display:flex;align-items:center;gap:6px">🔴 L3 必须你关注 <span style="font-size:10px;color:var(--t3)">3件</span></div>
+
+          <div class="event-card selected" data-level="l3" onclick="openDetail(1)">
+            <div class="event-priority" style="color:var(--red)">⚡</div>
+            <div class="event-content">
+              <div class="event-title">服务器CPU使用率超过90%</div>
+              <div class="event-meta">
+                <span>💬 钉钉</span>
+                <span>运维群 · 张三</span>
+                <span>2分钟前</span>
+                <div class="event-tags">
+                  <span class="tag" style="background:var(--red-bg);color:var(--red)">L3</span>
+                  <span class="tag" style="background:var(--orange-bg);color:var(--orange)">紧急</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="event-card" data-level="l3" onclick="openDetail(2)">
+            <div class="event-priority" style="color:var(--orange)">⬆</div>
+            <div class="event-content">
+              <div class="event-title">客户投诉：产品功能异常导致数据丢失</div>
+              <div class="event-meta">
+                <span>📧 Gmail</span>
+                <span>client@example.com</span>
+                <span>15分钟前</span>
+                <div class="event-tags">
+                  <span class="tag" style="background:var(--red-bg);color:var(--red)">L3</span>
+                  <span class="tag" style="background:var(--orange-bg);color:var(--orange)">高</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="event-card" data-level="l3" onclick="openDetail(3)">
+            <div class="event-priority" style="color:var(--yellow)">◆</div>
+            <div class="event-content">
+              <div class="event-title">融资路演PPT审核</div>
+              <div class="event-meta">
+                <span>📧 Gmail</span>
+                <span>投资机构</span>
+                <span>6小时前</span>
+                <div class="event-tags">
+                  <span class="tag" style="background:var(--red-bg);color:var(--red)">L3</span>
+                  <span class="tag" style="background:var(--yellow-bg);color:var(--yellow)">中</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- L2 Agent 处理中 -->
+          <div style="padding:16px 0 4px;font-size:11px;font-weight:600;color:var(--yellow);display:flex;align-items:center;gap:6px">🟡 L2 Agent 处理中 <span style="font-size:10px;color:var(--t3)">5件</span></div>
+
+          <div class="event-card" data-level="l2" onclick="openDetail(4)">
+            <div class="event-priority" style="color:var(--t3)">▾</div>
+            <div class="event-content">
+              <div class="event-title">AI新闻摘要生成</div>
+              <div class="event-meta">
+                <span>📰 RSS</span>
+                <span>🦞 龙虾处理中</span>
+                <span>1小时前</span>
+                <div class="event-tags">
+                  <span class="tag" style="background:var(--yellow-bg);color:var(--yellow)">L2</span>
+                  <span class="tag" style="background:var(--green-bg);color:var(--green)">处理中</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="event-card" data-level="l2" onclick="openDetail(5)">
+            <div class="event-priority" style="color:var(--t3)">▾</div>
+            <div class="event-content">
+              <div class="event-title">竞品分析报告</div>
+              <div class="event-meta">
+                <span>💬 企微</span>
+                <span>🦞 龙虾处理中</span>
+                <span>3小时前</span>
+                <div class="event-tags">
+                  <span class="tag" style="background:var(--yellow-bg);color:var(--yellow)">L2</span>
+                  <span class="tag" style="background:var(--green-bg);color:var(--green)">处理中</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="event-card" data-level="l2" onclick="openDetail(6)">
+            <div class="event-priority" style="color:var(--t3)">▾</div>
+            <div class="event-content">
+              <div class="event-title">周报汇总</div>
+              <div class="event-meta">
+                <span>💬 飞书</span>
+                <span>🎯 Harness</span>
+                <span>2小时前</span>
+                <div class="event-tags">
+                  <span class="tag" style="background:var(--yellow-bg);color:var(--yellow)">L2</span>
+                  <span class="tag" style="background:var(--blue-bg);color:var(--blue)">待处理</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- L1 AI 追踪 -->
+          <div style="padding:16px 0 4px;font-size:11px;font-weight:600;color:var(--blue);display:flex;align-items:center;gap:6px">🔵 L1 AI 追踪中 <span style="font-size:10px;color:var(--t3)">18件 · 有结果再汇报</span></div>
+
+          <div class="event-card" data-level="l1" onclick="openDetail(7)" style="opacity:0.7">
+            <div class="event-priority" style="color:var(--t3)">·</div>
+            <div class="event-content">
+              <div class="event-title">Anthropic发布Claude 4</div>
+              <div class="event-meta">
+                <span>📰 RSS</span>
+                <span>AI追踪中</span>
+                <span>1小时前</span>
+                <div class="event-tags">
+                  <span class="tag" style="background:var(--blue-bg);color:var(--blue)">L1</span>
+                  <span class="tag" style="background:var(--bg-active);color:var(--t3)">追踪中</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="event-card" data-level="l1" onclick="openDetail(8)" style="opacity:0.7">
+            <div class="event-priority" style="color:var(--t3)">·</div>
+            <div class="event-content">
+              <div class="event-title">XX公司获得B轮融资</div>
+              <div class="event-meta">
+                <span>📰 RSS</span>
+                <span>AI追踪中</span>
+                <span>3小时前</span>
+                <div class="event-tags">
+                  <span class="tag" style="background:var(--blue-bg);color:var(--blue)">L1</span>
+                  <span class="tag" style="background:var(--bg-active);color:var(--t3)">追踪中</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- L0 已隔离 -->
+          <div style="padding:16px 0 4px;font-size:11px;font-weight:600;color:var(--t3);display:flex;align-items:center;gap:6px">⚪ L0 已隔离 <span style="font-size:10px">125件 · 自动归档</span> <span style="font-size:10px;color:var(--accent);cursor:pointer;margin-left:auto">查看</span></div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 0">
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center">
+              <div style="font-size:16px;font-weight:600;color:var(--t3)">45</div>
+              <div style="font-size:10px;color:var(--t3)">营销邮件</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center">
+              <div style="font-size:16px;font-weight:600;color:var(--t3)">62</div>
+              <div style="font-size:10px;color:var(--t3)">无关群消息</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center">
+              <div style="font-size:16px;font-weight:600;color:var(--t3)">18</div>
+              <div style="font-size:10px;color:var(--t3)">系统通知</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tasks -->
+      <div class="page" id="page-tasks">
+        <div class="events-toolbar">
+          <div class="chips"><button class="chip active">全部</button><button class="chip">我的</button><button class="chip">Agent</button><button class="chip">逾期</button></div>
+          <div class="view-toggle"><button class="view-btn active">▦ 看板</button><button class="view-btn">☰ 列表</button></div>
+        </div>
+        <div class="kanban">
+          <div class="kanban-col"><div class="kanban-col-hd"><div class="dot" style="background:var(--t3)"></div><h4>待分配</h4><span class="count">3</span></div><div class="kanban-cards"><div class="kanban-card"><div class="kanban-card-title">客户投诉处理</div><div class="kanban-card-meta"><span class="tag" style="background:var(--red-bg);color:var(--red)">紧急</span></div><div class="kanban-card-bottom"><span>📧 邮件</span><span>⬆ 高</span></div></div><div class="kanban-card"><div class="kanban-card-title">周报汇总</div><div class="kanban-card-meta"><span class="tag" style="background:var(--yellow-bg);color:var(--yellow)">中</span></div><div class="kanban-card-bottom"><span>💬 飞书</span><span>◆ 中</span></div></div></div></div>
+          <div class="kanban-col"><div class="kanban-col-hd"><div class="dot" style="background:var(--yellow)"></div><h4>进行中</h4><span class="count">3</span></div><div class="kanban-cards"><div class="kanban-card"><div class="kanban-card-title">服务器告警处理</div><div class="kanban-card-meta"><span class="tag" style="background:var(--red-bg);color:var(--red)">紧急</span></div><div class="kanban-card-bottom"><span>👤 Kael</span><span>⚡ 紧急</span></div></div><div class="kanban-card"><div class="kanban-card-title">AI新闻摘要</div><div class="kanban-card-meta"><span class="tag" style="background:var(--green-bg);color:var(--green)">低</span></div><div class="kanban-card-bottom"><span>🦞 龙虾</span><span>▾ 低</span></div></div></div></div>
+          <div class="kanban-col"><div class="kanban-col-hd"><div class="dot" style="background:var(--green)"></div><h4>已完成</h4><span class="count">4</span></div><div class="kanban-cards"><div class="kanban-card" style="opacity:0.6"><div class="kanban-card-title" style="text-decoration:line-through">月度报表</div><div class="kanban-card-bottom"><span>🦞 龙虾</span><span>昨天</span></div></div></div></div>
+        </div>
+      </div>
+
+      <!-- Executors (Agents) -->
+      <div class="page" id="page-agents">
+        <div class="page-scroll">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <div>
+              <h2 style="font-size:16px;font-weight:600">执行器管理</h2>
+              <p style="font-size:12px;color:var(--t3);margin-top:4px">执行器负责具体执行，系统只负责驱动流程</p>
+            </div>
+            <button class="btn btn-p" onclick="openDialog('add-agent')">+ 添加执行器</button>
+          </div>
+
+          <!-- Executor Stats -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--green)">4</div>
+              <div style="font-size:11px;color:var(--t3)">活跃执行器</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--yellow)">5</div>
+              <div style="font-size:11px;color:var(--t3)">执行中任务</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--accent)">23</div>
+              <div style="font-size:11px;color:var(--t3)">今日完成</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--t3)">0</div>
+              <div style="font-size:11px;color:var(--t3)">异常/超时</div>
+            </div>
+          </div>
+
+          <!-- Flow Diagram -->
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:20px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:12px">执行流程</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t2);flex-wrap:wrap">
+              <span style="padding:4px 8px;background:var(--accent-bg);border-radius:var(--r)">接收任务</span>
+              <span>→</span>
+              <span style="padding:4px 8px;background:var(--yellow-bg);border-radius:var(--r)">能力匹配</span>
+              <span>→</span>
+              <span style="padding:4px 8px;background:var(--green-bg);border-radius:var(--r)">执行任务</span>
+              <span>→</span>
+              <span style="padding:4px 8px;background:var(--blue-bg);border-radius:var(--r)">提交结果</span>
+              <span>→</span>
+              <span style="padding:4px 8px;background:var(--bg-active);border-radius:var(--r)">完成/审核</span>
+            </div>
+          </div>
+
+          <!-- Executors Grid -->
+          <h3 style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:12px">Agent 执行器</h3>
+          <div class="agents-grid" style="padding:0">
+            <div class="agent-card">
+              <div class="agent-card-hd">
+                <div class="agent-card-avatar" style="background:var(--red-bg)">🦞</div>
+                <div class="agent-card-info">
+                  <div class="agent-card-name">龙虾</div>
+                  <div class="agent-card-role">信息执行器</div>
+                </div>
+                <div class="agent-card-status" style="background:var(--green-bg);color:var(--green)">● 空闲</div>
+              </div>
+              <div class="agent-caps">
+                <span class="cap">信息检索</span>
+                <span class="cap">内容摘要</span>
+                <span class="cap">报告生成</span>
+                <span class="cap">资讯追踪</span>
+              </div>
+              <div class="agent-stats">
+                <div class="agent-stat"><div class="agent-stat-val">5</div><div class="agent-stat-lbl">今日完成</div></div>
+                <div class="agent-stat"><div class="agent-stat-val">8</div><div class="agent-stat-lbl">今日上限</div></div>
+                <div class="agent-stat"><div class="agent-stat-val" style="color:var(--green)">98%</div><div class="agent-stat-lbl">成功率</div></div>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:6px">
+                <button class="btn btn-sm">配置</button>
+                <button class="btn btn-sm">暂停</button>
+                <button class="btn btn-sm">历史</button>
+              </div>
+            </div>
+
+            <div class="agent-card">
+              <div class="agent-card-hd">
+                <div class="agent-card-avatar" style="background:var(--yellow-bg)">🎯</div>
+                <div class="agent-card-info">
+                  <div class="agent-card-name">Harness</div>
+                  <div class="agent-card-role">代码执行器</div>
+                </div>
+                <div class="agent-card-status" style="background:var(--yellow-bg);color:var(--yellow)">● 处理中</div>
+              </div>
+              <div class="agent-caps">
+                <span class="cap">代码生成</span>
+                <span class="cap">代码审查</span>
+                <span class="cap">Bug修复</span>
+                <span class="cap">重构</span>
+              </div>
+              <div class="agent-stats">
+                <div class="agent-stat"><div class="agent-stat-val">3</div><div class="agent-stat-lbl">今日完成</div></div>
+                <div class="agent-stat"><div class="agent-stat-val">5</div><div class="agent-stat-lbl">今日上限</div></div>
+                <div class="agent-stat"><div class="agent-stat-val" style="color:var(--green)">95%</div><div class="agent-stat-lbl">成功率</div></div>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:6px">
+                <button class="btn btn-sm">配置</button>
+                <button class="btn btn-sm">暂停</button>
+                <button class="btn btn-sm">历史</button>
+              </div>
+            </div>
+
+            <div class="agent-card">
+              <div class="agent-card-hd">
+                <div class="agent-card-avatar" style="background:var(--accent-bg)">🤖</div>
+                <div class="agent-card-info">
+                  <div class="agent-card-name">Codex</div>
+                  <div class="agent-card-role">架构执行器</div>
+                </div>
+                <div class="agent-card-status" style="background:var(--bg-active);color:var(--t3)">● 离线</div>
+              </div>
+              <div class="agent-caps">
+                <span class="cap">代码生成</span>
+                <span class="cap">架构设计</span>
+                <span class="cap">技术方案</span>
+              </div>
+              <div class="agent-stats">
+                <div class="agent-stat"><div class="agent-stat-val">0</div><div class="agent-stat-lbl">今日完成</div></div>
+                <div class="agent-stat"><div class="agent-stat-val">—</div><div class="agent-stat-lbl">今日上限</div></div>
+                <div class="agent-stat"><div class="agent-stat-val">92%</div><div class="agent-stat-lbl">成功率</div></div>
+              </div>
+              <div style="margin-top:12px;display:flex;gap:6px">
+                <button class="btn btn-sm">配置</button>
+                <button class="btn btn-sm btn-p">启动</button>
+                <button class="btn btn-sm">历史</button>
+              </div>
+            </div>
+          </div>
+
+          <h3 style="font-size:13px;font-weight:600;color:var(--t2);margin:20px 0 12px">👤 人执行器</h3>
+          <div class="agents-grid" style="padding:0">
+            <div class="agent-card">
+              <div class="agent-card-hd">
+                <div class="agent-card-avatar" style="background:linear-gradient(135deg,var(--accent),var(--blue))">K</div>
+                <div class="agent-card-info">
+                  <div class="agent-card-name">Kael</div>
+                  <div class="agent-card-role">决策执行器</div>
+                </div>
+                <div class="agent-card-status" style="background:var(--green-bg);color:var(--green)">● 在线</div>
+              </div>
+              <div class="agent-caps">
+                <span class="cap">决策审批</span>
+                <span class="cap">任务分配</span>
+                <span class="cap">规则配置</span>
+                <span class="cap">创意工作</span>
+              </div>
+              <div class="agent-stats">
+                <div class="agent-stat"><div class="agent-stat-val">3</div><div class="agent-stat-lbl">待处理</div></div>
+                <div class="agent-stat"><div class="agent-stat-val">2</div><div class="agent-stat-lbl">待审核</div></div>
+                <div class="agent-stat"><div class="agent-stat-val">8</div><div class="agent-stat-lbl">今日完成</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rules -->
+      <div class="page" id="page-rules">
+        <div class="page-scroll">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <div>
+              <h2 style="font-size:16px;font-weight:600">规则引擎</h2>
+              <p style="font-size:12px;color:var(--t3);margin-top:4px">规则是对分发的增强，通过对话创建，系统调用执行器生成</p>
+            </div>
+            <button class="btn btn-p" onclick="openDialog('new-rule')">+ 通过对话创建规则</button>
+          </div>
+
+          <!-- Rule Stats -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--accent)">8</div>
+              <div style="font-size:11px;color:var(--t3)">活跃规则</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--green)">280</div>
+              <div style="font-size:11px;color:var(--t3)">今日触发</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--yellow)">156</div>
+              <div style="font-size:11px;color:var(--t3)">已拦截</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--rl);padding:14px;text-align:center">
+              <div style="font-size:20px;font-weight:700;color:var(--blue)">124</div>
+              <div style="font-size:11px;color:var(--t3)">已分发</div>
+            </div>
+          </div>
+
+          <!-- AI Suggested Rules -->
+          <div style="background:var(--accent-bg);border:1px solid rgba(139,92,246,0.2);border-radius:var(--rl);padding:16px;margin-bottom:20px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <span style="font-size:14px">✨</span>
+              <span style="font-size:13px;font-weight:600">AI 建议的规则</span>
+            </div>
+            <p style="font-size:12px;color:var(--t2);margin-bottom:12px">基于你的使用模式，AI 建议以下规则：</p>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px;display:flex;align-items:center;gap:10px">
+                <span style="font-size:12px">📧</span>
+                <div style="flex:1">
+                  <div style="font-size:12px;font-weight:500">周报提醒自动归档</div>
+                  <div style="font-size:10px;color:var(--t3)">你总是周五才处理周报，建议自动归档其他时间的提醒</div>
+                </div>
+                <button class="btn btn-sm" onclick="showToast('规则已添加')">添加</button>
+                <button class="btn btn-sm" onclick="showToast('已忽略')">忽略</button>
+              </div>
+              <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px;display:flex;align-items:center;gap:10px">
+                <span style="font-size:12px">💬</span>
+                <div style="flex:1">
+                  <div style="font-size:12px;font-weight:500">产品群消息自动摘要</div>
+                  <div style="font-size:10px;color:var(--t3)">产品群消息较多，建议AI自动摘要后再推送</div>
+                </div>
+                <button class="btn btn-sm" onclick="showToast('规则已添加')">添加</button>
+                <button class="btn btn-sm" onclick="showToast('已忽略')">忽略</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Rules -->
+          <h3 style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:12px">活跃规则</h3>
+
+          <div class="rule-card">
+            <div class="rule-hd">
+              <span style="font-size:14px">⚡</span>
+              <div class="rule-name">紧急事件自动升级</div>
+              <span class="rule-level" style="background:var(--red-bg);color:var(--red)">L3</span>
+              <div class="rule-toggle on"></div>
+            </div>
+            <div class="rule-cond">IF 来源 == 任意 AND 关键词 包含 ["故障","宕机","紧急","告警"]</div>
+            <div class="rule-action">THEN L3 → 立即通知人</div>
+            <div class="rule-meta"><span>触发23次</span><span>最后2分钟前</span><span>成功率100%</span></div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-hd">
+              <span style="font-size:14px">👤</span>
+              <div class="rule-name">老板消息必达</div>
+              <span class="rule-level" style="background:var(--red-bg);color:var(--red)">L3</span>
+              <div class="rule-toggle on"></div>
+            </div>
+            <div class="rule-cond">IF 发送人 == "张总" OR 发送人 == "李总"</div>
+            <div class="rule-action">THEN L3 → 立即通知人</div>
+            <div class="rule-meta"><span>触发12次</span><span>最后1小时前</span></div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-hd">
+              <span style="font-size:14px">📧</span>
+              <div class="rule-name">营销邮件归档</div>
+              <span class="rule-level" style="background:var(--bg-active);color:var(--t3)">L0</span>
+              <div class="rule-toggle on"></div>
+            </div>
+            <div class="rule-cond">IF 来源=="邮件" AND 域名包含["promo","marketing","noreply"]</div>
+            <div class="rule-action">THEN L0 → 自动归档</div>
+            <div class="rule-meta"><span>触发156次</span><span>最后30分钟前</span></div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-hd">
+              <span style="font-size:14px">📰</span>
+              <div class="rule-name">AI资讯追踪</div>
+              <span class="rule-level" style="background:var(--green-bg);color:var(--green)">L1</span>
+              <div class="rule-toggle on"></div>
+            </div>
+            <div class="rule-cond">IF 来源=="RSS" AND 关键词包含["AI","融资","竞品","发布"]</div>
+            <div class="rule-action">THEN L1 → Agent摘要，有结果再汇报</div>
+            <div class="rule-meta"><span>触发89次</span><span>最后1小时前</span></div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-hd">
+              <span style="font-size:14px">💬</span>
+              <div class="rule-name">@我消息必达</div>
+              <span class="rule-level" style="background:var(--orange-bg);color:var(--orange)">L3</span>
+              <div class="rule-toggle on"></div>
+            </div>
+            <div class="rule-cond">IF 来源==["钉钉","飞书","企微"] AND 内容包含"@Kael"</div>
+            <div class="rule-action">THEN L3 → 立即通知人</div>
+            <div class="rule-meta"><span>触发34次</span><span>最后30分钟前</span></div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-hd">
+              <span style="font-size:14px">🔧</span>
+              <div class="rule-name">代码任务自动分发</div>
+              <span class="rule-level" style="background:var(--yellow-bg);color:var(--yellow)">L2</span>
+              <div class="rule-toggle on"></div>
+            </div>
+            <div class="rule-cond">IF 标签==["代码","Bug","技术"] AND 优先级!="紧急"</div>
+            <div class="rule-action">THEN L2 → 分配给Harness</div>
+            <div class="rule-meta"><span>触发18次</span><span>最后2小时前</span></div>
+          </div>
+
+          <div class="rule-card">
+            <div class="rule-hd">
+              <span style="font-size:14px">📊</span>
+              <div class="rule-name">数据报表自动生成</div>
+              <span class="rule-level" style="background:var(--blue-bg);color:var(--blue)">L2</span>
+              <div class="rule-toggle on"></div>
+            </div>
+            <div class="rule-cond">IF 来源=="系统" AND 类型=="定时任务" AND 名称包含"报表"</div>
+            <div class="rule-action">THEN L2 → 分配给龙虾</div>
+            <div class="rule-meta"><span>触发8次</span><span>最后昨天</span></div>
+          </div>
+
+          <div class="rule-card" style="opacity:0.6">
+            <div class="rule-hd">
+              <span style="font-size:14px">📰</span>
+              <div class="rule-name">竞品新闻追踪</div>
+              <span class="rule-level" style="background:var(--green-bg);color:var(--green)">L1</span>
+              <div class="rule-toggle"></div>
+            </div>
+            <div class="rule-cond">IF 来源=="RSS" AND 关键词包含["竞品","XX公司","YY公司"]</div>
+            <div class="rule-action">THEN L1 → Agent摘要，有结果再汇报</div>
+            <div class="rule-meta"><span>已禁用</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sources -->
+      <div class="page" id="page-sources">
+        <div class="page-scroll">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><h2 style="font-size:16px;font-weight:600">信息源接入</h2><button class="btn btn-p" onclick="openDialog('add-source')">+ 添加信息源</button></div>
+          <div class="sources-grid">
+          <div class="source-card"><div class="source-card-hd"><span class="source-card-icon">💬</span><div class="source-card-info"><div class="source-card-name">钉钉</div><div class="source-card-type">即时通讯</div></div><span class="source-card-status" style="background:var(--green-bg);color:var(--green)">已连接</span></div><p class="source-card-desc">群消息、@消息、通知</p><div class="source-card-stats">今日 42条 · 已过滤 28条</div></div>
+          <div class="source-card"><div class="source-card-hd"><span class="source-card-icon">📧</span><div class="source-card-info"><div class="source-card-name">Gmail</div><div class="source-card-type">邮件</div></div><span class="source-card-status" style="background:var(--green-bg);color:var(--green)">已连接</span></div><p class="source-card-desc">收件箱自动解析</p><div class="source-card-stats">今日 28条 · 已过滤 20条</div></div>
+          <div class="source-card"><div class="source-card-hd"><span class="source-card-icon">📰</span><div class="source-card-info"><div class="source-card-name">RSS</div><div class="source-card-type">资讯</div></div><span class="source-card-status" style="background:var(--green-bg);color:var(--green)">已连接</span></div><p class="source-card-desc">多个RSS源订阅</p><div class="source-card-stats">今日 15条 · 已摘要 4条</div></div>
+          <div class="source-card"><div class="source-card-hd"><span class="source-card-icon">💬</span><div class="source-card-info"><div class="source-card-name">飞书</div><div class="source-card-type">即时通讯</div></div><span class="source-card-status" style="background:var(--green-bg);color:var(--green)">已连接</span></div><p class="source-card-desc">消息、日历、审批</p><div class="source-card-stats">今日 18条 · 已过滤 15条</div></div>
+          <div class="source-card"><div class="source-card-hd"><span class="source-card-icon">💬</span><div class="source-card-info"><div class="source-card-name">企微</div><div class="source-card-type">即时通讯</div></div><span class="source-card-status" style="background:var(--bg-active);color:var(--t3)">未连接</span></div><p class="source-card-desc">企业微信消息</p><button class="btn btn-sm" style="margin-top:8px" onclick="openDialog('add-source')">配置接入</button></div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Detail Panel -->
+  <aside class="detail" id="detail">
+    <div class="detail-hd"><button class="detail-close" id="detailClose">✕</button><span style="font-size:12px;color:var(--t3)">EVT-001</span><div style="margin-left:auto;display:flex;gap:4px"><button class="btn btn-sm">📦</button><button class="btn btn-sm">🗑</button></div></div>
+    <div class="detail-body">
+      <div class="detail-title">服务器CPU使用率超过90%</div>
+      <div class="detail-section"><div class="detail-label">状态</div><div class="detail-value"><select><option>待分拣</option><option>待分配</option><option selected>进行中</option><option>已完成</option></select></div></div>
+      <div class="detail-section"><div class="detail-label">优先级</div><div class="detail-value"><select><option selected>⚡ 紧急</option><option>⬆ 高</option><option>◆ 中</option><option>▾ 低</option></select></div></div>
+      <div class="detail-section"><div class="detail-label">级别</div><div class="detail-value"><select><option selected>L3 必须你</option><option>L2 Agent处理</option><option>L1 可追踪</option><option>L0 噪音</option></select></div></div>
+      <div class="detail-section"><div class="detail-label">来源</div><div class="detail-value" style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;padding:2px 5px;border-radius:3px;background:var(--blue-bg);color:var(--blue)">💬 钉钉</span><span>运维群 / 张三</span></div></div>
+      <div class="detail-section"><div class="detail-label">内容</div><div class="detail-desc">服务器CPU使用率持续超过90%，已持续15分钟。需要立即排查原因并处理。</div></div>
+
+      <div class="detail-divider"></div>
+
+      <!-- Thread -->
+      <div class="thread">
+        <div class="thread-hd"><h3>对话线程</h3><span class="count">2轮</span></div>
+
+        <div class="comment"><div class="comment-avatar ai">✨</div><div class="comment-body"><div class="comment-hd"><span class="comment-name">Nexus</span><span class="comment-time">09:00</span></div><div class="comment-text"><p>收到服务器告警，已识别为 <strong>L3</strong>。正在分析原因...</p></div><div class="comment-status"><span class="dot" style="background:var(--yellow)"></span> 分析中</div></div></div>
+
+        <div class="comment"><div class="comment-avatar ai">✨</div><div class="comment-body"><div class="comment-hd"><span class="comment-name">Nexus</span><span class="comment-time">09:02</span></div><div class="comment-text"><p>分析完成：某个定时任务导致CPU飙升。建议重启该任务。</p></div><div class="comment-actions"><button class="btn btn-sm btn-p" onclick="sendComment('重启任务')">重启任务</button><button class="btn btn-sm" onclick="sendComment('查看详情')">查看详情</button></div></div></div>
+
+        <div class="comment"><div class="comment-avatar user">K</div><div class="comment-body"><div class="comment-hd"><span class="comment-name">Kael</span><span class="comment-time">09:05</span></div><div class="comment-text">重启任务</div></div></div>
+
+        <div class="comment"><div class="comment-avatar ai">✨</div><div class="comment-body"><div class="comment-hd"><span class="comment-name">Nexus</span><span class="comment-time">09:05</span></div><div class="comment-text"><p>✅ 任务已重启，CPU恢复正常。</p></div><div class="comment-status"><span class="dot" style="background:var(--green)"></span> 状态：进行中 → 已完成</div></div></div>
+
+        <div class="comment-input">
+          <textarea id="commentInput" placeholder="继续对话..." rows="2"></textarea>
+          <div class="comment-input-actions">
+            <div class="comment-quick">
+              <button class="quick-btn" onclick="openDialog('assign-agent')">分配给Agent</button>
+              <button class="quick-btn" onclick="sendComment('关闭事件')">关闭</button>
+              <button class="quick-btn" onclick="sendComment('升级处理')">升级</button>
+            </div>
+            <button class="btn btn-p btn-sm" onclick="sendComment()">发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- Command Palette -->
+<div class="cmd-overlay" id="cmdOverlay"><div class="cmd"><input type="text" class="cmd-input" placeholder="输入命令或搜索..." id="cmdInput"><div class="cmd-list"><div class="cmd-gt">快速操作</div><div class="cmd-item active" data-action="new"><span class="ci">+</span><span>新建事件</span><span class="cs"><span class="kbd">N</span></span></div><div class="cmd-item" data-action="goto-dashboard"><span class="ci">📊</span><span>仪表盘</span></div><div class="cmd-item" data-action="goto-events"><span class="ci">📥</span><span>事件流</span></div><div class="cmd-item" data-action="goto-tasks"><span class="ci">📋</span><span>任务</span></div><div class="cmd-item" data-action="goto-agents"><span class="ci">🤖</span><span>Agent</span></div><div class="cmd-gt">对话</div><div class="cmd-item" data-action="chat"><span class="ci">💬</span><span>AI 对话</span><span class="cs"><span class="kbd">⌘</span> <span class="kbd">J</span></span></div></div></div></div>
+
+<!-- Dialog Modal -->
+<div class="dialog-overlay" id="dialogOverlay">
+  <div class="dialog" id="dialog">
+    <div class="dialog-hd">
+      <div class="dialog-hd-icon" id="dialogIcon" style="background:var(--accent-bg)">✨</div>
+      <div class="dialog-hd-title" id="dialogTitle">对话</div>
+      <button class="dialog-hd-close" onclick="closeDialog()">✕</button>
+    </div>
+    <div class="dialog-body" id="dialogBody">
+      <!-- Dynamic content -->
+    </div>
+    <div class="dialog-ft">
+      <button class="btn" onclick="closeDialog()">取消</button>
+      <button class="btn btn-p" id="dialogSubmit" onclick="submitDialog()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- Side Panel Dialog -->
+<div class="side-panel-overlay" id="sidePanelOverlay"></div>
+<div class="side-panel" id="sidePanel">
+  <div class="resize-handle" id="resizeHandle"></div>
+  <div class="dialog-hd">
+    <div class="dialog-hd-icon" id="sidePanelIcon" style="background:var(--accent-bg)">✨</div>
+    <div class="dialog-hd-title" id="sidePanelTitle">对话</div>
+    <div class="panel-mode-toggle">
+      <button class="panel-mode-btn active" onclick="switchPanelMode('side')">侧面</button>
+      <button class="panel-mode-btn" onclick="switchPanelMode('modal')">弹窗</button>
+    </div>
+    <button class="dialog-hd-close" onclick="closeSidePanel()">✕</button>
+  </div>
+  <div class="dialog-body" id="sidePanelBody">
+    <!-- Dynamic content -->
+  </div>
+  <div class="dialog-ft">
+    <button class="btn" onclick="closeSidePanel()">取消</button>
+    <button class="btn btn-p" id="sidePanelSubmit" onclick="submitSidePanel()">确认</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span>✓</span><span class="toast-msg">操作成功</span></div>
+
+<script>
+// Navigation
+document.querySelectorAll('.nav-i[data-page]').forEach(i => {
+  i.addEventListener('click', () => {
+    document.querySelectorAll('.nav-i').forEach(n => n.classList.remove('active'));
+    i.classList.add('active');
+    const p = i.dataset.page;
+    document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+    document.getElementById('page-' + p)?.classList.add('active');
+    const icons = {dashboard:'📊',events:'📥',tasks:'📋',agents:'🤖',rules:'⚙️',sources:'🔗'};
+    document.querySelector('.header-title span').textContent = (icons[p]||'') + ' ' + i.querySelector('span:nth-child(2)').textContent;
+    document.getElementById('detail').classList.remove('open');
+  });
+});
+document.querySelectorAll('[data-goto]').forEach(e => {
+  e.addEventListener('click', () => document.querySelector(`[data-page="${e.dataset.goto}"]`)?.click());
+});
+
+// Detail panel
+const detail = document.getElementById('detail');
+document.getElementById('detailClose').addEventListener('click', () => detail.classList.remove('open'));
+function openDetail(id) { detail.classList.add('open'); document.querySelectorAll('.event-card').forEach(c => c.classList.remove('selected')); document.querySelector(`[onclick="openDetail(${id})"]`)?.classList.add('selected'); }
+
+// Comment input
+const commentInput = document.getElementById('commentInput');
+commentInput.addEventListener('input', () => { commentInput.style.height = 'auto'; commentInput.style.height = Math.min(commentInput.scrollHeight, 100) + 'px'; });
+
+function sendComment(text) {
+  if (!text) text = commentInput.value.trim();
+  if (!text) return;
+  commentInput.value = '';
+  commentInput.style.height = 'auto';
+  const now = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+  const thread = document.querySelector('.thread');
+  const inputDiv = document.querySelector('.comment-input');
+  const userDiv = document.createElement('div');
+  userDiv.className = 'comment fade-in';
+  userDiv.innerHTML = `<div class="comment-avatar user">K</div><div class="comment-body"><div class="comment-hd"><span class="comment-name">Kael</span><span class="comment-time">${now}</span></div><div class="comment-text">${text}</div></div>`;
+  thread.insertBefore(userDiv, inputDiv);
+  setTimeout(() => {
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'comment fade-in';
+    aiDiv.innerHTML = getResponse(text, now);
+    thread.insertBefore(aiDiv, inputDiv);
+    aiDiv.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 500);
+}
+commentInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendComment(); } });
+
+function getResponse(input, now) {
+  const t = input.toLowerCase();
+  if (t.includes('分配')) return `<div class="comment-avatar ai">✨</div><div class="comment-body"><div class="comment-hd"><span class="comment-name">Nexus</span><span class="comment-time">${now}</span></div><div class="comment-text"><p>已分配给 🦞 龙虾。后续会自动跟进。</p></div></div>`;
+  if (t.includes('关闭')) return `<div class="comment-avatar ai">✨</div><div class="comment-body"><div class="comment-hd"><span class="comment-name">Nexus</span><span class="comment-time">${now}</span></div><div class="comment-text"><p>✅ 事件已关闭。</p></div><div class="comment-status"><span class="dot" style="background:var(--green)"></span> 状态：已完成</div></div>`;
+  if (t.includes('升级')) return `<div class="comment-avatar ai">✨</div><div class="comment-body"><div class="comment-hd"><span class="comment-name">Nexus</span><span class="comment-time">${now}</span></div><div class="comment-text"><p>已升级处理。</p></div><div class="comment-status"><span class="dot" style="background:var(--orange)"></span> 状态：升级处理中</div></div>`;
+  return `<div class="comment-avatar ai">✨</div><div class="comment-body"><div class="comment-hd"><span class="comment-name">Nexus</span><span class="comment-time">${now}</span></div><div class="comment-text"><p>收到。你可以：</p><p style="font-size:11px;color:var(--t3)">• "分配给Agent"<br>• "关闭事件"<br>• "升级处理"</p></div></div>`;
+}
+
+// Event level filter
+document.querySelectorAll('[data-filter]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('[data-filter]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    const filter = chip.dataset.filter;
+    document.querySelectorAll('.event-card').forEach(card => {
+      if (filter === 'all') {
+        card.style.display = '';
+      } else {
+        card.style.display = card.dataset.level === filter ? '' : 'none';
+      }
+    });
+    // Show/hide section headers
+    document.querySelectorAll('.events-list > div:not(.event-card)').forEach(header => {
+      if (filter === 'all') {
+        header.style.display = '';
+      } else {
+        const text = header.textContent.toLowerCase();
+        header.style.display = text.includes(filter) ? '' : 'none';
+      }
+    });
+  });
+});
+
+// Command palette
+const cmdO = document.getElementById('cmdOverlay');
+const cmdI = document.getElementById('cmdInput');
+function toggleCmd(s) { cmdO.classList.toggle('show', s); if (s) { cmdI.value = ''; cmdI.focus(); } }
+document.getElementById('cmdTrigger').addEventListener('click', () => toggleCmd(true));
+cmdO.addEventListener('click', e => { if (e.target === cmdO) toggleCmd(false); });
+document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); toggleCmd(!cmdO.classList.contains('show')); } if (e.key === 'Escape') { toggleCmd(false); document.getElementById('workspaceDropdown').classList.remove('show'); } });
+document.querySelectorAll('.cmd-item').forEach(i => { i.addEventListener('click', () => { const a = i.dataset.action; toggleCmd(false); if (a === 'new') openDialog('new-event'); if (a?.startsWith('goto-')) document.querySelector(`[data-page="${a.replace('goto-','')}"]`)?.click(); }); });
+
+// Workspace switcher
+function toggleWorkspace() {
+  document.getElementById('workspaceDropdown').classList.toggle('show');
+}
+
+function switchWorkspace(item, name) {
+  document.querySelectorAll('.workspace-dropdown-item').forEach(i => i.classList.remove('active'));
+  item.classList.add('active');
+  document.querySelector('.workspace-name').textContent = name + ' ' + (name === '个人' ? '个人空间' : name === '团队' ? '团队空间' : name === '学习' ? '学习空间' : '生活空间');
+  document.querySelector('.workspace-type').textContent = name === '个人' ? '个人工作空间' : name === '团队' ? '团队协作' : name === '学习' ? '学习资料' : '生活事务';
+  document.getElementById('workspaceDropdown').classList.remove('show');
+  showToast('已切换到: ' + name + '空间');
+}
+
+// Close workspace dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.workspace-switcher')) {
+    document.getElementById('workspaceDropdown').classList.remove('show');
+  }
+});
+
+// Dialog system
+let currentDialogType = null;
+let currentDialogMode = 'side'; // 'side' or 'modal'
+
+function openDialog(type, mode) {
+  currentDialogType = type;
+  currentDialogMode = mode || 'side'; // Default to side panel
+  
+  // Generate content
+  const content = generateDialogContent(type);
+  
+  if (currentDialogMode === 'modal') {
+    openModalDialog(type, content);
+  } else {
+    openSidePanel(type, content);
+  }
+}
+
+function generateDialogContent(type) {
+  if (type === 'new-event') {
+    return {
+      title: '创建事件',
+      icon: '📥',
+      iconBg: 'var(--accent-bg)',
+      html: `
+        <div class="dialog-ai">
+          <div class="ai-icon">✨</div>
+          <div class="ai-text">告诉我发生了什么，我会<strong>自动分类</strong>并<strong>分配</strong>。有问题我会问你。</div>
+        </div>
+        <div id="eventChatArea" style="min-height:200px;max-height:300px;overflow-y:auto;margin-bottom:16px">
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <div style="width:24px;height:24px;border-radius:5px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">✨</div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;font-size:12px;color:var(--t2);max-width:90%">
+              请描述发生了什么，例如：<br>
+              • "服务器CPU超过90%"<br>
+              • "客户投诉产品问题"<br>
+              • "收到一封紧急邮件"
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" placeholder="描述事件..." id="eventChatInput" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;color:var(--t1);font-size:13px;outline:none;font-family:inherit">
+          <button class="btn btn-p" onclick="processEventChat()">发送</button>
+        </div>
+      `,
+      submitText: '创建事件'
+    };
+  } else if (type === 'new-task') {
+    return {
+      title: '创建任务',
+      icon: '📋',
+      iconBg: 'var(--blue-bg)',
+      html: `
+        <div class="dialog-ai">
+          <div class="ai-icon">✨</div>
+          <div class="ai-text">告诉我你想创建什么任务，我会<strong>自动判断</strong>需要什么参数。有问题我会问你。</div>
+        </div>
+        <div id="taskChatArea" style="min-height:200px;max-height:300px;overflow-y:auto;margin-bottom:16px">
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <div style="width:24px;height:24px;border-radius:5px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">✨</div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;font-size:12px;color:var(--t2);max-width:90%">
+              请描述你要创建的任务，例如：<br>
+              • "处理客户投诉"<br>
+              • "把周报任务分配给龙虾，周五截止"<br>
+              • "创建一个紧急任务：修复服务器"
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" placeholder="描述任务..." id="taskChatInput" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;color:var(--t1);font-size:13px;outline:none;font-family:inherit">
+          <button class="btn btn-p" onclick="processTaskChat()">发送</button>
+        </div>
+      `,
+      submitText: '创建任务'
+    };
+  } else if (type === 'assign-agent') {
+    return {
+      title: '分配给 Agent',
+      icon: '🤖',
+      iconBg: 'var(--green-bg)',
+      html: `
+        <div class="dialog-ai">
+          <div class="ai-icon">✨</div>
+          <div class="ai-text">选择要分配的 Agent，我会<strong>自动追踪</strong>执行进度。</div>
+        </div>
+        <div class="dialog-options">
+          <div class="dialog-option" onclick="selectOption(this)">
+            <div class="opt-icon" style="background:var(--red-bg)">🦞</div>
+            <div class="opt-info"><div class="opt-name">龙虾</div><div class="opt-desc">信息检索 · 内容摘要 · 报告生成</div></div>
+          </div>
+          <div class="dialog-option" onclick="selectOption(this)">
+            <div class="opt-icon" style="background:var(--yellow-bg)">🎯</div>
+            <div class="opt-info"><div class="opt-name">Harness</div><div class="opt-desc">代码生成 · 代码审查 · Bug修复</div></div>
+          </div>
+          <div class="dialog-option" onclick="selectOption(this)">
+            <div class="opt-icon" style="background:var(--accent-bg)">🤖</div>
+            <div class="opt-info"><div class="opt-name">Codex</div><div class="opt-desc">代码生成 · 架构设计 · 技术方案</div></div>
+          </div>
+        </div>
+      `,
+      submitText: '分配'
+    };
+  } else if (type === 'new-rule') {
+    return {
+      title: '通过对话创建规则',
+      icon: '⚙️',
+      iconBg: 'var(--yellow-bg)',
+      html: `
+        <div class="dialog-ai">
+          <div class="ai-icon">✨</div>
+          <div class="ai-text">告诉我你想创建什么样的规则，我会<strong>自动生成</strong>并<strong>配置执行器</strong>。你可以说：<br><br>
+          • "紧急消息立即通知我"<br>
+          • "营销邮件自动归档"<br>
+          • "AI资讯每天汇总一次"<br>
+          • "代码任务分配给Harness"</div>
+        </div>
+        <div class="dialog-input">
+          <label>描述你想要的规则</label>
+          <textarea placeholder="用自然语言描述你的规则，例如：当收到紧急消息时，立即通知我..." id="dialogRuleDesc" rows="3"></textarea>
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:11px;font-weight:600;color:var(--t3);margin-bottom:8px">AI 解析结果</label>
+          <div id="rulePreview" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-size:12px;color:var(--t2)">
+            <div style="color:var(--t3);font-style:italic">输入规则描述后，AI会自动解析...</div>
+          </div>
+        </div>
+        <div class="dialog-input">
+          <label>执行器</label>
+          <select id="dialogRuleExecutor">
+            <option>自动选择</option>
+            <option>🦞 龙虾（信息处理）</option>
+            <option>🎯 Harness（代码任务）</option>
+            <option>🤖 Codex（架构设计）</option>
+            <option>👤 Kael（人工处理）</option>
+          </select>
+        </div>
+      `,
+      submitText: '创建规则'
+    };
+  } else if (type === 'add-source') {
+    return {
+      title: '添加信息源',
+      icon: '🔗',
+      iconBg: 'var(--blue-bg)',
+      html: `
+        <div class="dialog-ai">
+          <div class="ai-icon">✨</div>
+          <div class="ai-text">接入后我会<strong>自动过滤噪音</strong>，只把重要的信息推送给你。</div>
+        </div>
+        <div class="dialog-options">
+          <div class="dialog-option" onclick="selectOption(this)">
+            <div class="opt-icon" style="background:var(--blue-bg)">💬</div>
+            <div class="opt-info"><div class="opt-name">钉钉</div><div class="opt-desc">群消息、@消息、通知</div></div>
+          </div>
+          <div class="dialog-option" onclick="selectOption(this)">
+            <div class="opt-icon" style="background:var(--accent-bg)">💬</div>
+            <div class="opt-info"><div class="opt-name">飞书</div><div class="opt-desc">消息、日历、审批</div></div>
+          </div>
+          <div class="dialog-option" onclick="selectOption(this)">
+            <div class="opt-icon" style="background:var(--orange-bg)">📧</div>
+            <div class="opt-info"><div class="opt-name">Gmail</div><div class="opt-desc">收件箱自动解析</div></div>
+          </div>
+          <div class="dialog-option" onclick="selectOption(this)">
+            <div class="opt-icon" style="background:var(--green-bg)">📰</div>
+            <div class="opt-info"><div class="opt-name">RSS</div><div class="opt-desc">多个RSS源订阅</div></div>
+          </div>
+          <div class="dialog-option" onclick="selectOption(this)">
+            <div class="opt-icon" style="background:var(--bg-active)">🌐</div>
+            <div class="opt-info"><div class="opt-name">Webhook</div><div class="opt-desc">通过Webhook接收推送</div></div>
+          </div>
+        </div>
+      `,
+      submitText: '添加'
+    };
+  } else if (type === 'add-agent') {
+    return {
+      title: '添加 Agent',
+      icon: '🤖',
+      iconBg: 'var(--green-bg)',
+      html: `
+        <div class="dialog-ai">
+          <div class="ai-icon">✨</div>
+          <div class="ai-text">添加新的 Agent 来<strong>自动处理</strong>更多类型的任务。</div>
+        </div>
+        <div class="dialog-input">
+          <label>Agent 名称</label>
+          <input type="text" placeholder="给 Agent 起个名字..." id="dialogAgentName">
+        </div>
+        <div class="dialog-input">
+          <label>类型</label>
+          <select id="dialogAgentType">
+            <option>信息 Agent</option>
+            <option>代码 Agent</option>
+            <option>任务 Agent</option>
+            <option>自定义</option>
+          </select>
+        </div>
+        <div class="dialog-input">
+          <label>能力描述</label>
+          <textarea placeholder="描述 Agent 能做什么..." id="dialogAgentCaps"></textarea>
+        </div>
+      `,
+      submitText: '添加 Agent'
+    };
+  } else if (type === 'new-workspace') {
+    return {
+      title: '创建工作空间',
+      icon: '🏢',
+      iconBg: 'var(--accent-bg)',
+      html: `
+        <div class="dialog-ai">
+          <div class="ai-icon">✨</div>
+          <div class="ai-text">工作空间可以帮你<strong>隔离不同场景</strong>的事件和任务，比如工作、生活、学习。</div>
+        </div>
+        <div class="dialog-input">
+          <label>空间名称</label>
+          <input type="text" placeholder="给工作空间起个名字..." id="dialogWsName">
+        </div>
+        <div class="dialog-input">
+          <label>类型</label>
+          <select id="dialogWsType">
+            <option>个人空间</option>
+            <option>团队空间</option>
+            <option>学习空间</option>
+            <option>生活空间</option>
+            <option>自定义</option>
+          </select>
+        </div>
+        <div class="dialog-input">
+          <label>描述（可选）</label>
+          <textarea placeholder="描述这个空间的用途..." id="dialogWsDesc"></textarea>
+        </div>
+      `,
+      submitText: '创建工作空间'
+    };
+  }
+  
+  return {
+    title: type,
+    icon: '✨',
+    iconBg: 'var(--accent-bg)',
+    html: `<p>这是 ${type} 对话窗口。</p>`,
+    submitText: '确认'
+  };
+}
+
+function openModalDialog(type, content) {
+  const overlay = document.getElementById('dialogOverlay');
+  const title = document.getElementById('dialogTitle');
+  const icon = document.getElementById('dialogIcon');
+  const body = document.getElementById('dialogBody');
+  const submit = document.getElementById('dialogSubmit');
+
+  title.textContent = content.title;
+  icon.textContent = content.icon;
+  icon.style.background = content.iconBg;
+  body.innerHTML = content.html;
+  submit.textContent = content.submitText;
+
+  overlay.classList.add('show');
+  setTimeout(() => {
+    const firstInput = body.querySelector('input, textarea');
+    if (firstInput) firstInput.focus();
+  }, 100);
+}
+
+function openSidePanel(type, content) {
+  const overlay = document.getElementById('sidePanelOverlay');
+  const panel = document.getElementById('sidePanel');
+  const title = document.getElementById('sidePanelTitle');
+  const icon = document.getElementById('sidePanelIcon');
+  const body = document.getElementById('sidePanelBody');
+  const submit = document.getElementById('sidePanelSubmit');
+
+  title.textContent = content.title;
+  icon.textContent = content.icon;
+  icon.style.background = content.iconBg;
+  body.innerHTML = content.html;
+  submit.textContent = content.submitText;
+
+  overlay.classList.add('show');
+  panel.classList.add('show');
+  
+  setTimeout(() => {
+    const firstInput = body.querySelector('input, textarea');
+    if (firstInput) firstInput.focus();
+  }, 100);
+}
+
+function closeDialog() {
+  document.getElementById('dialogOverlay').classList.remove('show');
+  currentDialogType = null;
+}
+
+function closeSidePanel() {
+  document.getElementById('sidePanelOverlay').classList.remove('show');
+  document.getElementById('sidePanel').classList.remove('show');
+  currentDialogType = null;
+}
+
+// Rule preview - parse natural language to rule structure
+function setupRulePreview() {
+  const descInput = document.getElementById('dialogRuleDesc');
+  if (!descInput) return;
+  
+  descInput.addEventListener('input', () => {
+    const desc = descInput.value.toLowerCase();
+    const preview = document.getElementById('rulePreview');
+    if (!preview) return;
+    
+    if (!desc.trim()) {
+      preview.innerHTML = '<div style="color:var(--t3);font-style:italic">输入规则描述后，AI会自动解析...</div>';
+      return;
+    }
+    
+    // Simple rule parsing simulation
+    let condition = '';
+    let action = '';
+    let level = '';
+    
+    if (desc.includes('紧急') || desc.includes('故障') || desc.includes('告警')) {
+      condition = 'IF 关键词 包含 ["紧急","故障","告警"]';
+      action = 'THEN L3 → 立即通知人';
+      level = 'L3';
+    } else if (desc.includes('营销') || desc.includes('推广') || desc.includes('广告')) {
+      condition = 'IF 来源=="邮件" AND 内容包含["营销","推广","广告"]';
+      action = 'THEN L0 → 自动归档';
+      level = 'L0';
+    } else if (desc.includes('ai') || desc.includes('资讯') || desc.includes('新闻')) {
+      condition = 'IF 来源=="RSS" AND 关键词包含["AI","资讯"]';
+      action = 'THEN L1 → Agent摘要，有结果再汇报';
+      level = 'L1';
+    } else if (desc.includes('代码') || desc.includes('bug') || desc.includes('技术')) {
+      condition = 'IF 标签==["代码","Bug","技术"]';
+      action = 'THEN L2 → 分配给Harness';
+      level = 'L2';
+    } else if (desc.includes('老板') || desc.includes('张总') || desc.includes('李总')) {
+      condition = 'IF 发送人==["张总","李总"]';
+      action = 'THEN L3 → 立即通知人';
+      level = 'L3';
+    } else if (desc.includes('@') || desc.includes('提到我') || desc.includes('at我')) {
+      condition = 'IF 内容包含"@Kael"';
+      action = 'THEN L3 → 立即通知人';
+      level = 'L3';
+    } else {
+      condition = 'IF ' + desc;
+      action = 'THEN 自动处理';
+      level = 'L2';
+    }
+    
+    const levelColors = {'L0':'var(--t3)','L1':'var(--blue)','L2':'var(--yellow)','L3':'var(--red)'};
+    
+    preview.innerHTML = `
+      <div style="margin-bottom:8px">
+        <span style="font-size:10px;padding:2px 5px;border-radius:3px;background:${levelColors[level]}20;color:${levelColors[level]}">${level}</span>
+        <span style="font-size:11px;color:var(--t3);margin-left:8px">AI 解析</span>
+      </div>
+      <div style="font-family:'SF Mono',monospace;font-size:11px;line-height:1.6;color:var(--t2)">
+        <div style="color:var(--accent)">${condition}</div>
+        <div style="color:var(--green)">${action}</div>
+      </div>
+    `;
+  });
+}
+
+// Call setupRulePreview when dialog opens
+const originalOpenDialog = openDialog;
+openDialog = function(type, mode) {
+  originalOpenDialog(type, mode);
+  if (type === 'new-rule') {
+    setTimeout(setupRulePreview, 100);
+  }
+};
+
+function switchPanelMode(mode) {
+  const content = generateDialogContent(currentDialogType);
+  
+  // Update mode buttons
+  document.querySelectorAll('.panel-mode-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector(`.panel-mode-btn[onclick="switchPanelMode('${mode}')"]`).classList.add('active');
+  
+  if (mode === 'modal') {
+    closeSidePanel();
+    openModalDialog(currentDialogType, content);
+  } else {
+    closeDialog();
+    openSidePanel(currentDialogType, content);
+  }
+  currentDialogMode = mode;
+}
+
+function selectOption(el) {
+  el.parentElement.querySelectorAll('.dialog-option').forEach(o => o.style.borderColor = 'var(--border)');
+  el.style.borderColor = 'var(--accent)';
+}
+
+function submitDialog() {
+  submitDialogContent();
+  if (currentDialogMode === 'modal') {
+    closeDialog();
+  } else {
+    closeSidePanel();
+  }
+}
+
+function submitSidePanel() {
+  submitDialogContent();
+  closeSidePanel();
+}
+
+// Task chat processing
+let taskChatState = { step: 0, name: '', priority: '', assignee: '自动分配', due: '' };
+
+function processTaskChat() {
+  const input = document.getElementById('taskChatInput');
+  const area = document.getElementById('taskChatArea');
+  if (!input || !area) return;
+  
+  const text = input.value.trim();
+  if (!text) return;
+  
+  // Add user message
+  area.innerHTML += `
+    <div style="display:flex;gap:8px;margin-bottom:12px;justify-content:flex-end">
+      <div style="background:var(--accent);border-radius:var(--r);padding:10px;font-size:12px;color:#fff;max-width:90%">${text}</div>
+      <div style="width:24px;height:24px;border-radius:5px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">K</div>
+    </div>
+  `;
+  
+  input.value = '';
+  
+  // Parse input
+  const lower = text.toLowerCase();
+  
+  // Extract priority
+  let priority = '';
+  if (lower.includes('紧急') || lower.includes('urgent')) priority = '紧急';
+  else if (lower.includes('高')) priority = '高';
+  else if (lower.includes('低')) priority = '低';
+  else priority = '中';
+  
+  // Extract assignee
+  let assignee = '自动分配';
+  if (lower.includes('龙虾')) assignee = '龙虾';
+  else if (lower.includes('harness')) assignee = 'Harness';
+  else if (lower.includes('codex')) assignee = 'Codex';
+  else if (lower.includes('kael') || lower.includes('自己')) assignee = 'Kael';
+  
+  // Extract due
+  let due = '';
+  if (lower.includes('周五')) due = '周五';
+  else if (lower.includes('今天')) due = '今天';
+  else if (lower.includes('明天')) due = '明天';
+  
+  // Determine if we have enough info
+  const name = text.replace(/紧急|高|低|龙虾|harness|codex|kael|自己|周五|今天|明天|分配给|截止/g, '').trim();
+  
+  if (name.length < 2) {
+    // Need more info
+    area.innerHTML += `
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="width:24px;height:24px;border-radius:5px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">✨</div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;font-size:12px;color:var(--t2);max-width:90%">
+          请描述一下这个任务具体要做什么？
+        </div>
+      </div>
+    `;
+  } else {
+    // Create task
+    let summary = `✅ 任务已创建：${name}`;
+    if (priority !== '中') summary += `（${priority}）`;
+    if (assignee !== '自动分配') summary += `，分配给 ${assignee}`;
+    if (due) summary += `，${due}截止`;
+    
+    area.innerHTML += `
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="width:24px;height:24px;border-radius:5px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">✨</div>
+        <div style="background:var(--green-bg);border:1px solid rgba(34,197,94,0.2);border-radius:var(--r);padding:10px;font-size:12px;color:var(--green);max-width:90%">
+          ${summary}
+        </div>
+      </div>
+    `;
+    
+    showToast('任务已创建: ' + name);
+  }
+  
+  area.scrollTop = area.scrollHeight;
+}
+
+// Event chat processing
+function processEventChat() {
+  const input = document.getElementById('eventChatInput');
+  const area = document.getElementById('eventChatArea');
+  if (!input || !area) return;
+  
+  const text = input.value.trim();
+  if (!text) return;
+  
+  // Add user message
+  area.innerHTML += `
+    <div style="display:flex;gap:8px;margin-bottom:12px;justify-content:flex-end">
+      <div style="background:var(--accent);border-radius:var(--r);padding:10px;font-size:12px;color:#fff;max-width:90%">${text}</div>
+      <div style="width:24px;height:24px;border-radius:5px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">K</div>
+    </div>
+  `;
+  
+  input.value = '';
+  
+  // Parse input
+  const lower = text.toLowerCase();
+  
+  // Determine level
+  let level = 'L2';
+  let levelLabel = 'Agent处理';
+  if (lower.includes('紧急') || lower.includes('故障') || lower.includes('告警') || lower.includes('宕机')) {
+    level = 'L3'; levelLabel = '必须你';
+  } else if (lower.includes('资讯') || lower.includes('新闻') || lower.includes('rss')) {
+    level = 'L1'; levelLabel = 'AI追踪';
+  } else if (lower.includes('营销') || lower.includes('推广')) {
+    level = 'L0'; levelLabel = '自动归档';
+  }
+  
+  // Create event
+  area.innerHTML += `
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="width:24px;height:24px;border-radius:5px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">✨</div>
+      <div style="background:var(--green-bg);border:1px solid rgba(34,197,94,0.2);border-radius:var(--r);padding:10px;font-size:12px;color:var(--green);max-width:90%">
+        ✅ 事件已创建：${text}<br>
+        <span style="font-size:10px;color:var(--t3)">级别：${level}（${levelLabel}）· 来源：手动创建</span>
+      </div>
+    </div>
+  `;
+  
+  showToast('事件已创建');
+  area.scrollTop = area.scrollHeight;
+}
+
+function submitDialogContent() {
+  if (currentDialogType === 'new-event') {
+    // Already handled by chat
+  } else if (currentDialogType === 'new-task') {
+    // Already handled by chat
+  } else if (currentDialogType === 'assign-agent') {
+    showToast('已分配给 Agent');
+  } else if (currentDialogType === 'new-rule') {
+    const name = document.getElementById('dialogRuleName')?.value;
+    if (!name) { showToast('请输入规则名称'); return; }
+    showToast('规则已创建: ' + name);
+  } else if (currentDialogType === 'add-source') {
+    showToast('信息源已添加');
+  } else if (currentDialogType === 'add-agent') {
+    const name = document.getElementById('dialogAgentName')?.value;
+    if (!name) { showToast('请输入 Agent 名称'); return; }
+    showToast('Agent 已添加: ' + name);
+  } else if (currentDialogType === 'new-workspace') {
+    const name = document.getElementById('dialogWsName')?.value;
+    if (!name) { showToast('请输入空间名称'); return; }
+    showToast('工作空间已创建: ' + name);
+  }
+}
+
+// Resize handle for side panel
+const resizeHandle = document.getElementById('resizeHandle');
+const sidePanel = document.getElementById('sidePanel');
+let isResizing = false;
+
+resizeHandle.addEventListener('mousedown', (e) => {
+  isResizing = true;
+  resizeHandle.classList.add('active');
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const newWidth = window.innerWidth - e.clientX;
+  if (newWidth >= 320 && newWidth <= 800) {
+    sidePanel.style.width = newWidth + 'px';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (isResizing) {
+    isResizing = false;
+    resizeHandle.classList.remove('active');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  }
+});
+
+// Close dialog on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeDialog();
+    closeSidePanel();
+  }
+});
+
+// Toast
+function showToast(m) { document.querySelector('.toast-msg').textContent = m; document.getElementById('toast').classList.add('show'); setTimeout(() => document.getElementById('toast').classList.remove('show'), 2000); }
+
+// Rule toggles
+document.querySelectorAll('.rule-toggle').forEach(t => { t.addEventListener('click', () => { t.classList.toggle('on'); showToast(t.classList.contains('on') ? '规则已启用' : '规则已禁用'); }); });
+
+// Shortcuts
+document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return; if (e.key === '1') document.querySelector('[data-page="dashboard"]')?.click(); if (e.key === '2') document.querySelector('[data-page="events"]')?.click(); if (e.key === '3') document.querySelector('[data-page="tasks"]')?.click(); if (e.key === '4') document.querySelector('[data-page="agents"]')?.click(); });
+</script>
+</body>
+</html>
