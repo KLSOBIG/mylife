@@ -1,4 +1,14 @@
-import { useEffect, useMemo, useReducer } from "react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
+import {
+  buildExecutionFailure,
+  buildExecutionSummary,
+  canStartExecution,
+  collectQueuedRuns,
+  createExecutionLog,
+  createExecutionRun,
+  findActiveRun,
+  findLatestRun
+} from "../domain/execution-runtime";
 import { chartSeries } from "../domain/mock-data";
 import { parseIntent } from "../domain/intents";
 import { loadAppModel, saveAppModel } from "../domain/persistence";
@@ -12,7 +22,7 @@ import {
   createWorkspaceFromDraft,
   reduceModel
 } from "../domain/store";
-import type { AttentionLevel, ExecutorItem, ExecutorStatus, PageId, TaskItem, Workspace } from "../domain/types";
+import type { AttentionLevel, ExecutionRun, ExecutorItem, ExecutorStatus, PageId, Workspace } from "../domain/types";
 import { DashboardPage } from "../features/dashboard/dashboard-page";
 import { EventsPage } from "../features/events/events-page";
 import { ExecutorsPage } from "../features/executors/executors-page";
@@ -36,10 +46,36 @@ const pageByDigit: Record<string, PageId> = {
 export function App() {
   const [model, dispatch] = useReducer(reduceModel, undefined, () => loadAppModel(getStorage()));
   const { data, state } = model;
+  const queuedTimers = useRef(new Set<string>());
 
   useEffect(() => {
     saveAppModel(model, getStorage());
   }, [model]);
+
+  useEffect(() => {
+    const queuedRuns = collectQueuedRuns(data.executionRuns);
+    queuedRuns.forEach((run: ExecutionRun) => {
+      if (queuedTimers.current.has(run.id)) {
+        return;
+      }
+
+      queuedTimers.current.add(run.id);
+      window.setTimeout(() => {
+        queuedTimers.current.delete(run.id);
+        dispatch({
+          type: "task/executionRunning",
+          taskId: run.taskId,
+          runId: run.id,
+          log: createExecutionLog({
+            id: createRuntimeId("log"),
+            at: formatNow(),
+            level: "info",
+            message: "执行器已领取任务，开始运行。"
+          })
+        });
+      }, 250);
+    });
+  }, [data.executionRuns]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -121,12 +157,15 @@ export function App() {
     [data.tasks, state.currentWorkspaceId]
   );
   const filteredExecutors = useMemo(
-    () =>
-      deriveExecutorMetrics(
-        data.executors.filter((item) => item.workspaceId === state.currentWorkspaceId),
-        filteredTasks
-      ),
-    [data.executors, filteredTasks, state.currentWorkspaceId]
+    () => deriveExecutorMetrics(
+      data.executors.filter((item) => item.workspaceId === state.currentWorkspaceId),
+      data.executionRuns.filter((item) => item.workspaceId === state.currentWorkspaceId)
+    ),
+    [data.executors, data.executionRuns, state.currentWorkspaceId]
+  );
+  const filteredExecutionRuns = useMemo(
+    () => data.executionRuns.filter((item) => item.workspaceId === state.currentWorkspaceId),
+    [data.executionRuns, state.currentWorkspaceId]
   );
   const filteredRules = useMemo(
     () => data.rules.filter((item) => item.workspaceId === state.currentWorkspaceId),
@@ -143,6 +182,17 @@ export function App() {
 
   const selectedEvent = findById(filteredEvents, state.selectedEventId);
   const selectedTask = findById(filteredTasks, state.selectedTaskId);
+  const selectedTaskRuns = selectedTask
+    ? filteredExecutionRuns
+        .filter((item) => item.taskId === selectedTask.id)
+        .sort((left, right) => getRunSortKey(right).localeCompare(getRunSortKey(left)))
+    : [];
+  const activeRun = selectedTask ? findActiveRun(selectedTask.id, filteredExecutionRuns) : undefined;
+  const latestRun = selectedTask ? findLatestRun(selectedTask.id, filteredExecutionRuns) : undefined;
+  const selectedExecutor = selectedTask?.assigneeId
+    ? filteredExecutors.find((item) => item.id === selectedTask.assigneeId)
+    : undefined;
+  const executionStats = deriveExecutionStats(filteredExecutionRuns);
   if (!currentWorkspace) {
     return null;
   }
@@ -184,6 +234,7 @@ export function App() {
               workspace={currentWorkspace}
               events={filteredEvents}
               executors={filteredExecutors}
+              executionStats={executionStats}
               chartSeries={chartSeries}
             />
           ) : null}
@@ -273,6 +324,9 @@ export function App() {
         event={selectedEvent}
         executors={filteredExecutors}
         task={selectedTask}
+        activeRun={activeRun}
+        latestRun={latestRun}
+        runs={selectedTaskRuns}
         onConvertEventToTask={() => {
           if (!selectedEvent) {
             return;
@@ -298,6 +352,92 @@ export function App() {
             return;
           }
           dispatch({ type: "task/assigneeChanged", taskId: selectedTask.id, assigneeId });
+        }}
+        onTaskExecutionFailure={() => {
+          if (!selectedTask || !activeRun) {
+            return;
+          }
+          const error = buildExecutionFailure(selectedTask, selectedExecutor);
+          const log = createExecutionLog({
+            id: createRuntimeId("log"),
+            at: formatNow(),
+            level: "error",
+            message: error
+          });
+          dispatch({
+            type: "task/executionFailed",
+            taskId: selectedTask.id,
+            runId: activeRun.id,
+            error,
+            finishedAt: log.at,
+            log
+          });
+        }}
+        onTaskExecutionRetry={() => {
+          if (!selectedTask?.assigneeId) {
+            return;
+          }
+          dispatch({
+            type: "task/executionStarted",
+            run: createExecutionRun({
+              id: createRuntimeId("run"),
+              workspaceId: selectedTask.workspaceId,
+              taskId: selectedTask.id,
+              executorId: selectedTask.assigneeId,
+              trigger: "manual",
+              logs: [
+                createExecutionLog({
+                  id: createRuntimeId("log"),
+                  at: formatNow(),
+                  level: "info",
+                  message: "任务已派发，等待执行器领取。"
+                })
+              ]
+            })
+          });
+        }}
+        onTaskExecutionStart={() => {
+          if (!selectedTask?.assigneeId || !canStartExecution(selectedTask, selectedExecutor)) {
+            return;
+          }
+          dispatch({
+            type: "task/executionStarted",
+            run: createExecutionRun({
+              id: createRuntimeId("run"),
+              workspaceId: selectedTask.workspaceId,
+              taskId: selectedTask.id,
+              executorId: selectedTask.assigneeId,
+              trigger: "manual",
+              logs: [
+                createExecutionLog({
+                  id: createRuntimeId("log"),
+                  at: formatNow(),
+                  level: "info",
+                  message: "任务已派发，等待执行器领取。"
+                })
+              ]
+            })
+          });
+        }}
+        onTaskExecutionSuccess={() => {
+          if (!selectedTask || !activeRun) {
+            return;
+          }
+          const summary = buildExecutionSummary(selectedTask, selectedExecutor);
+          const log = createExecutionLog({
+            id: createRuntimeId("log"),
+            at: formatNow(),
+            level: "success",
+            message: summary
+          });
+          dispatch({
+            type: "task/executionSucceeded",
+            taskId: selectedTask.id,
+            runId: activeRun.id,
+            finishedAt: log.at,
+            summary,
+            log
+          });
         }}
       />
 
@@ -350,23 +490,26 @@ export function App() {
   }
 }
 
-function deriveExecutorMetrics(executors: ExecutorItem[], tasks: TaskItem[]): ExecutorItem[] {
+function deriveExecutorMetrics(executors: ExecutorItem[], runs: ExecutionRun[]): ExecutorItem[] {
   return executors.map((executor) => {
-    const assignedTasks = tasks.filter((task) => task.assigneeId === executor.id);
-    const activeTasks = assignedTasks.filter((task) => isActiveTask(task.status)).length;
-    const completedToday = assignedTasks.filter((task) => task.status === "completed").length;
+    const executorRuns = runs.filter((item) => item.executorId === executor.id);
+    const queueCount = executorRuns.filter((item) => item.status === "queued").length;
+    const runningCount = executorRuns.filter((item) => item.status === "running").length;
+    const completedToday = executorRuns.filter((item) => item.status === "succeeded").length;
+    const failureCount = executorRuns.filter((item) => item.status === "failed").length;
+    const latestRun = [...executorRuns].sort((left, right) => getRunSortKey(right).localeCompare(getRunSortKey(left)))[0];
 
     return {
       ...executor,
-      activeTasks,
+      activeTasks: runningCount,
       completedToday,
-      status: deriveExecutorStatus(executor.status, activeTasks)
+      queueCount,
+      runningCount,
+      failureCount,
+      lastRunSummary: latestRun?.summary ?? latestRun?.error,
+      status: deriveExecutorStatus(executor.status, queueCount + runningCount)
     };
   });
-}
-
-function isActiveTask(status: TaskItem["status"]): boolean {
-  return status !== "completed" && status !== "pending_assignment";
 }
 
 function deriveExecutorStatus(current: ExecutorStatus, activeTasks: number): ExecutorStatus {
@@ -375,6 +518,32 @@ function deriveExecutorStatus(current: ExecutorStatus, activeTasks: number): Exe
   }
 
   return activeTasks > 0 ? "busy" : "idle";
+}
+
+function deriveExecutionStats(runs: ExecutionRun[]) {
+  return {
+    running: runs.filter((item) => item.status === "running").length,
+    succeeded: runs.filter((item) => item.status === "succeeded").length,
+    failed: runs.filter((item) => item.status === "failed").length
+  };
+}
+
+function getRunSortKey(run: ExecutionRun): string {
+  return run.finishedAt ?? run.startedAt ?? run.logs.at(-1)?.at ?? "";
+}
+
+function createRuntimeId(prefix: string): string {
+  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function formatNow(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = `${now.getMonth() + 1}`.padStart(2, "0");
+  const dd = `${now.getDate()}`.padStart(2, "0");
+  const hh = `${now.getHours()}`.padStart(2, "0");
+  const min = `${now.getMinutes()}`.padStart(2, "0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
 }
 
 function buildReply(

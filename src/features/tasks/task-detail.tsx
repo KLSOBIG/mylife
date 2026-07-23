@@ -1,4 +1,4 @@
-import type { ExecutorItem, TaskItem } from "../../domain/types";
+import type { ExecutionRun, ExecutorItem, TaskItem } from "../../domain/types";
 
 const statusFlow: Record<TaskItem["status"], TaskItem["status"][]> = {
   pending_assignment: ["assigned"],
@@ -14,10 +14,23 @@ const statusFlow: Record<TaskItem["status"], TaskItem["status"][]> = {
 export function TaskDetail(props: {
   task: TaskItem;
   executors?: ExecutorItem[];
+  runs?: ExecutionRun[];
+  activeRun?: ExecutionRun;
   onStatusChange?: (nextStatus: TaskItem["status"]) => void;
   onAssigneeChange?: (assigneeId?: string) => void;
+  onStartExecution?: () => void;
+  onMarkExecutionSuccess?: () => void;
+  onMarkExecutionFailure?: () => void;
+  onRetryExecution?: () => void;
 }) {
   const nextStatuses = statusFlow[props.task.status];
+  const latestRun = props.activeRun ?? props.runs?.[0];
+  const logs = latestRun?.logs ?? [];
+  const canStart = props.task.assigneeId && !props.activeRun && (props.task.status === "assigned" || props.task.status === "returned" || props.task.status === "suspended");
+  const canResolve = props.activeRun?.status === "running";
+  const canRetry = latestRun?.status === "failed" && !props.activeRun;
+  const runStatusLabel = latestRun?.status ?? "idle";
+  const runResult = latestRun?.summary ?? latestRun?.error;
 
   return (
     <div className="detail-section-stack">
@@ -54,6 +67,52 @@ export function TaskDetail(props: {
             ))}
           </select>
         </label>
+      </section>
+      <section className="detail-section">
+        <h3>执行运行</h3>
+        <div className="execution-summary">
+          <span className={`execution-state ${runStatusLabel}`}>运行状态：{runStatusLabel}</span>
+          <span className="execution-meta">开始 {latestRun?.startedAt ?? "未开始"}</span>
+          <span className="execution-meta">结束 {latestRun?.finishedAt ?? "未结束"}</span>
+          {runResult ? <span className="execution-result">{runResult}</span> : null}
+        </div>
+        <div className="execution-actions">
+          {canStart ? (
+            <button className="btn primary small" onClick={props.onStartExecution} type="button">
+              开始执行
+            </button>
+          ) : null}
+          {canResolve ? (
+            <>
+              <button className="btn secondary small" onClick={props.onMarkExecutionSuccess} type="button">
+                标记成功
+              </button>
+              <button className="btn secondary small" onClick={props.onMarkExecutionFailure} type="button">
+                标记失败
+              </button>
+            </>
+          ) : null}
+          {canRetry ? (
+            <button className="btn secondary small" onClick={props.onRetryExecution} type="button">
+              重试执行
+            </button>
+          ) : null}
+        </div>
+        <div className="execution-log">
+          {logs.length ? (
+            logs.map((entry) => (
+              <article className={`execution-log-entry ${entry.level}`} key={entry.id}>
+                <div className="execution-log-top">
+                  <span>{entry.at}</span>
+                  <span>{entry.level}</span>
+                </div>
+                <p>{entry.message}</p>
+              </article>
+            ))
+          ) : (
+            <div className="execution-log-empty">暂无运行日志。</div>
+          )}
+        </div>
       </section>
       <section className="detail-section">
         <h3>状态流转</h3>

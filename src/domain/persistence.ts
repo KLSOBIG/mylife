@@ -5,6 +5,8 @@ import type {
   AttentionLevel,
   ChatMessage,
   EventItem,
+  ExecutionLog,
+  ExecutionRun,
   ExecutorItem,
   PageId,
   RuleItem,
@@ -98,10 +100,39 @@ function isAppData(value: unknown): value is AppData {
     isArrayOf(value.events, isEventItem) &&
     isArrayOf(value.tasks, isTaskItem) &&
     isArrayOf(value.executors, isExecutorItem) &&
+    isArrayOf(value.executionRuns, isExecutionRun) &&
     isArrayOf(value.rules, isRuleItem) &&
     isArrayOf(value.ruleSuggestions, isRuleSuggestion) &&
     isArrayOf(value.sources, isSourceItem) &&
     isArrayOf(value.chatMessages, isChatMessage)
+  );
+}
+
+function isExecutionRun(value: unknown): value is ExecutionRun {
+  return (
+    isRecord(value) &&
+    isString(value.id) &&
+    isString(value.workspaceId) &&
+    isString(value.taskId) &&
+    isString(value.executorId) &&
+    (value.status === "queued" || value.status === "running" || value.status === "succeeded" || value.status === "failed" || value.status === "cancelled") &&
+    (value.trigger === "manual" || value.trigger === "auto") &&
+    isOptionalString(value.startedAt) &&
+    isOptionalString(value.updatedAt) &&
+    isOptionalString(value.finishedAt) &&
+    isOptionalString(value.summary) &&
+    isOptionalString(value.error) &&
+    isArrayOf(value.logs, isExecutionLog)
+  );
+}
+
+function isExecutionLog(value: unknown): value is ExecutionLog {
+  return (
+    isRecord(value) &&
+    isString(value.id) &&
+    isString(value.at) &&
+    (value.level === "info" || value.level === "success" || value.level === "error") &&
+    isString(value.message)
   );
 }
 

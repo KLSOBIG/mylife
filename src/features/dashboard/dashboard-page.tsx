@@ -5,9 +5,15 @@ export function DashboardPage(props: {
   events: EventItem[];
   executors: ExecutorItem[];
   chartSeries: number[];
+  executionStats: {
+    running: number;
+    succeeded: number;
+    failed: number;
+  };
 }) {
   const l3Count = props.events.filter((item) => item.level === "L3").length;
-  const inFlight = props.executors.reduce((sum, item) => sum + item.activeTasks, 0);
+  const inFlight = props.executionStats.running;
+  const failureCount = props.executionStats.failed;
 
   return (
     <div className="page-scroll">
@@ -26,7 +32,11 @@ export function DashboardPage(props: {
         </article>
         <article className="stat-card success">
           <span>AI 已完成</span>
-          <strong>{Math.max(8, props.events.length * 2)}</strong>
+          <strong>{props.executionStats.succeeded}</strong>
+        </article>
+        <article className="stat-card danger">
+          <span>执行失败</span>
+          <strong>{failureCount}</strong>
         </article>
       </section>
 

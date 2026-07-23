@@ -1,5 +1,5 @@
 import { createSeedData } from "./mock-data";
-import type { ChatMode, PageId, TaskStatus } from "./types";
+import type { ChatMode, ExecutionLog, ExecutionRun, PageId, TaskStatus } from "./types";
 import type {
   AppData,
   AppModel,
@@ -32,6 +32,10 @@ export type AppAction =
   | { type: "task/created"; task: TaskItem }
   | { type: "task/statusChanged"; taskId: string; status: TaskStatus }
   | { type: "task/assigneeChanged"; taskId: string; assigneeId?: string }
+  | { type: "task/executionStarted"; run: ExecutionRun }
+  | { type: "task/executionRunning"; taskId: string; runId: string; log: ExecutionLog }
+  | { type: "task/executionSucceeded"; taskId: string; runId: string; log?: ExecutionLog; finishedAt: string; summary?: string }
+  | { type: "task/executionFailed"; taskId: string; runId: string; log?: ExecutionLog; finishedAt: string; error: string }
   | { type: "task/viewChanged"; view: AppState["taskView"] }
   | { type: "rule/created"; rule: RuleItem }
   | { type: "rule/toggled"; ruleId: string; enabled?: boolean }
@@ -123,6 +127,22 @@ export function reduceState(state: AppState, action: AppAction): AppState {
         selectedEventId: undefined
       };
     case "task/assigneeChanged":
+      return {
+        ...state,
+        currentPage: "tasks",
+        selectedTaskId: action.taskId,
+        selectedEventId: undefined
+      };
+    case "task/executionStarted":
+      return {
+        ...state,
+        currentPage: "tasks",
+        selectedTaskId: action.run.taskId,
+        selectedEventId: undefined
+      };
+    case "task/executionRunning":
+    case "task/executionSucceeded":
+    case "task/executionFailed":
       return {
         ...state,
         currentPage: "tasks",
@@ -242,6 +262,37 @@ function reduceData(data: AppData, action: AppAction): AppData {
         ...data,
         tasks: [action.task, ...data.tasks]
       };
+    case "task/executionStarted":
+      return {
+        ...data,
+        tasks: data.tasks.map((task) =>
+          task.id === action.run.taskId
+            ? { ...task, assigneeId: action.run.executorId, status: "in_progress" }
+            : task
+        ),
+        executionRuns: [action.run, ...data.executionRuns]
+      };
+    case "task/executionRunning":
+      return updateExecutionRun(data, action.runId, (run) => ({
+        ...run,
+        status: "running",
+        startedAt: run.startedAt ?? action.log.at,
+        logs: [...run.logs, action.log]
+      }));
+    case "task/executionSucceeded":
+      return updateExecutionOutcome(data, action.taskId, action.runId, {
+        status: "succeeded",
+        finishedAt: action.finishedAt,
+        summary: action.summary,
+        log: action.log
+      });
+    case "task/executionFailed":
+      return updateExecutionOutcome(data, action.taskId, action.runId, {
+        status: "failed",
+        finishedAt: action.finishedAt,
+        error: action.error,
+        log: action.log
+      });
     case "chat/messageSubmitted":
       return {
         ...data,
@@ -288,6 +339,51 @@ function updateById<K extends keyof Pick<AppData, "tasks" | "rules" | "sources">
   }
 
   return { ...data, [key]: nextItems };
+}
+
+function updateExecutionRun(
+  data: AppData,
+  runId: string,
+  updater: (run: AppData["executionRuns"][number]) => AppData["executionRuns"][number]
+): AppData {
+  const nextRuns = data.executionRuns.map((run) => (run.id === runId ? updater(run) : run));
+  const changed = nextRuns.some((run, index) => run !== data.executionRuns[index]);
+
+  if (!changed) {
+    return data;
+  }
+
+  return {
+    ...data,
+    executionRuns: nextRuns
+  };
+}
+
+function updateExecutionOutcome(
+  data: AppData,
+  taskId: string,
+  runId: string,
+  outcome: {
+    status: "succeeded" | "failed";
+    finishedAt: string;
+    summary?: string;
+    error?: string;
+    log?: ExecutionLog;
+  }
+): AppData {
+  const withRuns = updateExecutionRun(data, runId, (run) => ({
+    ...run,
+    status: outcome.status,
+    finishedAt: outcome.finishedAt,
+    summary: outcome.status === "succeeded" ? outcome.summary ?? run.summary : run.summary,
+    error: outcome.status === "failed" ? outcome.error ?? run.error : undefined,
+    logs: outcome.log ? [...run.logs, outcome.log] : run.logs
+  }));
+
+  return updateById(withRuns, "tasks", taskId, (task) => ({
+    ...task,
+    status: outcome.status === "succeeded" ? "pending_review" : "returned"
+  }));
 }
 
 export function createWorkspaceFromDraft(draft: {
@@ -403,6 +499,31 @@ export function createTaskFromIntent(
     priority,
     level: priority === "urgent" ? "L3" : priority === "high" ? "L2" : "L1",
     status: "pending_assignment"
+  };
+}
+
+export function createExecutionRun(
+  task: TaskItem,
+  executorId: string,
+  trigger: ExecutionRun["trigger"] = "manual"
+): ExecutionRun {
+  return {
+    id: createId("run"),
+    workspaceId: task.workspaceId,
+    taskId: task.id,
+    executorId,
+    status: "queued",
+    trigger,
+    logs: [createExecutionLog("info", "任务已派发，等待执行器领取。")]
+  };
+}
+
+export function createExecutionLog(level: ExecutionLog["level"], message: string): ExecutionLog {
+  return {
+    id: createId("log"),
+    at: formatNow(),
+    level,
+    message
   };
 }
 

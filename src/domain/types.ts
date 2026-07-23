@@ -15,6 +15,8 @@ export type SourceStatus = "connected" | "warning" | "offline";
 export type ExecutorStatus = "idle" | "busy" | "offline" | "error";
 export type ChatMode = "side" | "modal";
 export type TaskView = "kanban" | "list";
+export type ExecutionRunStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
+export type ExecutionLogLevel = "info" | "success" | "error";
 
 export interface Workspace {
   id: string;
@@ -62,6 +64,32 @@ export interface ExecutorItem {
   successRate: number;
   activeTasks: number;
   completedToday: number;
+  queueCount?: number;
+  runningCount?: number;
+  failureCount?: number;
+  lastRunSummary?: string;
+}
+
+export interface ExecutionLog {
+  id: string;
+  at: string;
+  level: ExecutionLogLevel;
+  message: string;
+}
+
+export interface ExecutionRun {
+  id: string;
+  workspaceId: string;
+  taskId: string;
+  executorId: string;
+  status: ExecutionRunStatus;
+  trigger: "manual" | "auto";
+  startedAt?: string;
+  updatedAt?: string;
+  finishedAt?: string;
+  summary?: string;
+  error?: string;
+  logs: ExecutionLog[];
 }
 
 export interface RuleItem {
@@ -110,6 +138,7 @@ export interface AppData {
   events: EventItem[];
   tasks: TaskItem[];
   executors: ExecutorItem[];
+  executionRuns: ExecutionRun[];
   rules: RuleItem[];
   ruleSuggestions: RuleSuggestion[];
   sources: SourceItem[];

@@ -1,4 +1,16 @@
-import type { AppData, AttentionLevel, ChatMessage, EventItem, ExecutorItem, RuleItem, RuleSuggestion, SourceItem, TaskItem, Workspace } from "./types";
+import type {
+  AppData,
+  AttentionLevel,
+  ChatMessage,
+  EventItem,
+  ExecutionRun,
+  ExecutorItem,
+  RuleItem,
+  RuleSuggestion,
+  SourceItem,
+  TaskItem,
+  Workspace
+} from "./types";
 
 export const chartSeries = [42, 56, 33, 61, 48, 70, 58];
 export const levelOrder: AttentionLevel[] = ["L3", "L2", "L1", "L0"];
@@ -207,6 +219,25 @@ export function createSeedData(): AppData {
     }
   ];
 
+  const executionRuns: ExecutionRun[] = [
+    {
+      id: "run_1",
+      workspaceId: "ws_personal",
+      taskId: "task_2",
+      executorId: "exec_lobster",
+      status: "succeeded",
+      trigger: "auto",
+      startedAt: "2026-07-23 09:45",
+      finishedAt: "2026-07-23 09:58",
+      summary: "已生成客户投诉回复草稿，等待 Kael 审核。",
+      logs: [
+        { id: "run_1_log_1", at: "2026-07-23 09:45", level: "info", message: "龙虾已领取任务：客户投诉邮件回复" },
+        { id: "run_1_log_2", at: "2026-07-23 09:52", level: "info", message: "已抽取客户诉求与上下文历史" },
+        { id: "run_1_log_3", at: "2026-07-23 09:58", level: "success", message: "已输出回复草稿，进入待审核" }
+      ]
+    }
+  ];
+
   const rules: RuleItem[] = [
     {
       id: "rule_1",
@@ -326,6 +357,7 @@ export function createSeedData(): AppData {
     events,
     tasks,
     executors,
+    executionRuns,
     rules,
     ruleSuggestions,
     sources,
@@ -338,6 +370,7 @@ export const workspaces = appData.workspaces;
 export const events = appData.events;
 export const tasks = appData.tasks;
 export const executors = appData.executors;
+export const executionRuns = appData.executionRuns;
 export const rules = appData.rules;
 export const ruleSuggestions = appData.ruleSuggestions;
 export const sources = appData.sources;

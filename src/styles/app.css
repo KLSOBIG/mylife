@@ -627,13 +627,44 @@ body {
 
 .metric-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
 }
 
 .metric-row strong {
   display: block;
   font-size: 18px;
+}
+
+.recent-result {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.recent-result.success {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--success);
+}
+
+.recent-result.error {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--l3);
+}
+
+.recent-result.running {
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--warning);
+}
+
+.recent-result.idle {
+  color: var(--text-body);
 }
 
 .rule-card {
@@ -751,6 +782,163 @@ body {
 .detail-section h3 {
   margin: 0 0 10px;
   font-size: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  color: var(--text-subtle);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.input {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--text-body);
+}
+
+.execution-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.execution-state,
+.execution-result {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.execution-state.idle,
+.execution-state.queued,
+.execution-state.retrying {
+  background: var(--bg-soft);
+  color: var(--text-body);
+}
+
+.execution-state.running {
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--warning);
+}
+
+.execution-state.success,
+.execution-state.succeeded {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--success);
+}
+
+.execution-state.error,
+.execution-state.failed,
+.recent-result.error {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--l3);
+}
+
+.recent-result.running {
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--warning);
+}
+
+.recent-result.idle {
+  background: var(--bg-soft);
+  color: var(--text-body);
+}
+
+.execution-result {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.execution-meta {
+  color: var(--text-subtle);
+  font-size: 12px;
+}
+
+.execution-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.execution-log {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.execution-log-entry {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--bg-soft);
+}
+
+.execution-log-entry.success {
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.execution-log-entry.error {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.execution-log-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-subtle);
+  font-size: 11px;
+}
+
+.execution-log-entry p {
+  margin: 0;
+}
+
+.execution-log-empty {
+  color: var(--text-subtle);
+  font-size: 12px;
+}
+
+.dashboard-failures {
+  margin-top: 16px;
+}
+
+.failure-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+
+.failure-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.failure-card p,
+.failure-card small {
+  margin: 0;
+  color: var(--text-body);
+  font-size: 12px;
 }
 
 .detail-list {

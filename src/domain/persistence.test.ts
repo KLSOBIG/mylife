@@ -8,6 +8,7 @@ describe("persistence", () => {
     const model = loadAppModel(storage);
 
     expect(model.data.tasks.length).toBeGreaterThan(0);
+    expect(model.data.executionRuns.length).toBeGreaterThan(0);
     expect(model.state.currentWorkspaceId).toBe("ws_personal");
   });
 
@@ -19,6 +20,26 @@ describe("persistence", () => {
     saveAppModel(model, storage);
 
     expect(loadAppModel(storage).data.tasks[0]!.status).toBe("completed");
+  });
+
+  it("persists execution runs", () => {
+    const model = createInitialModel();
+    model.data.executionRuns.push({
+      id: "run_2",
+      taskId: "task_1",
+      workspaceId: "ws_personal",
+      executorId: "exec_kael",
+      status: "running",
+      trigger: "manual",
+      startedAt: "2026-07-23 09:00",
+      updatedAt: "2026-07-23 09:00",
+      logs: []
+    });
+    const storage = createStorage();
+
+    saveAppModel(model, storage);
+
+    expect(loadAppModel(storage).data.executionRuns).toHaveLength(model.data.executionRuns.length);
   });
 
   it("falls back to seed model when storage payload is malformed", () => {
@@ -37,6 +58,36 @@ describe("persistence", () => {
     expect(model.data.workspaces[0]?.id).toBe("ws_personal");
     expect(model.data.tasks.length).toBeGreaterThan(0);
     expect(model.state.currentWorkspaceId).toBe("ws_personal");
+  });
+
+  it("falls back when execution runs are invalid", () => {
+    const storage = createStorage();
+
+    storage.setItem(
+      "nexus.v1.phase1",
+      JSON.stringify({
+        state: {
+          currentPage: "dashboard",
+          currentWorkspaceId: "ws_personal",
+          chatOpen: true,
+          chatPinned: true,
+          chatMode: "side",
+          commandPaletteOpen: false,
+          eventFilter: "all",
+          eventSourceFilter: "all",
+          eventQuery: "",
+          taskView: "kanban"
+        },
+        data: {
+          ...createInitialModel().data,
+          executionRuns: [{ id: "run_bad", taskId: "task_1" }]
+        }
+      })
+    );
+
+    const model = loadAppModel(storage);
+
+    expect(model.data.executionRuns.length).toBeGreaterThan(0);
   });
 });
 

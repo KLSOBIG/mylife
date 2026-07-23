@@ -122,7 +122,7 @@ describe("App", () => {
     expect(screen.getByText("已停用")).toBeInTheDocument();
   });
 
-  it("updates executor metrics after assigning task", async () => {
+  it("keeps executor runtime metrics unchanged before execution starts", async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole("button", { name: "任务" }));
@@ -132,6 +132,47 @@ describe("App", () => {
 
     const lobsterCard = screen.getByText("龙虾").closest(".entity-card");
     expect(lobsterCard).not.toBeNull();
-    expect(within(lobsterCard as HTMLElement).getByText("3")).toBeInTheDocument();
+    expect(within(lobsterCard as HTMLElement).getByText("今日完成")).toBeInTheDocument();
+    expect(within(lobsterCard as HTMLElement).getByText("已生成客户投诉回复草稿，等待 Kael 审核。")).toBeInTheDocument();
+  });
+
+  it("starts local execution from task detail", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "任务" }));
+    await user.click(screen.getByRole("button", { name: /追踪 AI 融资资讯/ }));
+    await user.click(screen.getByRole("button", { name: "开始执行" }));
+    expect(screen.getByText("运行状态：queued")).toBeInTheDocument();
+    expect(await screen.findByText("运行状态：running")).toBeInTheDocument();
+  });
+
+  it("marks execution success and moves task to pending review", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "任务" }));
+    await user.click(screen.getByRole("button", { name: /追踪 AI 融资资讯/ }));
+    await user.click(screen.getByRole("button", { name: "开始执行" }));
+    await screen.findByText("运行状态：running");
+    await user.click(screen.getByRole("button", { name: "标记成功" }));
+    expect(screen.getByText("运行状态：succeeded")).toBeInTheDocument();
+    expect(screen.getByText("状态：pending_review")).toBeInTheDocument();
+  });
+
+  it("marks execution failure and updates executor board", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "任务" }));
+    await user.click(screen.getByRole("button", { name: /追踪 AI 融资资讯/ }));
+    await user.click(screen.getByRole("button", { name: "开始执行" }));
+    await screen.findByText("运行状态：running");
+    await user.click(screen.getByRole("button", { name: "标记失败" }));
+    expect(screen.getByText("运行状态：failed")).toBeInTheDocument();
+    expect(screen.getByText("状态：returned")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "执行器" }));
+
+    const lobsterCard = screen.getByText("龙虾").closest(".entity-card");
+    expect(lobsterCard).not.toBeNull();
+    expect(within(lobsterCard as HTMLElement).getByText("失败次数")).toBeInTheDocument();
+    expect(within(lobsterCard as HTMLElement).getByText("龙虾 执行 追踪 AI 融资资讯 失败，任务已退回。")).toBeInTheDocument();
   });
 });

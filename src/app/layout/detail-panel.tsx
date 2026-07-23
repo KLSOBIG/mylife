@@ -1,4 +1,4 @@
-import type { EventItem, ExecutorItem, TaskItem } from "../../domain/types";
+import type { EventItem, ExecutionRun, ExecutorItem, TaskItem } from "../../domain/types";
 import { EventDetail } from "../../features/events/event-detail";
 import { TaskDetail } from "../../features/tasks/task-detail";
 
@@ -6,8 +6,15 @@ export function DetailPanel(props: {
   event?: EventItem;
   task?: TaskItem;
   executors?: ExecutorItem[];
+  runs?: ExecutionRun[];
+  activeRun?: ExecutionRun;
+  latestRun?: ExecutionRun;
   onTaskStatusChange?: (nextStatus: TaskItem["status"]) => void;
   onTaskAssigneeChange?: (assigneeId?: string) => void;
+  onTaskExecutionStart?: () => void;
+  onTaskExecutionSuccess?: () => void;
+  onTaskExecutionFailure?: () => void;
+  onTaskExecutionRetry?: () => void;
   onConvertEventToTask?: () => void;
 }) {
   const hasDetail = Boolean(props.event || props.task);
@@ -31,9 +38,15 @@ export function DetailPanel(props: {
           <div className="detail-section-stack">
             <div className="detail-surface">
               <TaskDetail
+                activeRun={props.activeRun}
                 executors={props.executors}
                 onAssigneeChange={props.onTaskAssigneeChange}
+                onMarkExecutionFailure={props.onTaskExecutionFailure}
+                onMarkExecutionSuccess={props.onTaskExecutionSuccess}
+                onRetryExecution={props.onTaskExecutionRetry}
+                onStartExecution={props.onTaskExecutionStart}
                 onStatusChange={props.onTaskStatusChange}
+                runs={props.runs}
                 task={props.task}
               />
             </div>

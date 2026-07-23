@@ -1,6 +1,8 @@
 import type { ExecutorItem } from "../../domain/types";
 
-export function ExecutorsPage(props: { executors: ExecutorItem[] }) {
+export function ExecutorsPage(props: {
+  executors: ExecutorItem[];
+}) {
   return (
     <div className="card-grid page-scroll">
       {props.executors.map((item) => (
@@ -20,16 +22,26 @@ export function ExecutorsPage(props: { executors: ExecutorItem[] }) {
           </div>
           <div className="metric-row">
             <div>
-              <strong>{item.activeTasks}</strong>
-              <span>执行中</span>
+              <strong>{item.queueCount ?? 0}</strong>
+              <span>队列中</span>
+            </div>
+            <div>
+              <strong>{item.runningCount ?? item.activeTasks}</strong>
+              <span>运行中</span>
             </div>
             <div>
               <strong>{item.completedToday}</strong>
               <span>今日完成</span>
             </div>
             <div>
-              <strong>{item.successRate}%</strong>
-              <span>成功率</span>
+              <strong>{item.failureCount ?? 0}</strong>
+              <span>失败次数</span>
+            </div>
+            <div>
+              <span className={`recent-result ${(item.failureCount ?? 0) > 0 ? "error" : item.runningCount ? "running" : "idle"}`}>
+                {item.lastRunSummary ?? item.status}
+              </span>
+              <span>最近结果</span>
             </div>
           </div>
         </article>
