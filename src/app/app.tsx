@@ -12,7 +12,7 @@ import {
   createWorkspaceFromDraft,
   reduceModel
 } from "../domain/store";
-import type { AttentionLevel, PageId, Workspace } from "../domain/types";
+import type { AttentionLevel, ExecutorItem, ExecutorStatus, PageId, TaskItem, Workspace } from "../domain/types";
 import { DashboardPage } from "../features/dashboard/dashboard-page";
 import { EventsPage } from "../features/events/events-page";
 import { ExecutorsPage } from "../features/executors/executors-page";
@@ -121,8 +121,12 @@ export function App() {
     [data.tasks, state.currentWorkspaceId]
   );
   const filteredExecutors = useMemo(
-    () => data.executors.filter((item) => item.workspaceId === state.currentWorkspaceId),
-    [data.executors, state.currentWorkspaceId]
+    () =>
+      deriveExecutorMetrics(
+        data.executors.filter((item) => item.workspaceId === state.currentWorkspaceId),
+        filteredTasks
+      ),
+    [data.executors, filteredTasks, state.currentWorkspaceId]
   );
   const filteredRules = useMemo(
     () => data.rules.filter((item) => item.workspaceId === state.currentWorkspaceId),
@@ -344,6 +348,33 @@ export function App() {
       reply: `已创建任务：${task.title}`
     });
   }
+}
+
+function deriveExecutorMetrics(executors: ExecutorItem[], tasks: TaskItem[]): ExecutorItem[] {
+  return executors.map((executor) => {
+    const assignedTasks = tasks.filter((task) => task.assigneeId === executor.id);
+    const activeTasks = assignedTasks.filter((task) => isActiveTask(task.status)).length;
+    const completedToday = assignedTasks.filter((task) => task.status === "completed").length;
+
+    return {
+      ...executor,
+      activeTasks,
+      completedToday,
+      status: deriveExecutorStatus(executor.status, activeTasks)
+    };
+  });
+}
+
+function isActiveTask(status: TaskItem["status"]): boolean {
+  return status !== "completed" && status !== "pending_assignment";
+}
+
+function deriveExecutorStatus(current: ExecutorStatus, activeTasks: number): ExecutorStatus {
+  if (current === "offline" || current === "error") {
+    return current;
+  }
+
+  return activeTasks > 0 ? "busy" : "idle";
 }
 
 function buildReply(

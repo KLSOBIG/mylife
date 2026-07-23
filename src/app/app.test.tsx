@@ -121,4 +121,17 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "切换规则 紧急事件自动升级" }));
     expect(screen.getByText("已停用")).toBeInTheDocument();
   });
+
+  it("updates executor metrics after assigning task", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "任务" }));
+    await user.click(screen.getByRole("button", { name: /处理服务器告警/ }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "执行器" }), "exec_lobster");
+    await user.click(screen.getByRole("button", { name: "执行器" }));
+
+    const lobsterCard = screen.getByText("龙虾").closest(".entity-card");
+    expect(lobsterCard).not.toBeNull();
+    expect(within(lobsterCard as HTMLElement).getByText("3")).toBeInTheDocument();
+  });
 });
