@@ -1,5 +1,4 @@
 export type PageId = "dashboard" | "events" | "tasks" | "executors" | "rules" | "sources";
-
 export type WorkspaceKind = "personal" | "team" | "study" | "life";
 export type AttentionLevel = "L0" | "L1" | "L2" | "L3";
 export type TaskStatus =
@@ -11,6 +10,11 @@ export type TaskStatus =
   | "suspended"
   | "escalated"
   | "returned";
+export type SourceKind = "webhook" | "api" | "polling" | "cli" | "sdk";
+export type SourceStatus = "connected" | "warning" | "offline";
+export type ExecutorStatus = "idle" | "busy" | "offline" | "error";
+export type ChatMode = "side" | "modal";
+export type TaskView = "kanban" | "list";
 
 export interface Workspace {
   id: string;
@@ -52,7 +56,7 @@ export interface ExecutorItem {
   name: string;
   role: string;
   type: "agent" | "human";
-  status: "idle" | "busy" | "offline" | "error";
+  status: ExecutorStatus;
   avatar: string;
   capabilities: string[];
   successRate: number;
@@ -73,12 +77,23 @@ export interface RuleItem {
   successRate: number;
 }
 
+export interface RuleSuggestion {
+  id: string;
+  workspaceId: string;
+  title: string;
+  description: string;
+  confidence: number;
+  condition: string;
+  action: string;
+}
+
 export interface SourceItem {
   id: string;
   workspaceId: string;
   name: string;
-  kind: "webhook" | "api" | "polling" | "cli" | "sdk";
-  status: "connected" | "warning" | "offline";
+  kind: SourceKind;
+  status: SourceStatus;
+  enabled: boolean;
   icon: string;
   description: string;
   stat: string;
@@ -88,4 +103,41 @@ export interface ChatMessage {
   id: string;
   role: "ai" | "user";
   content: string;
+}
+
+export interface AppData {
+  workspaces: Workspace[];
+  events: EventItem[];
+  tasks: TaskItem[];
+  executors: ExecutorItem[];
+  rules: RuleItem[];
+  ruleSuggestions: RuleSuggestion[];
+  sources: SourceItem[];
+  chatMessages: ChatMessage[];
+}
+
+export interface AppState {
+  currentPage: PageId;
+  currentWorkspaceId: Workspace["id"];
+  selectedEventId?: string;
+  selectedTaskId?: string;
+  chatOpen: boolean;
+  chatPinned: boolean;
+  chatMode: ChatMode;
+  commandPaletteOpen: boolean;
+  eventFilter: "all" | AttentionLevel;
+  eventSourceFilter: "all" | string;
+  eventQuery: string;
+  taskView: TaskView;
+}
+
+export interface AppModel {
+  state: AppState;
+  data: AppData;
+}
+
+export interface CommandItem {
+  id: string;
+  label: string;
+  hint?: string;
 }

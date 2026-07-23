@@ -1,26 +1,273 @@
-import type { RuleItem } from "../../domain/types";
+import { useMemo, useState } from "react";
+import type { AttentionLevel, RuleItem } from "../../domain/types";
+import { Dialog } from "../common/dialog";
+import { EmptyState } from "../common/empty-state";
 
-export function RulesPage(props: { rules: RuleItem[] }) {
+const levels: Array<"all" | AttentionLevel> = ["all", "L3", "L2", "L1", "L0"];
+
+type RuleDraft = {
+  name: string;
+  description: string;
+  level: AttentionLevel;
+  condition: string;
+  action: string;
+};
+
+export function RulesPage(props: {
+  rules: RuleItem[];
+  searchQuery?: string;
+  onSearchChange?: (value: string) => void;
+  levelFilter?: "all" | AttentionLevel;
+  onLevelFilterChange?: (next: "all" | AttentionLevel) => void;
+  onToggleRule?: (ruleId: string, nextEnabled: boolean) => void;
+  onCreateRule?: (draft: {
+    name: string;
+    description: string;
+    level: AttentionLevel;
+    condition: string;
+    action: string;
+  }) => void;
+  suggestedRules?: Array<{
+    name: string;
+    description: string;
+    level: AttentionLevel;
+    condition: string;
+    action: string;
+  }>;
+  onApplySuggestion?: (index: number) => void;
+}) {
+  const [searchDraft, setSearchDraft] = useState("");
+  const [levelDraft, setLevelDraft] = useState<"all" | AttentionLevel>("all");
+  const [localEnabled, setLocalEnabled] = useState<Record<string, boolean>>({});
+  const [createOpen, setCreateOpen] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [draft, setDraft] = useState<RuleDraft>({
+    name: "",
+    description: "",
+    level: "L2",
+    condition: "",
+    action: ""
+  });
+
+  const searchValue = props.searchQuery ?? searchDraft;
+  const activeLevelFilter = props.levelFilter ?? levelDraft;
+  const visibleRules = useMemo(() => {
+    const normalized = searchValue.trim().toLowerCase();
+    return props.rules.filter((item) => {
+      const matchesLevel = activeLevelFilter === "all" || item.level === activeLevelFilter;
+      if (!matchesLevel) {
+        return false;
+      }
+      if (!normalized) {
+        return true;
+      }
+      return [item.name, item.description, item.condition, item.action, item.level].join(" ").toLowerCase().includes(normalized);
+    });
+  }, [activeLevelFilter, props.rules, searchValue]);
+
   return (
     <div className="page-scroll stack-list">
-      {props.rules.map((item) => (
-        <article key={item.id} className="rule-card">
-          <div className="rule-header">
-            <div>
-              <h3>{item.name}</h3>
-              <p>{item.description}</p>
+      <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between" }}>
+          <input
+            aria-label="搜索规则"
+            onChange={(event) => {
+              const next = event.target.value;
+              if (props.searchQuery === undefined) {
+                setSearchDraft(next);
+              }
+              props.onSearchChange?.(next);
+            }}
+            placeholder="搜索名称、描述、条件、动作"
+            style={{
+              flex: "1 1 320px",
+              border: "1px solid var(--border)",
+              borderRadius: 14,
+              padding: "11px 14px",
+              outline: "none"
+            }}
+            value={searchValue}
+          />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button className="btn secondary" onClick={() => setSuggestOpen(true)} type="button">
+              建议规则
+            </button>
+            <button className="btn primary" onClick={() => setCreateOpen(true)} type="button">
+              创建规则
+            </button>
+          </div>
+        </div>
+        <div className="chips">
+          {levels.map((level) => (
+            <button
+              className={level === activeLevelFilter ? "chip active" : "chip"}
+              key={level}
+              onClick={() => {
+                if (props.levelFilter === undefined) {
+                  setLevelDraft(level);
+                }
+                props.onLevelFilterChange?.(level);
+              }}
+              type="button"
+            >
+              {level === "all" ? "全部" : level}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {visibleRules.length ? (
+        visibleRules.map((item) => (
+          <article key={item.id} className="rule-card">
+            {(() => {
+              const enabled = props.onToggleRule ? item.enabled : localEnabled[item.id] ?? item.enabled;
+              return (
+                <div className="rule-header">
+                  <div>
+                    <h3>{item.name}</h3>
+                    <p>{item.description}</p>
+                  </div>
+                  <button
+                    aria-label={`切换规则 ${item.name}`}
+                    className={enabled ? "toggle on" : "toggle"}
+                    onClick={() => {
+                      if (props.onToggleRule) {
+                        props.onToggleRule(item.id, !item.enabled);
+                        return;
+                      }
+                      setLocalEnabled((current) => ({ ...current, [item.id]: !enabled }));
+                    }}
+                    type="button"
+                  >
+                    {enabled ? "已启用" : "已停用"}
+                  </button>
+                </div>
+              );
+            })()}
+            <code>{item.condition}</code>
+            <code className="rule-action">{item.action}</code>
+            <div className="rule-meta">
+              <span>{item.level}</span>
+              <span>触发 {item.triggeredCount}</span>
+              <span>成功率 {item.successRate}%</span>
             </div>
-            <span className={item.enabled ? "toggle on" : "toggle"}>{item.enabled ? "启用" : "停用"}</span>
-          </div>
-          <code>{item.condition}</code>
-          <code className="rule-action">{item.action}</code>
-          <div className="rule-meta">
-            <span>{item.level}</span>
-            <span>触发 {item.triggeredCount}</span>
-            <span>成功率 {item.successRate}%</span>
-          </div>
-        </article>
-      ))}
+          </article>
+        ))
+      ) : (
+        <EmptyState description="换关键词或改级别筛选。" title="没有匹配规则" />
+      )}
+
+      <Dialog
+        description="这只是创建 UI。创建动作交给主线程。"
+        onClose={() => setCreateOpen(false)}
+        open={createOpen}
+        title="创建规则"
+        footer={
+          <>
+            <button className="btn secondary" onClick={() => setCreateOpen(false)} type="button">
+              取消
+            </button>
+            <button
+              className="btn primary"
+              onClick={() => {
+                props.onCreateRule?.({
+                  name: draft.name.trim(),
+                  description: draft.description.trim(),
+                  level: draft.level,
+                  condition: draft.condition.trim(),
+                  action: draft.action.trim()
+                });
+                setDraft({ name: "", description: "", level: "L2", condition: "", action: "" });
+                setCreateOpen(false);
+              }}
+              type="button"
+            >
+              创建
+            </button>
+          </>
+        }
+      >
+        <div style={{ display: "grid", gap: 12 }}>
+          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+            <span>名称</span>
+            <input
+              onChange={(event) => setDraft((value) => ({ ...value, name: event.target.value }))}
+              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+              value={draft.name}
+            />
+          </label>
+          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+            <span>描述</span>
+            <input
+              onChange={(event) => setDraft((value) => ({ ...value, description: event.target.value }))}
+              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+              value={draft.description}
+            />
+          </label>
+          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+            <span>级别</span>
+            <select
+              onChange={(event) => setDraft((value) => ({ ...value, level: event.target.value as AttentionLevel }))}
+              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+              value={draft.level}
+            >
+              {["L3", "L2", "L1", "L0"].map((level) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+            <span>条件</span>
+            <textarea
+              onChange={(event) => setDraft((value) => ({ ...value, condition: event.target.value }))}
+              rows={4}
+              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", resize: "vertical" }}
+              value={draft.condition}
+            />
+          </label>
+          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+            <span>动作</span>
+            <textarea
+              onChange={(event) => setDraft((value) => ({ ...value, action: event.target.value }))}
+              rows={3}
+              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", resize: "vertical" }}
+              value={draft.action}
+            />
+          </label>
+        </div>
+      </Dialog>
+
+      <Dialog
+        description="建议规则先展示，应用动作交给主线程。"
+        onClose={() => setSuggestOpen(false)}
+        open={suggestOpen}
+        title="建议规则"
+      >
+        <div style={{ display: "grid", gap: 12 }}>
+          {props.suggestedRules?.length ? (
+            props.suggestedRules.map((item, index) => (
+              <article className="rule-card" key={`${item.name}-${index}`}>
+                <div className="rule-header">
+                  <div>
+                    <h3>{item.name}</h3>
+                    <p>{item.description}</p>
+                  </div>
+                  <span className="toggle on">{item.level}</span>
+                </div>
+                <code>{item.condition}</code>
+                <code className="rule-action">{item.action}</code>
+                <button className="btn primary" onClick={() => props.onApplySuggestion?.(index)} type="button">
+                  应用建议
+                </button>
+              </article>
+            ))
+          ) : (
+            <EmptyState description="主线程还没喂建议数据。" title="暂无建议规则" />
+          )}
+        </div>
+      </Dialog>
     </div>
   );
 }

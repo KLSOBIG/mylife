@@ -17,21 +17,26 @@ export function Sidebar(props: {
   workspaces: Workspace[];
   onPageChange: (page: PageId) => void;
   onWorkspaceChange: (workspaceId: string) => void;
+  onCreateWorkspace?: (draft: { name: string; kind: Workspace["kind"]; description: string; icon: string }) => void;
 }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="logo">N</div>
-        <div>
+        <div className="sidebar-brand">
           <div className="sidebar-title">Nexus</div>
           <div className="sidebar-subtitle">注意力保护系统</div>
         </div>
       </div>
-      <WorkspaceSwitcher
-        currentWorkspaceId={props.currentWorkspaceId}
-        workspaces={props.workspaces}
-        onSwitch={props.onWorkspaceChange}
-      />
+      <section className="sidebar-section">
+        <div className="sidebar-section__label">工作空间</div>
+        <WorkspaceSwitcher
+          currentWorkspaceId={props.currentWorkspaceId}
+          workspaces={props.workspaces}
+          onSwitch={props.onWorkspaceChange}
+          onCreateWorkspace={props.onCreateWorkspace}
+        />
+      </section>
       <nav className="sidebar-nav" aria-label="主导航">
         {navItems.map((item) => (
           <button
@@ -44,13 +49,15 @@ export function Sidebar(props: {
             <span className="nav-icon" aria-hidden="true">
               {item.icon}
             </span>
-            <span>{item.label}</span>
+            <span className="nav-copy">
+              <span className="nav-label">{item.label}</span>
+            </span>
           </button>
         ))}
       </nav>
       <div className="sidebar-footer">
         <div className="avatar">K</div>
-        <div>
+        <div className="sidebar-brand">
           <div className="sidebar-title">Kael</div>
           <div className="sidebar-subtitle">管理员</div>
         </div>
