@@ -28,7 +28,7 @@
 - Modify: `src/features/dashboard/dashboard-page.tsx`
 - Modify: `src/styles/app.css`
 - Modify: `README.md`
-- Modify: `DESIGN.md`
+- Modify: `docs/DESIGN.md`
 
 ### Task 1: 新增执行运行领域模型
 
@@ -260,7 +260,7 @@ Expected: PASS
 
 **Files:**
 - Modify: `README.md`
-- Modify: `DESIGN.md`
+- Modify: `docs/DESIGN.md`
 
 - [ ] **Step 1: README 更新二期能力**
 

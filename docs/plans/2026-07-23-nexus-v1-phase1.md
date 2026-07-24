@@ -46,7 +46,7 @@
 - Create: `src/features/common/empty-state.tsx`
 - Modify: `src/styles/app.css`
 - Modify: `README.md`
-- Modify: `DESIGN.md`
+- Modify: `docs/DESIGN.md`
 
 ---
 
@@ -465,7 +465,7 @@ Expected: PASS
 
 **Files:**
 - Modify: `README.md`
-- Modify: `DESIGN.md`
+- Modify: `docs/DESIGN.md`
 
 - [x] **Step 1: README 增加一期功能列表**
 
@@ -476,7 +476,7 @@ Expected: PASS
 - 任务看板/列表与状态流转
 ```
 
-- [x] **Step 2: DESIGN.md 增加“一期已实现范围”**
+- [x] **Step 2: docs/DESIGN.md 增加“一期已实现范围”**
 
 ```md
 - 个人用户 Web SPA

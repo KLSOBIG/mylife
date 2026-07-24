@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   buildExecutionFailure,
   buildExecutionSummary,
@@ -9,6 +9,7 @@ import {
   findActiveRun,
   findLatestRun
 } from "../domain/execution-runtime";
+import { fetchPluginRegistry, runExternalExecutor, syncRealSource, type PluginRegistry } from "../domain/gateway";
 import { chartSeries } from "../domain/mock-data";
 import { parseIntent } from "../domain/intents";
 import { loadAppModel, saveAppModel } from "../domain/persistence";
@@ -47,10 +48,31 @@ export function App() {
   const [model, dispatch] = useReducer(reduceModel, undefined, () => loadAppModel(getStorage()));
   const { data, state } = model;
   const queuedTimers = useRef(new Set<string>());
+  const [pluginRegistry, setPluginRegistry] = useState<PluginRegistry>({ sources: [], executors: [] });
 
   useEffect(() => {
     saveAppModel(model, getStorage());
   }, [model]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchPluginRegistry()
+      .then((registry) => {
+        if (!cancelled) {
+          setPluginRegistry(registry);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPluginRegistry({ sources: [], executors: [] });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const queuedRuns = collectQueuedRuns(data.executionRuns);
@@ -179,6 +201,20 @@ export function App() {
     () => data.sources.filter((item) => item.workspaceId === state.currentWorkspaceId),
     [data.sources, state.currentWorkspaceId]
   );
+  const realSourceIds = useMemo(
+    () =>
+      pluginRegistry.sources
+        .filter((item) => item.workspaceId === state.currentWorkspaceId && item.enabled)
+        .map((item) => item.id),
+    [pluginRegistry.sources, state.currentWorkspaceId]
+  );
+  const realExecutorIds = useMemo(
+    () =>
+      pluginRegistry.executors
+        .filter((item) => item.workspaceId === state.currentWorkspaceId && item.enabled)
+        .map((item) => item.id),
+    [pluginRegistry.executors, state.currentWorkspaceId]
+  );
 
   const selectedEvent = findById(filteredEvents, state.selectedEventId);
   const selectedTask = findById(filteredTasks, state.selectedTaskId);
@@ -302,7 +338,11 @@ export function App() {
 
           {state.currentPage === "sources" ? (
             <SourcesPage
+              realSourceIds={realSourceIds}
               sources={filteredSources}
+              onSyncSource={(sourceId) => {
+                void handleRealSourceSync(sourceId);
+              }}
               onToggleSource={(sourceId, nextStatus) =>
                 dispatch({
                   type: "source/toggled",
@@ -325,6 +365,7 @@ export function App() {
         executors={filteredExecutors}
         task={selectedTask}
         activeRun={activeRun}
+        hasExternalExecutor={Boolean(selectedTask?.assigneeId && realExecutorIds.includes(selectedTask.assigneeId))}
         latestRun={latestRun}
         runs={selectedTaskRuns}
         onConvertEventToTask={() => {
@@ -419,6 +460,9 @@ export function App() {
             })
           });
         }}
+        onTaskExternalExecutionStart={() => {
+          void handleExternalExecution();
+        }}
         onTaskExecutionSuccess={() => {
           if (!selectedTask || !activeRun) {
             return;
@@ -487,6 +531,76 @@ export function App() {
       message: "创建任务",
       reply: `已创建任务：${task.title}`
     });
+  }
+
+  async function handleRealSourceSync(sourceId: string) {
+    const result = await syncRealSource(sourceId);
+    result.events.forEach((event) => {
+      dispatch({ type: "event/created", event });
+    });
+    dispatch({
+      type: "chat/messageSubmitted",
+      message: `同步信息源 ${sourceId}`,
+      reply: `已拉取 ${result.events.length} 条真实事件。`
+    });
+  }
+
+  async function handleExternalExecution() {
+    if (!selectedTask?.assigneeId || !canStartExecution(selectedTask, selectedExecutor)) {
+      return;
+    }
+
+    const run = createExecutionRun({
+      id: createRuntimeId("run"),
+      workspaceId: selectedTask.workspaceId,
+      taskId: selectedTask.id,
+      executorId: selectedTask.assigneeId,
+      trigger: "manual",
+      logs: [
+        createExecutionLog({
+          id: createRuntimeId("log"),
+          at: formatNow(),
+          level: "info",
+          message: "任务已派发到外部执行器。"
+        })
+      ]
+    });
+
+    dispatch({ type: "task/executionStarted", run });
+
+    try {
+      const result = await runExternalExecutor(selectedTask.assigneeId, selectedTask);
+      const successLog = createExecutionLog({
+        id: createRuntimeId("log"),
+        at: formatNow(),
+        level: "success",
+        message: result.log
+      });
+      dispatch({
+        type: "task/executionSucceeded",
+        taskId: selectedTask.id,
+        runId: run.id,
+        finishedAt: successLog.at,
+        summary: result.summary,
+        log: successLog
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const failureLog = createExecutionLog({
+        id: createRuntimeId("log"),
+        at: formatNow(),
+        level: "error",
+        message
+      });
+      dispatch({
+        type: "task/executionFailed",
+        taskId: selectedTask.id,
+        runId: run.id,
+        finishedAt: failureLog.at,
+        error: message,
+        log: failureLog
+      });
+    }
   }
 }
 

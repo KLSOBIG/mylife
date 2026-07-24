@@ -15,7 +15,7 @@
 - 第一批只做 `Web SPA`
 - 数据源先用本地 mock/domain store
 - 不做真实钉钉、Agent CLI、规则执行、登录、权限
-- 但页面结构、模块边界、状态流、文档命名全部按 `DESIGN.md` 和 `docs/modules/*.md`
+- 但页面结构、模块边界、状态流、文档命名全部按 `docs/DESIGN.md` 和 `docs/modules/*.md`
 
 ## 文件结构
 
@@ -47,7 +47,7 @@
 - Create: `src/features/tasks/task-detail.tsx`
 - Create: `src/features/events/event-detail.tsx`
 - Create: `src/test/setup.ts`
-- Modify: `DESIGN.md`
+- Modify: `docs/DESIGN.md`
 - Create: `README.md`
 
 ---
@@ -400,7 +400,7 @@ Expected: PASS
 - Modify: `src/app/app.tsx`
 - Test: `src/app/app.test.tsx`
 
-- [ ] **Step 1: 仪表盘按 DESIGN.md 落四张统计卡 + 趋势 + Agent 状态**
+- [ ] **Step 1: 仪表盘按 docs/DESIGN.md 落四张统计卡 + 趋势 + Agent 状态**
 
 ```tsx
 <section className="stats-row">
@@ -546,10 +546,10 @@ Expected: PASS
 ### Task 8: 文档同步和运行说明
 
 **Files:**
-- Modify: `DESIGN.md`
+- Modify: `docs/DESIGN.md`
 - Create: `README.md`
 
-- [ ] **Step 1: 在 DESIGN.md 追加“当前实现范围”**
+- [ ] **Step 1: 在 docs/DESIGN.md 追加“当前实现范围”**
 
 ```md
 ## 当前实现范围（2026-07-23）
@@ -590,7 +590,7 @@ Expected: 全部通过
 
 ## 自检
 
-- `DESIGN.md` 核心页面、工作空间、任务、执行器、规则、信息源、对话侧板，计划均已覆盖
+- `docs/DESIGN.md` 核心页面、工作空间、任务、执行器、规则、信息源、对话侧板，计划均已覆盖
 - 第一阶段故意不做真实钉钉/规则执行/Agent 调度，边界已在“实现边界”写明
 - 无 `TODO/TBD` 占位
 - 类型名在任务间保持一致：`AttentionLevel`、`TaskStatus`、`Workspace`

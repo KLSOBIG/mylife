@@ -16,9 +16,11 @@ export function TaskDetail(props: {
   executors?: ExecutorItem[];
   runs?: ExecutionRun[];
   activeRun?: ExecutionRun;
+  hasExternalExecutor?: boolean;
   onStatusChange?: (nextStatus: TaskItem["status"]) => void;
   onAssigneeChange?: (assigneeId?: string) => void;
   onStartExecution?: () => void;
+  onStartExternalExecution?: () => void;
   onMarkExecutionSuccess?: () => void;
   onMarkExecutionFailure?: () => void;
   onRetryExecution?: () => void;
@@ -78,9 +80,16 @@ export function TaskDetail(props: {
         </div>
         <div className="execution-actions">
           {canStart ? (
-            <button className="btn primary small" onClick={props.onStartExecution} type="button">
-              开始执行
-            </button>
+            <>
+              <button className="btn primary small" onClick={props.onStartExecution} type="button">
+                开始执行
+              </button>
+              {props.hasExternalExecutor ? (
+                <button className="btn secondary small" onClick={props.onStartExternalExecution} type="button">
+                  真实执行
+                </button>
+              ) : null}
+            </>
           ) : null}
           {canResolve ? (
             <>

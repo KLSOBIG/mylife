@@ -14,11 +14,13 @@ type SourceDraft = {
 
 export function SourcesPage(props: {
   sources: SourceItem[];
+  realSourceIds?: string[];
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
   statusFilter?: "all" | SourceItem["status"];
   onStatusFilterChange?: (next: "all" | SourceItem["status"]) => void;
   onToggleSource?: (sourceId: string, nextStatus: SourceItem["status"]) => void;
+  onSyncSource?: (sourceId: string) => void;
   onCreateSource?: (draft: {
     name: string;
     kind: SourceItem["kind"];
@@ -112,15 +114,22 @@ export function SourcesPage(props: {
                   <h3>{item.name}</h3>
                   <p>{item.kind}</p>
                 </div>
-                <button
-                  className={`status-tag ${item.status}`}
-                  onClick={() =>
-                    props.onToggleSource?.(item.id, item.status === "connected" ? "offline" : "connected")
-                  }
-                  type="button"
-                >
-                  {item.status}
-                </button>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <button
+                    className={`status-tag ${item.status}`}
+                    onClick={() =>
+                      props.onToggleSource?.(item.id, item.status === "connected" ? "offline" : "connected")
+                    }
+                    type="button"
+                  >
+                    {item.status}
+                  </button>
+                  {props.realSourceIds?.includes(item.id) ? (
+                    <button className="btn secondary small" onClick={() => props.onSyncSource?.(item.id)} type="button">
+                      真实同步
+                    </button>
+                  ) : null}
+                </div>
               </div>
               <p className="entity-description">{item.description}</p>
               <div className="entity-stat-line">{item.stat}</div>

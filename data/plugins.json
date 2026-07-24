@@ -1,0 +1,49 @@
+{
+  "sources": [
+    {
+      "id": "source_3",
+      "pluginId": "rss.arxiv.cs-ai",
+      "workspaceId": "ws_study",
+      "kind": "polling",
+      "name": "ArXiv RSS",
+      "enabled": true,
+      "config": {
+        "url": "https://export.arxiv.org/rss/cs.AI",
+        "limit": 5,
+        "sender": "ArXiv RSS",
+        "level": "L1",
+        "tags": ["论文", "Agent", "RSS"]
+      }
+    }
+  ],
+  "executors": [
+    {
+      "id": "exec_lobster",
+      "pluginId": "cli.lobster",
+      "workspaceId": "ws_personal",
+      "kind": "cli",
+      "name": "龙虾 CLI",
+      "enabled": true,
+      "timeoutMs": 5000,
+      "command": "node",
+      "args": [
+        "-e",
+        "const task=JSON.parse(process.env.NEXUS_TASK_PAYLOAD); process.stdout.write(JSON.stringify({summary:`龙虾 已处理 ${task.title}`,log:`已完成外部执行：${task.title}`}));"
+      ]
+    },
+    {
+      "id": "exec_harness",
+      "pluginId": "cli.harness",
+      "workspaceId": "ws_team",
+      "kind": "cli",
+      "name": "Harness CLI",
+      "enabled": true,
+      "timeoutMs": 5000,
+      "command": "node",
+      "args": [
+        "-e",
+        "const task=JSON.parse(process.env.NEXUS_TASK_PAYLOAD); process.stdout.write(JSON.stringify({summary:`Harness 已处理 ${task.title}`,log:`已完成外部执行：${task.title}`}));"
+      ]
+    }
+  ]
+}

@@ -9,9 +9,11 @@ export function DetailPanel(props: {
   runs?: ExecutionRun[];
   activeRun?: ExecutionRun;
   latestRun?: ExecutionRun;
+  hasExternalExecutor?: boolean;
   onTaskStatusChange?: (nextStatus: TaskItem["status"]) => void;
   onTaskAssigneeChange?: (assigneeId?: string) => void;
   onTaskExecutionStart?: () => void;
+  onTaskExternalExecutionStart?: () => void;
   onTaskExecutionSuccess?: () => void;
   onTaskExecutionFailure?: () => void;
   onTaskExecutionRetry?: () => void;
@@ -40,10 +42,12 @@ export function DetailPanel(props: {
               <TaskDetail
                 activeRun={props.activeRun}
                 executors={props.executors}
+                hasExternalExecutor={props.hasExternalExecutor}
                 onAssigneeChange={props.onTaskAssigneeChange}
                 onMarkExecutionFailure={props.onTaskExecutionFailure}
                 onMarkExecutionSuccess={props.onTaskExecutionSuccess}
                 onRetryExecution={props.onTaskExecutionRetry}
+                onStartExternalExecution={props.onTaskExternalExecutionStart}
                 onStartExecution={props.onTaskExecutionStart}
                 onStatusChange={props.onTaskStatusChange}
                 runs={props.runs}

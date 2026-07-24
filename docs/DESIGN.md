@@ -70,12 +70,14 @@ Nexus 是一个**注意力保护系统**：
 
 ### 1.5 一期落地状态
 
-截至 **2026-07-23**，一期已先落成单用户 `Web SPA`：
+截至 **2026-07-24**，当前已落成单用户 `Web SPA + 本地适配 API`：
 
 - 数据存在前端 domain store，并持久化到 `localStorage`
 - 六大页面、详情面板、对话面板、命令面板已打通
 - 工作空间切换 / 新建、事件转任务、任务状态流转、执行器分配、规则启停已经可用
-- 真实插件接入、模型调用、服务端同步还未进入一期范围
+- 已接最小真实信息源：RSS 轮询同步
+- 已接最小真实执行器：CLI 执行器
+- 规则插件、钉钉、邮件、远程服务端同步还未进入当前范围
 
 ---
 
@@ -255,61 +257,61 @@ AI 会自动判断参数，有问题再问你。
 
 | 模块 | 职责 | 设计文档 |
 |------|------|----------|
-| **任务管理** | 任务创建、生命周期、状态流转 | [01-task.md](./docs/modules/01-task.md) |
-| **执行器** | Agent/人管理、任务执行、状态监控 | [02-executor.md](./docs/modules/02-executor.md) |
-| **规则引擎** | 事件分发、条件匹配、动作执行 | [03-rule.md](./docs/modules/03-rule.md) |
-| **插件系统** | 插件接口、生命周期、接入规范 | [04-plugin.md](./docs/modules/04-plugin.md) |
-| **对话引擎** | 参数推断、追问机制、对话管理 | [05-chat.md](./docs/modules/05-chat.md) |
-| **钉钉信息源** | 消息接收、Webhook、消息解析 | [06-dingtalk.md](./docs/modules/06-dingtalk.md) |
-| **工作空间** | 空间隔离、成员管理、权限控制 | [07-workspace.md](./docs/modules/07-workspace.md) |
-| **前端 UI** | React 组件、页面设计、状态管理 | [08-frontend.md](./docs/modules/08-frontend.md) |
+| **任务管理** | 任务创建、生命周期、状态流转 | [01-task.md](./modules/01-task.md) |
+| **执行器** | Agent/人管理、任务执行、状态监控 | [02-executor.md](./modules/02-executor.md) |
+| **规则引擎** | 事件分发、条件匹配、动作执行 | [03-rule.md](./modules/03-rule.md) |
+| **插件系统** | 插件接口、生命周期、接入规范 | [04-plugin.md](./modules/04-plugin.md) |
+| **对话引擎** | 参数推断、追问机制、对话管理 | [05-chat.md](./modules/05-chat.md) |
+| **钉钉信息源** | 消息接收、Webhook、消息解析 | [06-dingtalk.md](./modules/06-dingtalk.md) |
+| **工作空间** | 空间隔离、成员管理、权限控制 | [07-workspace.md](./modules/07-workspace.md) |
+| **前端 UI** | React 组件、页面设计、状态管理 | [08-frontend.md](./modules/08-frontend.md) |
 
 ### 5.2 各模块核心能力
 
-**任务管理** → [详细设计](./docs/modules/01-task.md)
+**任务管理** → [详细设计](./modules/01-task.md)
 - 任务创建（手动/自动）
 - 生命周期管理（待分配→进行中→完成）
 - 状态流转（挂起/升级/退回）
 - 任务拆分（父子任务）
 - 任务对话（多轮交互）
 
-**执行器** → [详细设计](./docs/modules/02-executor.md)
+**执行器** → [详细设计](./modules/02-executor.md)
 - 执行器类型（Agent/人）
 - 能力声明（信息处理/代码处理/决策）
 - 执行流程（接收→执行→提交）
 - 状态监控（空闲/忙碌/离线）
 - 协调器（超时处理、失败升级）
 
-**规则引擎** → [详细设计](./docs/modules/03-rule.md)
+**规则引擎** → [详细设计](./modules/03-rule.md)
 - 条件系统（来源/关键词/发送人/时间）
 - 动作系统（设置级别/分配/通知/归档）
 - 预设规则（紧急升级、老板必达、营销归档）
 - AI 建议规则（基于行为学习）
 
-**插件系统** → [详细设计](./docs/modules/04-plugin.md)
+**插件系统** → [详细设计](./modules/04-plugin.md)
 - 插件类型（信息源/执行器/规则）
 - 接入方式（API/CLI/SDK/Webhook/轮询）
 - 插件管理（添加/启用/配置）
 - AI 生成插件
 
-**对话引擎** → [详细设计](./docs/modules/05-chat.md)
+**对话引擎** → [详细设计](./modules/05-chat.md)
 - 参数推断（AI 自动提取参数）
 - 追问机制（必要时追问用户）
 - 对话管理（历史、状态）
 - 对话模式（侧面板/弹窗）
 
-**钉钉信息源** → [详细设计](./docs/modules/06-dingtalk.md)
+**钉钉信息源** → [详细设计](./modules/06-dingtalk.md)
 - 消息接收（Webhook）
 - 消息解析（文本/图片/富文本）
 - 群消息处理
 - 签名验证
 
-**工作空间** → [详细设计](./docs/modules/07-workspace.md)
+**工作空间** → [详细设计](./modules/07-workspace.md)
 - 空间类型（个人/团队/学习/生活）
 - 空间隔离（任务/规则/配置）
 - 成员管理（添加/移除/权限）
 
-**前端 UI** → [详细设计](./docs/modules/08-frontend.md)
+**前端 UI** → [详细设计](./modules/08-frontend.md)
 - 页面设计（仪表盘/事件流/任务/执行器/规则）
 - 对话面板（侧面板/弹窗）
 - 交互设计（创建/分配/状态流转）
@@ -377,7 +379,7 @@ AI 解析意图
   └────────┴────────┴────────┴→ 挂起/升级/退回
 ```
 
-详细状态流转规则见 [01-task.md](./docs/modules/01-task.md)
+详细状态流转规则见 [01-task.md](./modules/01-task.md)
 
 ---
 
@@ -414,15 +416,18 @@ AI 解析意图
 
 ---
 
-## 当前实现范围（2026-07-23）
+## 当前实现范围（2026-07-24）
 
 - Web SPA
+- 本地 Node API 适配层
 - 本地 `localStorage` 持久化
-- 规则和信息源仍是 mock 数据
 - 六大页面：仪表盘、事件流、任务、执行器、规则引擎、信息源
 - 工作空间切换、右侧详情面板、右侧对话侧板、命令面板
 - 本地真实执行器闭环：任务派发、开始执行、运行日志、成功/失败回写
+- 真实 CLI 执行器适配：插件注册、外部命令执行、结果回写
+- 真实 RSS 信息源适配：轮询拉取、转系统事件、入工作空间
 - 执行器页和仪表盘统计已改用真实运行数据
+- 规则仍是本地 store，未接真实规则插件
 
 ### Phase 1：核心框架（已完成）
 
@@ -442,19 +447,20 @@ AI 解析意图
 - 成功回写 `pending_review`
 - 失败回写 `returned`
 
-### Phase 2.5：外部执行器适配（下一步）
+### Phase 2.5：更多外部执行器适配（下一步）
 
-**目标**：把本地闭环替换成外部执行器适配层**
+**目标**：扩展当前适配层，接更多外部执行器**
 
 - OpenCode CLI 适配器
 - 外部执行结果回传
 - 更真实的调度与超时处理
 
-### Phase 3：第一个信息源
+### Phase 3：更多真实信息源
 
-**目标**：接入钉钉
+**目标**：在 RSS 基础上继续扩真实来源**
 
 - 钉钉信息源插件
+- 邮件信息源插件
 - 消息自动接收
 - 基础规则匹配
 
@@ -489,6 +495,8 @@ AI 解析意图
 - 事件筛选、搜索、转任务
 - 任务看板 / 列表、状态流转、执行器分配
 - 本地执行器闭环、运行日志、成功/失败回写
+- 真实 CLI 执行器接入与结果回写
+- 真实 RSS 事件同步
 - 执行器真实统计与仪表盘真实运行统计
 - 规则启停、建议采纳、手动创建
 - 信息源状态切换
@@ -496,8 +504,8 @@ AI 解析意图
 
 ### 9.2 暂未实现
 
-- 真实外部信息源接入
-- 真实 CLI / API / 外部 Agent 执行链路
+- 更多真实外部信息源接入
+- 更多真实 CLI / API / 外部 Agent 执行链路
 - 多用户协作与权限
 - 云同步与服务端存储
 - 系统级通知与移动端
@@ -521,11 +529,11 @@ v20: 产品设计文档 ← 当前
 
 | 文档 | 路径 |
 |------|------|
-| 任务管理 | [docs/modules/01-task.md](./docs/modules/01-task.md) |
-| 执行器 | [docs/modules/02-executor.md](./docs/modules/02-executor.md) |
-| 规则引擎 | [docs/modules/03-rule.md](./docs/modules/03-rule.md) |
-| 插件系统 | [docs/modules/04-plugin.md](./docs/modules/04-plugin.md) |
-| 对话引擎 | [docs/modules/05-chat.md](./docs/modules/05-chat.md) |
-| 钉钉信息源 | [docs/modules/06-dingtalk.md](./docs/modules/06-dingtalk.md) |
-| 工作空间 | [docs/modules/07-workspace.md](./docs/modules/07-workspace.md) |
-| 前端 UI | [docs/modules/08-frontend.md](./docs/modules/08-frontend.md) |
+| 任务管理 | [modules/01-task.md](./modules/01-task.md) |
+| 执行器 | [modules/02-executor.md](./modules/02-executor.md) |
+| 规则引擎 | [modules/03-rule.md](./modules/03-rule.md) |
+| 插件系统 | [modules/04-plugin.md](./modules/04-plugin.md) |
+| 对话引擎 | [modules/05-chat.md](./modules/05-chat.md) |
+| 钉钉信息源 | [modules/06-dingtalk.md](./modules/06-dingtalk.md) |
+| 工作空间 | [modules/07-workspace.md](./modules/07-workspace.md) |
+| 前端 UI | [modules/08-frontend.md](./modules/08-frontend.md) |
