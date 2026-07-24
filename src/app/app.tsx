@@ -9,7 +9,7 @@ import {
   findActiveRun,
   findLatestRun
 } from "../domain/execution-runtime";
-import { fetchPluginRegistry, runExternalExecutor, syncRealSource, type PluginRegistry } from "../domain/gateway";
+import { evaluateEventRules, fetchPluginRegistry, runExternalExecutor, syncRealSource, type PluginRegistry } from "../domain/gateway";
 import { chartSeries } from "../domain/mock-data";
 import { parseIntent } from "../domain/intents";
 import { loadAppModel, saveAppModel } from "../domain/persistence";
@@ -23,10 +23,22 @@ import {
   createWorkspaceFromDraft,
   reduceModel
 } from "../domain/store";
-import type { AttentionLevel, ExecutionRun, ExecutorItem, ExecutorStatus, PageId, Workspace } from "../domain/types";
+import type {
+  AttentionLevel,
+  ExecutionRun,
+  ExecutorItem,
+  ExecutorStatus,
+  PageId,
+  PluginHealth,
+  PluginSummary,
+  RuleItem,
+  SourceItem,
+  Workspace
+} from "../domain/types";
 import { DashboardPage } from "../features/dashboard/dashboard-page";
 import { EventsPage } from "../features/events/events-page";
 import { ExecutorsPage } from "../features/executors/executors-page";
+import { PluginsPage } from "../features/plugins/plugins-page";
 import { RulesPage } from "../features/rules/rules-page";
 import { SourcesPage } from "../features/sources/sources-page";
 import { TasksPage } from "../features/tasks/tasks-page";
@@ -41,14 +53,15 @@ const pageByDigit: Record<string, PageId> = {
   "3": "tasks",
   "4": "executors",
   "5": "rules",
-  "6": "sources"
+  "6": "sources",
+  "7": "plugins"
 };
 
 export function App() {
   const [model, dispatch] = useReducer(reduceModel, undefined, () => loadAppModel(getStorage()));
   const { data, state } = model;
   const queuedTimers = useRef(new Set<string>());
-  const [pluginRegistry, setPluginRegistry] = useState<PluginRegistry>({ sources: [], executors: [] });
+  const [pluginRegistry, setPluginRegistry] = useState<PluginRegistry>({ sources: [], executors: [], rules: [] });
 
   useEffect(() => {
     saveAppModel(model, getStorage());
@@ -65,7 +78,7 @@ export function App() {
       })
       .catch(() => {
         if (!cancelled) {
-          setPluginRegistry({ sources: [], executors: [] });
+          setPluginRegistry({ sources: [], executors: [], rules: [] });
         }
       });
 
@@ -201,6 +214,81 @@ export function App() {
     () => data.sources.filter((item) => item.workspaceId === state.currentWorkspaceId),
     [data.sources, state.currentWorkspaceId]
   );
+  const workspaceNameById = useMemo(
+    () => new Map(data.workspaces.map((workspace) => [workspace.id, workspace.name] as const)),
+    [data.workspaces]
+  );
+  const registrySourceById = useMemo(
+    () => new Map(pluginRegistry.sources.map((item) => [item.id, item] as const)),
+    [pluginRegistry.sources]
+  );
+  const registryExecutorById = useMemo(
+    () => new Map(pluginRegistry.executors.map((item) => [item.id, item] as const)),
+    [pluginRegistry.executors]
+  );
+  const registryRuleById = useMemo(
+    () => new Map(pluginRegistry.rules.map((item) => [item.id, item] as const)),
+    [pluginRegistry.rules]
+  );
+  const filteredSourceCards = useMemo(
+    () =>
+      filteredSources.map((item) => {
+        const registryItem = registrySourceById.get(item.id);
+        const health = registryItem?.health ?? item.health ?? deriveSourceHealth(item);
+        return {
+          ...item,
+          adapterKind: registryItem?.adapterKind ?? registryItem?.kind ?? item.adapterKind ?? item.kind,
+          health,
+          lastSyncAt: registryItem?.lastSyncAt ?? item.lastSyncAt ?? item.stat,
+          lastResult: registryItem?.lastResult ?? item.lastResult,
+          lastError: registryItem?.lastError ?? item.lastError ?? deriveSourceError(item, health)
+        };
+      }),
+    [filteredSources, registrySourceById]
+  );
+  const filteredExecutorCards = useMemo(
+    () =>
+      filteredExecutors.map((item) => {
+        const registryItem = registryExecutorById.get(item.id);
+        const health = registryItem?.health ?? item.health ?? deriveExecutorHealth(item, filteredExecutionRuns);
+        const latestRun = [...filteredExecutionRuns]
+          .filter((run) => run.executorId === item.id)
+          .sort((left, right) => getRunSortKey(right).localeCompare(getRunSortKey(left)))[0];
+        return {
+          ...item,
+          adapterKind: registryItem?.adapterKind ?? registryItem?.kind ?? item.adapterKind ?? item.type,
+          health,
+          lastResult: registryItem?.lastResult ?? item.lastResult ?? item.lastRunSummary ?? latestRun?.summary ?? latestRun?.error,
+          lastError: registryItem?.lastError ?? item.lastError ?? deriveExecutorError(item, health, latestRun)
+        };
+      }),
+    [filteredExecutors, filteredExecutionRuns, registryExecutorById]
+  );
+  const filteredPluginSources = useMemo(
+    () =>
+      pluginRegistry.sources
+        .filter((item) => item.workspaceId === state.currentWorkspaceId)
+        .map((item) => toPluginSummary(item, "source", workspaceNameById.get(item.workspaceId) ?? item.workspaceId)),
+    [pluginRegistry.sources, state.currentWorkspaceId, workspaceNameById]
+  );
+  const filteredPluginExecutors = useMemo(
+    () =>
+      pluginRegistry.executors
+        .filter((item) => item.workspaceId === state.currentWorkspaceId)
+        .map((item) => toPluginSummary(item, "executor", workspaceNameById.get(item.workspaceId) ?? item.workspaceId)),
+    [pluginRegistry.executors, state.currentWorkspaceId, workspaceNameById]
+  );
+  const filteredPluginRules = useMemo(
+    () =>
+      pluginRegistry.rules
+        .filter((item) => item.workspaceId === state.currentWorkspaceId)
+        .map((item) => toPluginSummary(item, "rule", workspaceNameById.get(item.workspaceId) ?? item.workspaceId)),
+    [pluginRegistry.rules, state.currentWorkspaceId, workspaceNameById]
+  );
+  const pluginsBySourceId = useMemo(
+    () => Object.fromEntries(filteredPluginSources.map((item) => [item.id, item] as const)),
+    [filteredPluginSources]
+  );
   const realSourceIds = useMemo(
     () =>
       pluginRegistry.sources
@@ -288,7 +376,7 @@ export function App() {
               onSearchChange={(query) => dispatch({ type: "events/queryChanged", query })}
               onCreate={(draft) => {
                 const event = createEventFromDraft(state.currentWorkspaceId, draft);
-                dispatch({ type: "event/created", event });
+                void ingestEvent(event);
               }}
             />
           ) : null}
@@ -308,7 +396,7 @@ export function App() {
             />
           ) : null}
 
-          {state.currentPage === "executors" ? <ExecutorsPage executors={filteredExecutors} /> : null}
+          {state.currentPage === "executors" ? <ExecutorsPage executors={filteredExecutorCards} /> : null}
 
           {state.currentPage === "rules" ? (
             <RulesPage
@@ -339,7 +427,8 @@ export function App() {
           {state.currentPage === "sources" ? (
             <SourcesPage
               realSourceIds={realSourceIds}
-              sources={filteredSources}
+              sources={filteredSourceCards}
+              pluginsBySourceId={pluginsBySourceId}
               onSyncSource={(sourceId) => {
                 void handleRealSourceSync(sourceId);
               }}
@@ -356,6 +445,10 @@ export function App() {
                 dispatch({ type: "source/created", source });
               }}
             />
+          ) : null}
+
+          {state.currentPage === "plugins" ? (
+            <PluginsPage sources={filteredPluginSources} executors={filteredPluginExecutors} rules={filteredPluginRules} />
           ) : null}
         </section>
       </div>
@@ -535,9 +628,11 @@ export function App() {
 
   async function handleRealSourceSync(sourceId: string) {
     const result = await syncRealSource(sourceId);
-    result.events.forEach((event) => {
-      dispatch({ type: "event/created", event });
-    });
+    for (const event of result.events) {
+      // preserve rule side effects per event
+      // eslint-disable-next-line no-await-in-loop
+      await ingestEvent(event);
+    }
     dispatch({
       type: "chat/messageSubmitted",
       message: `同步信息源 ${sourceId}`,
@@ -601,6 +696,72 @@ export function App() {
         log: failureLog
       });
     }
+  }
+
+  async function ingestEvent(event: typeof data.events[number]) {
+    let nextEvent = event;
+    let pendingTaskExecutorId: string | undefined;
+
+    try {
+      const decision = await evaluateEventRules(event, event.workspaceId);
+      pendingTaskExecutorId = decision.actions.find((action) => action.type === "assign_executor")?.executorId;
+
+      for (const action of decision.actions) {
+        if (action.type === "set_level") {
+          nextEvent = { ...nextEvent, level: action.level };
+          continue;
+        }
+
+        if (action.type === "append_note") {
+          nextEvent = {
+            ...nextEvent,
+            summary: [nextEvent.summary, action.note].filter(Boolean).join("\n")
+          };
+          continue;
+        }
+
+        if (action.type === "archive_event") {
+          nextEvent = { ...nextEvent, level: "L0" };
+          continue;
+        }
+
+        if (action.type === "assign_executor") {
+          continue;
+        }
+
+        if (action.type === "create_task") {
+          const task = createTaskFromDraft(event.workspaceId, {
+            title: action.title?.trim() || nextEvent.title,
+            description: action.description?.trim() || nextEvent.summary,
+            type: "event",
+            priority: action.priority ?? derivePriorityFromLevel(nextEvent.level),
+            level: nextEvent.level,
+            status: action.status ?? (pendingTaskExecutorId ? "assigned" : "pending_assignment")
+          });
+
+          dispatch({
+            type: "task/created",
+            task: {
+              ...task,
+              assigneeId: pendingTaskExecutorId,
+              source: nextEvent.source
+            }
+          });
+        }
+      }
+
+      if (decision.matchedRules.length > 0 && decision.summary) {
+        dispatch({
+          type: "chat/messageSubmitted",
+          message: `规则评估 ${nextEvent.title}`,
+          reply: decision.summary
+        });
+      }
+    } catch {
+      // rule runtime is optional in local mode
+    }
+
+    dispatch({ type: "event/created", event: nextEvent });
   }
 }
 
@@ -682,7 +843,8 @@ const pageLabels: Record<PageId, string> = {
   tasks: "任务",
   executors: "执行器",
   rules: "规则引擎",
-  sources: "信息源"
+  sources: "信息源",
+  plugins: "插件"
 };
 
 function findById<T extends { id: string }>(items: T[], id?: string): T | undefined {
@@ -691,4 +853,71 @@ function findById<T extends { id: string }>(items: T[], id?: string): T | undefi
 
 function getStorage() {
   return typeof window === "undefined" ? undefined : window.localStorage;
+}
+
+function toPluginSummary(item: PluginSummary, type: "source" | "executor" | "rule", workspaceName: string): PluginSummary {
+  return {
+    ...item,
+    type,
+    workspaceName,
+    adapterKind: item.adapterKind ?? item.kind
+  };
+}
+
+function deriveSourceHealth(source: SourceItem): PluginHealth {
+  if (source.health) {
+    return source.health;
+  }
+
+  if (source.status === "connected" && source.enabled) {
+    return { status: "ok" };
+  }
+
+  if (source.status === "warning") {
+    return { status: "warning", message: source.lastError ?? "信息源同步延迟" };
+  }
+
+  return { status: "error", message: source.lastError ?? "信息源离线" };
+}
+
+function deriveSourceError(source: SourceItem, health: PluginHealth): string | undefined {
+  return source.lastError ?? health.message ?? (health.status === "error" ? "信息源离线" : undefined);
+}
+
+function deriveExecutorHealth(executor: ExecutorItem, runs: ExecutionRun[]): PluginHealth {
+  if (executor.health) {
+    return executor.health;
+  }
+
+  const latestRun = [...runs].filter((run) => run.executorId === executor.id).sort((left, right) => getRunSortKey(right).localeCompare(getRunSortKey(left)))[0];
+  if (executor.status === "offline" || executor.status === "error") {
+    return { status: "error", message: executor.lastError ?? latestRun?.error ?? "执行器离线" };
+  }
+
+  if (latestRun?.status === "failed") {
+    return { status: "error", message: latestRun.error ?? latestRun.summary ?? executor.lastError ?? "执行失败" };
+  }
+
+  if (latestRun?.status === "running" || executor.status === "busy" || (executor.queueCount ?? 0) > 0) {
+    return { status: "warning", message: executor.lastError ?? latestRun?.summary ?? "执行中" };
+  }
+
+  return { status: "ok" };
+}
+
+function deriveExecutorError(executor: ExecutorItem, health: PluginHealth, latestRun?: ExecutionRun): string | undefined {
+  return executor.lastError ?? latestRun?.error ?? health.message ?? (health.status === "error" ? "执行器异常" : undefined);
+}
+
+function derivePriorityFromLevel(level: AttentionLevel): "urgent" | "high" | "medium" | "low" {
+  if (level === "L3") {
+    return "urgent";
+  }
+  if (level === "L2") {
+    return "high";
+  }
+  if (level === "L1") {
+    return "medium";
+  }
+  return "low";
 }

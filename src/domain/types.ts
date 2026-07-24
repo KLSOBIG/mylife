@@ -1,4 +1,4 @@
-export type PageId = "dashboard" | "events" | "tasks" | "executors" | "rules" | "sources";
+export type PageId = "dashboard" | "events" | "tasks" | "executors" | "rules" | "sources" | "plugins";
 export type WorkspaceKind = "personal" | "team" | "study" | "life";
 export type AttentionLevel = "L0" | "L1" | "L2" | "L3";
 export type TaskStatus =
@@ -17,6 +17,29 @@ export type ChatMode = "side" | "modal";
 export type TaskView = "kanban" | "list";
 export type ExecutionRunStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
 export type ExecutionLogLevel = "info" | "success" | "error";
+export type PluginHealthStatus = "ok" | "warning" | "error";
+
+export interface PluginHealth {
+  status: PluginHealthStatus;
+  message?: string;
+  checkedAt?: string;
+}
+
+export interface PluginSummary {
+  id: string;
+  pluginId: string;
+  workspaceId: string;
+  kind: string;
+  name: string;
+  enabled: boolean;
+  health?: PluginHealth;
+  lastError?: string;
+  workspaceName?: string;
+  type?: "source" | "executor" | "rule";
+  adapterKind?: string;
+  lastResult?: string;
+  lastSyncAt?: string;
+}
 
 export interface Workspace {
   id: string;
@@ -68,6 +91,10 @@ export interface ExecutorItem {
   runningCount?: number;
   failureCount?: number;
   lastRunSummary?: string;
+  adapterKind?: string;
+  health?: PluginHealth;
+  lastError?: string;
+  lastResult?: string;
 }
 
 export interface ExecutionLog {
@@ -125,6 +152,11 @@ export interface SourceItem {
   icon: string;
   description: string;
   stat: string;
+  adapterKind?: string;
+  health?: PluginHealth;
+  lastSyncAt?: string;
+  lastResult?: string;
+  lastError?: string;
 }
 
 export interface ChatMessage {

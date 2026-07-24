@@ -8,7 +8,8 @@ const titles: Record<PageId, { title: string; subtitle: string }> = {
   tasks: { title: "任务", subtitle: "系统只分发，执行器执行" },
   executors: { title: "执行器", subtitle: "查看谁在干活，谁空闲，谁异常" },
   rules: { title: "规则引擎", subtitle: "条件匹配和动作分发中心" },
-  sources: { title: "信息源", subtitle: "统一接入钉钉、邮件、RSS 和执行入口" }
+  sources: { title: "信息源", subtitle: "统一接入钉钉、邮件、RSS 和执行入口" },
+  plugins: { title: "插件", subtitle: "统一查看真实接入、健康状态和错误" }
 };
 
 type HeaderCommandId =
@@ -18,6 +19,7 @@ type HeaderCommandId =
   | "open-executors"
   | "open-rules"
   | "open-sources"
+  | "open-plugins"
   | "create-task"
   | "toggle-chat";
 
@@ -88,6 +90,13 @@ export function Header(props: {
         label: "打开信息源",
         description: "查看接入渠道和状态",
         shortcut: "6",
+        group: "页面"
+      },
+      {
+        id: "open-plugins",
+        label: "打开插件",
+        description: "查看真实接入和健康状态",
+        shortcut: "7",
         group: "页面"
       },
       {
@@ -194,6 +203,9 @@ export function Header(props: {
         return;
       case "open-sources":
         navigatePage("sources");
+        return;
+      case "open-plugins":
+        navigatePage("plugins");
         return;
       case "create-task":
         openTaskCreator();

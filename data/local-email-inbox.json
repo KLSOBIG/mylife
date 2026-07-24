@@ -1,0 +1,22 @@
+{
+  "messages": [
+    {
+      "id": "mail_1",
+      "subject": "客户投诉需要今天答复",
+      "from": "customer@example.com",
+      "text": "我们对昨天交付延迟不满意，请今天给答复。",
+      "summary": "客户反馈交付延迟，要求今天回复。",
+      "receivedAt": "2026-07-24 09:30",
+      "tags": ["客户", "投诉", "邮件"]
+    },
+    {
+      "id": "mail_2",
+      "subject": "周报：Agent 评测进展",
+      "from": "team@example.com",
+      "text": "本周完成 Agent 路由评测初版。",
+      "summary": "团队周报，包含 Agent 路由评测进展。",
+      "receivedAt": "2026-07-24 10:10",
+      "tags": ["周报", "Agent", "邮件"]
+    }
+  ]
+}

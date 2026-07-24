@@ -1,6 +1,6 @@
 # 钉钉信息源 产品设计文档
 
-> 版本：v1 | 更新：2026-07-23
+> 版本：v2 | 更新：2026-07-24
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### 1.1 这是什么
 
-钉钉信息源是系统的第一个信息接入渠道，负责接收钉钉消息。
+钉钉信息源是系统的 webhook 型信息接入渠道，负责接收钉钉消息并转成系统标准事件。
 
 ### 1.2 解决什么问题
 
@@ -33,7 +33,8 @@
 1. 在钉钉开放平台创建应用
 2. 添加机器人能力
 3. 配置消息接收地址（系统的 Webhook 端点）
-4. 系统开始接收钉钉消息
+4. 配置 `POST /api/webhooks/dingtalk/:sourceId`
+5. 系统开始接收钉钉消息
 
 ---
 
@@ -109,6 +110,21 @@
 | Corp ID | 企业 ID |
 | Agent ID | 机器人 Agent ID（用于发送消息） |
 
+### 6.3 当前最小运行配置
+
+当前 server 端最小实现只要求：
+
+- `data/plugins.json` 中存在 `kind=webhook` 的钉钉 source
+- 可选 `level`
+- 可选 `tags`
+
+当前还不校验：
+
+- Token
+- AES Key
+- challenge 握手
+- 请求签名
+
 ---
 
 ## 7. 发送消息
@@ -132,3 +148,50 @@
 | 任务管理 | 钉钉消息转化为任务 |
 | 规则引擎 | 规则决定如何处理钉钉消息 |
 | 插件系统 | 钉钉以插件形式接入 |
+
+---
+
+## 9. 当前实现状态（2026-07-24）
+
+### 9.1 已实现
+
+- webhook 入口：`POST /api/webhooks/dingtalk/:sourceId`
+- 文本正文提取
+- 发送人提取
+- `告警` / `@mention` 标签补全
+- 输出标准事件字段：
+  - `id`
+  - `workspaceId`
+  - `title`
+  - `source`
+  - `sender`
+  - `level`
+  - `summary`
+  - `happenedAt`
+  - `tags`
+
+### 9.2 处理链路
+
+```text
+DingTalk webhook
+  -> /api/webhooks/dingtalk/:sourceId
+  -> dingtalk-source.mjs normalize
+  -> 标准事件
+  -> /api/rules/evaluate
+  -> L2/L3 决策动作
+```
+
+### 9.3 当前未实现
+
+- 钉钉签名校验
+- AES 解密
+- URL challenge 握手
+- 图片/文件消息深度解析
+- 系统回发钉钉消息
+
+### 9.4 本期实施顺序
+
+1. 先建 webhook 入口
+2. 再做文本消息标准化
+3. 再接服务端规则求值
+4. 后续再补签名校验与回发能力

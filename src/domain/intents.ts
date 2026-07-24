@@ -63,7 +63,8 @@ function parseSwitchPageIntent(text: string): ParsedIntent | undefined {
     [["任务", "task"], "tasks"],
     [["执行器", "executor", "agents", "agent", "执行"], "executors"],
     [["规则引擎", "规则"], "rules"],
-    [["信息源", "sources", "source", "来源"], "sources"]
+    [["信息源", "sources", "source", "来源"], "sources"],
+    [["插件", "plugin", "plugins"], "plugins"]
   ];
 
   for (const [keywords, page] of entries) {

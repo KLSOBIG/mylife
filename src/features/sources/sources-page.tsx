@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { SourceItem } from "../../domain/types";
+import type { PluginSummary, SourceItem } from "../../domain/types";
 import { Dialog } from "../common/dialog";
 import { EmptyState } from "../common/empty-state";
 
@@ -15,6 +15,7 @@ type SourceDraft = {
 export function SourcesPage(props: {
   sources: SourceItem[];
   realSourceIds?: string[];
+  pluginsBySourceId?: Record<string, PluginSummary | undefined>;
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
   statusFilter?: "all" | SourceItem["status"];
@@ -106,35 +107,57 @@ export function SourcesPage(props: {
 
       {visibleSources.length ? (
         <div className="card-grid">
-          {visibleSources.map((item) => (
-            <article key={item.id} className="entity-card">
-              <div className="entity-header">
-                <div className="entity-avatar">{item.icon}</div>
-                <div>
-                  <h3>{item.name}</h3>
-                  <p>{item.kind}</p>
-                </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <button
-                    className={`status-tag ${item.status}`}
-                    onClick={() =>
-                      props.onToggleSource?.(item.id, item.status === "connected" ? "offline" : "connected")
-                    }
-                    type="button"
-                  >
-                    {item.status}
-                  </button>
-                  {props.realSourceIds?.includes(item.id) ? (
-                    <button className="btn secondary small" onClick={() => props.onSyncSource?.(item.id)} type="button">
-                      真实同步
+          {visibleSources.map((item) => {
+            const plugin = props.pluginsBySourceId?.[item.id];
+            const adapterKind = item.adapterKind ?? plugin?.adapterKind ?? plugin?.kind ?? item.kind;
+            const healthLabel = plugin?.health?.status ?? item.health?.status ?? item.status;
+            return (
+              <article key={item.id} className="entity-card">
+                <div className="entity-header">
+                  <div className="entity-avatar">{item.icon}</div>
+                  <div>
+                    <h3>{item.name}</h3>
+                    <p>
+                      {item.kind}
+                      {plugin ? ` · ${plugin.pluginId}` : ""}
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <button
+                      className={`status-tag ${item.status}`}
+                      onClick={() =>
+                        props.onToggleSource?.(item.id, item.status === "connected" ? "offline" : "connected")
+                      }
+                      type="button"
+                    >
+                      {item.status}
                     </button>
+                    {props.realSourceIds?.includes(item.id) ? (
+                      <button className="btn secondary small" onClick={() => props.onSyncSource?.(item.id)} type="button">
+                        真实同步
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="plugin-card__meta">
+                  <span>适配器：{adapterKind}</span>
+                  <span>健康：{healthLabel}</span>
+                  <span>{item.enabled ? "已启用" : "已停用"}</span>
+                </div>
+                {plugin?.health?.message ? <p className="plugin-inline-meta">健康：{plugin.health.message}</p> : null}
+                <p className="entity-description">{item.description}</p>
+                <div className="plugin-card__meta plugin-card__meta--bottom">
+                  <span>最近同步：{plugin?.lastSyncAt ?? item.lastSyncAt ?? item.stat}</span>
+                  {plugin?.lastResult ?? item.lastResult ? (
+                    <span>最近结果：{plugin?.lastResult ?? item.lastResult}</span>
+                  ) : null}
+                  {plugin?.lastError ?? item.lastError ? (
+                    <span className="plugin-card__error-inline">错误：{plugin?.lastError ?? item.lastError}</span>
                   ) : null}
                 </div>
-              </div>
-              <p className="entity-description">{item.description}</p>
-              <div className="entity-stat-line">{item.stat}</div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       ) : (
         <EmptyState description="先放宽状态筛选或换关键词。" title="没有匹配信息源" />

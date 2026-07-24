@@ -205,6 +205,19 @@ export function createSeedData(): AppData {
       completedToday: 2
     },
     {
+      id: "exec_opencode",
+      workspaceId: "ws_team",
+      name: "OpenCode",
+      role: "通用代码执行",
+      type: "agent",
+      status: "idle",
+      avatar: "⌘",
+      capabilities: ["代码执行", "终端脚本", "任务回放"],
+      successRate: 90,
+      activeTasks: 0,
+      completedToday: 0
+    },
+    {
       id: "exec_kael",
       workspaceId: "ws_personal",
       name: "Kael",
@@ -322,6 +335,17 @@ export function createSeedData(): AppData {
       stat: "今日接收 18 封"
     },
     {
+      id: "source_email_local",
+      workspaceId: "ws_personal",
+      name: "Local Email Inbox",
+      kind: "api",
+      status: "connected",
+      enabled: true,
+      icon: "邮",
+      description: "本地 JSON inbox 轮询，模拟真实邮件接入。",
+      stat: "可手动同步"
+    },
+    {
       id: "source_3",
       workspaceId: "ws_study",
       name: "RSS",
@@ -331,6 +355,17 @@ export function createSeedData(): AppData {
       icon: "订",
       description: "30 分钟轮询，抓 AI/论文资讯。",
       stat: "今日抓取 42 条"
+    },
+    {
+      id: "source_dingtalk_webhook",
+      workspaceId: "ws_team",
+      name: "DingTalk Webhook",
+      kind: "webhook",
+      status: "connected",
+      enabled: true,
+      icon: "钉",
+      description: "真实 webhook 接线，接告警和 @ 消息。",
+      stat: "等待 webhook"
     },
     {
       id: "source_4",

@@ -8,7 +8,8 @@ const navItems: Array<{ id: PageId; label: string; icon: string }> = [
   { id: "tasks", label: "任务", icon: "▣" },
   { id: "executors", label: "执行器", icon: "⚙" },
   { id: "rules", label: "规则引擎", icon: "◇" },
-  { id: "sources", label: "信息源", icon: "⌁" }
+  { id: "sources", label: "信息源", icon: "⌁" },
+  { id: "plugins", label: "插件", icon: "⧉" }
 ];
 
 export function Sidebar(props: {

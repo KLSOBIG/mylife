@@ -14,6 +14,34 @@
         "level": "L1",
         "tags": ["论文", "Agent", "RSS"]
       }
+    },
+    {
+      "id": "source_email_local",
+      "pluginId": "email.local-json",
+      "workspaceId": "ws_personal",
+      "kind": "email_polling",
+      "name": "Local Email Inbox",
+      "enabled": true,
+      "config": {
+        "inboxPathEnv": "NEXUS_EMAIL_INBOX_PATH",
+        "inboxPath": "./data/local-email-inbox.json",
+        "limit": 10,
+        "sender": "Local Email Inbox",
+        "level": "L1",
+        "tags": ["邮件", "Inbox"]
+      }
+    },
+    {
+      "id": "source_dingtalk_webhook",
+      "pluginId": "dingtalk.webhook",
+      "workspaceId": "ws_team",
+      "kind": "webhook",
+      "name": "DingTalk Webhook",
+      "enabled": true,
+      "config": {
+        "level": "L2",
+        "tags": ["钉钉"]
+      }
     }
   ],
   "executors": [
@@ -44,6 +72,17 @@
         "-e",
         "const task=JSON.parse(process.env.NEXUS_TASK_PAYLOAD); process.stdout.write(JSON.stringify({summary:`Harness 已处理 ${task.title}`,log:`已完成外部执行：${task.title}`}));"
       ]
+    },
+    {
+      "id": "exec_opencode",
+      "pluginId": "cli.opencode",
+      "workspaceId": "ws_team",
+      "kind": "opencode",
+      "name": "OpenCode CLI",
+      "enabled": true,
+      "timeoutMs": 15000,
+      "command": "opencode",
+      "args": []
     }
   ]
 }

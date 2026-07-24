@@ -1,0 +1,39 @@
+{
+  "rules": [
+    {
+      "id": "rule_arxiv_agent_digest",
+      "pluginId": "rule.keyword",
+      "workspaceId": "ws_study",
+      "enabled": true,
+      "priority": 80,
+      "when": {
+        "all": [
+          { "field": "source", "op": "equals", "value": "ArXiv RSS" },
+          { "field": "tags", "op": "includes", "value": "论文" }
+        ]
+      },
+      "then": [
+        { "type": "set_level", "level": "L1" },
+        { "type": "append_note", "noteTemplate": "已命中论文追踪规则：{{title}}" }
+      ]
+    },
+    {
+      "id": "rule_dingtalk_alert",
+      "pluginId": "rule.keyword",
+      "workspaceId": "ws_team",
+      "enabled": true,
+      "priority": 100,
+      "when": {
+        "any": [
+          { "field": "title", "op": "includes", "value": "紧急" },
+          { "field": "tags", "op": "includes", "value": "告警" }
+        ]
+      },
+      "then": [
+        { "type": "set_level", "level": "L3" },
+        { "type": "create_task", "titleTemplate": "{{title}}" },
+        { "type": "assign_executor", "executorId": "exec_opencode" }
+      ]
+    }
+  ]
+}

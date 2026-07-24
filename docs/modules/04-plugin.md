@@ -226,9 +226,11 @@ AI：✅ 插件已生成，请配置 App ID 和 Secret
 ### 11.1 已实现
 
 - 本地插件注册表：`data/plugins.json`
-- 本地插件适配 API：`server/app.mjs`
-- 真实信息源插件首个落地：RSS 轮询
-- 真实执行器插件首个落地：CLI 执行器
+- 本地规则注册表：`data/rules.json`
+- 本地插件运行时：`server/app.mjs` + `server/lib/*`
+- 真实信息源插件：RSS 轮询、本地 JSON 邮件轮询、钉钉 Webhook 入口
+- 真实执行器插件：CLI 执行器、OpenCode CLI 适配器
+- 真实规则插件运行时：服务端规则求值与标准动作返回
 - 前端插件网关：`src/domain/gateway.ts`
 - 信息源页面可触发真实同步
 - 任务详情可触发真实执行，并把结果回写任务与运行日志
@@ -239,12 +241,15 @@ AI：✅ 插件已生成，请配置 App ID 和 Secret
 
 - `GET /api/plugins`
 - `POST /api/sources/:id/sync`
+- `POST /api/webhooks/dingtalk/:sourceId`
 
 当前支持：
 
 - `polling` 类型
 - 从 RSS 拉取条目
+- 从本地 JSON inbox 文件轮询邮件
 - 映射成系统事件并写入对应工作空间
+- 接收钉钉 webhook JSON 并映射成系统事件
 
 **执行器插件**
 
@@ -254,14 +259,43 @@ AI：✅ 插件已生成，请配置 App ID 和 Secret
 当前支持：
 
 - `cli` 类型
+- `opencode` 类型
 - 通过本地命令执行
 - 读取 JSON/stdout 结果
 - 返回 `summary/log/raw`
+- OpenCode 命令缺失时 health 返回 `warning`
 
-### 11.3 暂未实现
+**规则插件**
 
-- 规则插件真实运行时
+- `GET /api/plugins`
+- `POST /api/rules/evaluate`
+
+当前支持：
+
+- 本地规则注册表 `data/rules.json`
+- `all/any` 条件组合
+- `includes/equals` 基础匹配
+- 标准动作：`set_level/create_task/assign_executor/archive_event/append_note`
+
+### 11.3 健康检查
+
+- `GET /healthz`
+- source 检查启用状态与邮件 inbox 文件可读性
+- executor 检查命令是否存在
+- OpenCode 缺失只记 `warning`
+- rule 检查启停状态
+
+### 11.4 本期实施顺序
+
+1. 先拆 server runtime 模块边界
+2. 再补规则运行时与规则注册表
+3. 再补 OpenCode / 邮件 / 钉钉适配
+4. 最后统一健康检查与 smoke 验证
+
+### 11.5 暂未实现
+
 - 插件安装/卸载界面
-- 插件健康检查面板
-- OpenCode / Claude / GPT 真实适配
-- 钉钉 / 邮件 / 飞书 / 企微真实接入
+- 远程 API executor
+- 钉钉签名校验 / AES 解密
+- 正式邮件 IMAP / API 接入
+- 插件健康检查前端面板
