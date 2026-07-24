@@ -2,7 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Nexus: 调试 API",
+      "name": "Nexus: 一键启动前后端",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://127.0.0.1:5173",
+      "webRoot": "${workspaceFolder}/src",
+      "preLaunchTask": "nexus: start all"
+    },
+    {
+      "name": "Nexus: 仅启动 API",
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/server/app.mjs",
@@ -11,28 +19,6 @@
         "<node_internals>/**"
       ],
       "console": "integratedTerminal"
-    },
-    {
-      "name": "Nexus: 调试 Web",
-      "type": "pwa-chrome",
-      "request": "launch",
-      "url": "http://127.0.0.1:5173",
-      "webRoot": "${workspaceFolder}/src",
-      "preLaunchTask": "pnpm: dev",
-      "presentation": {
-        "hidden": false,
-        "group": "nexus"
-      }
-    }
-  ],
-  "compounds": [
-    {
-      "name": "Nexus: 一键全栈调试",
-      "configurations": [
-        "Nexus: 调试 API",
-        "Nexus: 调试 Web"
-      ],
-      "stopAll": true
     }
   ]
 }
