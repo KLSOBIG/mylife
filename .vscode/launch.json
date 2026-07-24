@@ -3,11 +3,15 @@
   "configurations": [
     {
       "name": "Nexus: 一键启动前后端",
-      "type": "pwa-chrome",
+      "type": "node-terminal",
       "request": "launch",
-      "url": "http://127.0.0.1:5173",
-      "webRoot": "${workspaceFolder}/src",
-      "preLaunchTask": "nexus: start all"
+      "command": "bash -lc 'trap \"kill 0\" EXIT; pnpm dev:api & pnpm dev --host 127.0.0.1 --port 5173'",
+      "cwd": "${workspaceFolder}",
+      "serverReadyAction": {
+        "pattern": "Local:\\s+(http://127\\.0\\.0\\.1:5173/)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
     }
   ]
 }
