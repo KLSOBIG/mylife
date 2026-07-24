@@ -124,17 +124,32 @@ describe("App", () => {
   it("creates a task from chat input", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole("button", { name: "打开对话" }));
     const input = screen.getByRole("textbox", { name: "对话输入框" });
     await user.type(input, "创建一个紧急任务，跟进老板邮件{enter}");
     await user.click(screen.getByRole("button", { name: "任务" }));
     expect(screen.getByRole("button", { name: /跟进老板邮件/ })).toBeInTheDocument();
   });
 
+  it("keeps chat panel closed by default", () => {
+    render(<App />);
+    expect(screen.queryByRole("textbox", { name: "对话输入框" })).not.toBeInTheDocument();
+  });
+
   it("switches chat panel to modal mode", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole("button", { name: "打开对话" }));
     await user.click(screen.getByRole("button", { name: "弹窗" }));
     expect(screen.getByRole("dialog", { name: "对话引擎" })).toBeInTheDocument();
+  });
+
+  it("opens task creator from header instead of creating task immediately", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "+ 新建任务" }));
+    expect(screen.getByRole("dialog", { name: "创建任务" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^新任务$/ })).not.toBeInTheDocument();
   });
 
   it("creates workspace and switches to it", async () => {
@@ -143,7 +158,6 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: /个人空间 工作空间切换/ }));
     await user.click(screen.getByRole("button", { name: "新建工作空间" }));
     await user.type(screen.getByRole("textbox", { name: "工作空间名称" }), "实验空间");
-    await user.selectOptions(screen.getByRole("combobox", { name: "工作空间类型" }), "study");
     await user.type(screen.getByRole("textbox", { name: "工作空间描述" }), "命令面板和规则实验");
     await user.click(screen.getByRole("button", { name: "创建工作空间" }));
     expect(screen.getByText(/实验空间 \/ 2 秒看清今天必须你关注什么/)).toBeInTheDocument();

@@ -29,9 +29,9 @@ export function Sidebar(props: {
   return (
     <aside className="sidebar">
       <div className="sidebar-hd">
-        <div className="logo">N</div>
+        <div className="logo">事</div>
         <div className="sidebar-brand">
-          <div className="app-name">Nexus</div>
+          <div className="app-name">事件中心</div>
         </div>
       </div>
       <section className="workspace-shell">

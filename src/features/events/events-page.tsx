@@ -175,7 +175,7 @@ export function EventsPage(props: {
         )}
       </div>
       <Dialog
-        description="填摘要后，主线程可接收创建回调。"
+        description="补齐来源、发送人和摘要。创建后进入事件流。"
         onClose={() => setCreateOpen(false)}
         open={createOpen}
         title="创建事件"
@@ -208,22 +208,22 @@ export function EventsPage(props: {
           </>
         }
       >
-        <div style={{ display: "grid", gap: 12 }}>
+        <div className="dialog-form">
           {eventFields.map((field) => (
-            <label key={field.key} style={{ display: "grid", gap: 6, fontSize: 12 }}>
+            <label key={field.key} className="dialog-field">
               <span>{field.label}</span>
               <input
                 onChange={(event) => setDraft((value) => ({ ...value, [field.key]: event.target.value }))}
-                style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+                className="dialog-input-control"
                 value={draft[field.key]}
               />
             </label>
           ))}
-          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+          <label className="dialog-field">
             <span>级别</span>
             <select
               onChange={(event) => setDraft((value) => ({ ...value, level: event.target.value as AttentionLevel }))}
-              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+              className="dialog-input-control"
               value={draft.level}
             >
               {["L3", "L2", "L1", "L0"].map((level) => (
@@ -233,21 +233,21 @@ export function EventsPage(props: {
               ))}
             </select>
           </label>
-          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+          <label className="dialog-field">
             <span>摘要</span>
             <textarea
               onChange={(event) => setDraft((value) => ({ ...value, summary: event.target.value }))}
               rows={4}
-              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", resize: "vertical" }}
+              className="dialog-input-control dialog-input-control--textarea"
               value={draft.summary}
             />
           </label>
-          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+          <label className="dialog-field">
             <span>标签</span>
             <input
               onChange={(event) => setDraft((value) => ({ ...value, tags: event.target.value }))}
               placeholder="用逗号或换行分隔"
-              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+              className="dialog-input-control"
               value={draft.tags}
             />
           </label>

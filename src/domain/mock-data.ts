@@ -17,10 +17,10 @@ export const levelOrder: AttentionLevel[] = ["L3", "L2", "L1", "L0"];
 
 export function createSeedData(): AppData {
   const workspaces: Workspace[] = [
-    { id: "ws_personal", name: "个人空间", kind: "personal", description: "默认工作空间", icon: "◉" },
-    { id: "ws_team", name: "团队空间", kind: "team", description: "多人协作项目", icon: "◆" },
-    { id: "ws_study", name: "学习空间", kind: "study", description: "学习资料和读书笔记", icon: "▲" },
-    { id: "ws_life", name: "生活空间", kind: "life", description: "健康、财务、社交", icon: "●" }
+    { id: "ws_personal", name: "个人空间", kind: "personal", description: "默认工作空间", icon: "个" },
+    { id: "ws_team", name: "团队空间", kind: "team", description: "多人协作项目", icon: "团" },
+    { id: "ws_study", name: "学习空间", kind: "study", description: "学习资料和读书笔记", icon: "学" },
+    { id: "ws_life", name: "生活空间", kind: "life", description: "健康、财务、社交", icon: "生" }
   ];
 
   const events: EventItem[] = [

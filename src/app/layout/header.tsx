@@ -109,7 +109,7 @@ export function Header(props: {
       {
         id: "toggle-chat",
         label: "切换对话",
-        description: props.chatOpen ? "关闭右侧对话壳层" : "打开右侧对话壳层",
+        description: props.chatOpen ? "关闭 AI 对话抽屉" : "打开 AI 对话抽屉",
         shortcut: "Enter",
         group: "布局"
       }
@@ -155,7 +155,13 @@ export function Header(props: {
           <button type="button" className="btn" onClick={props.onCreateTask}>
             + 新建任务
           </button>
-          <button type="button" className="btn btn-icon" onClick={props.onToggleChat} title={props.chatOpen ? "关闭对话" : "打开对话"}>
+          <button
+            type="button"
+            className="btn btn-icon"
+            aria-label={props.chatOpen ? "关闭对话" : "打开对话"}
+            onClick={props.onToggleChat}
+            title={props.chatOpen ? "关闭对话" : "打开对话"}
+          >
             💬
           </button>
           <button type="button" className="btn btn-icon" title="设置">⚙️</button>

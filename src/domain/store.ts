@@ -55,8 +55,8 @@ export function createInitialState(): AppState {
     currentWorkspaceId: "ws_personal",
     selectedEventId: undefined,
     selectedTaskId: undefined,
-    chatOpen: true,
-    chatPinned: true,
+    chatOpen: false,
+    chatPinned: false,
     chatMode: "side",
     commandPaletteOpen: false,
     eventFilter: "all",
@@ -392,12 +392,14 @@ export function createWorkspaceFromDraft(draft: {
   description: string;
   icon?: string;
 }): Workspace {
+  const trimmedName = draft.name.trim();
+  const fallbackIcon = trimmedName ? trimmedName.slice(0, 1).toUpperCase() : "工";
   return {
     id: createId("ws"),
-    name: draft.name.trim(),
+    name: trimmedName,
     kind: draft.kind,
     description: draft.description.trim(),
-    icon: draft.icon?.trim() || "N"
+    icon: draft.icon?.trim() || fallbackIcon
   };
 }
 

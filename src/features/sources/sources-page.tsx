@@ -156,7 +156,7 @@ export function SourcesPage(props: {
       )}
 
       <Dialog
-        description="信息源创建只收集草稿，不直接改数据源。"
+        description="补名称、适配器类型和说明。创建后进入当前工作空间。"
         onClose={() => setCreateOpen(false)}
         open={createOpen}
         title="添加信息源"
@@ -186,21 +186,21 @@ export function SourcesPage(props: {
           </>
         }
       >
-        <div style={{ display: "grid", gap: 12 }}>
-          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+        <div className="dialog-form">
+          <label className="dialog-field">
             <span>名称</span>
             <input
               onChange={(event) => setDraft((value) => ({ ...value, name: event.target.value }))}
-              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+              className="dialog-input-control"
               value={draft.name}
             />
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
-            <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+          <div className="dialog-grid-2">
+            <label className="dialog-field">
               <span>类型</span>
               <select
                 onChange={(event) => setDraft((value) => ({ ...value, kind: event.target.value as SourceItem["kind"] }))}
-                style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+                className="dialog-input-control"
                 value={draft.kind}
               >
                 {["webhook", "api", "polling", "cli", "sdk"].map((kind) => (
@@ -210,11 +210,11 @@ export function SourcesPage(props: {
                 ))}
               </select>
             </label>
-            <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+            <label className="dialog-field">
               <span>状态</span>
               <select
                 onChange={(event) => setDraft((value) => ({ ...value, status: event.target.value as SourceItem["status"] }))}
-                style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+                className="dialog-input-control"
                 value={draft.status}
               >
                 {["connected", "warning", "offline"].map((status) => (
@@ -225,30 +225,30 @@ export function SourcesPage(props: {
               </select>
             </label>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
-            <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+          <div className="dialog-grid-2">
+            <label className="dialog-field">
               <span>图标</span>
               <input
                 onChange={(event) => setDraft((value) => ({ ...value, icon: event.target.value }))}
-                style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+                className="dialog-input-control"
                 value={draft.icon}
               />
             </label>
-            <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+            <label className="dialog-field">
               <span>统计</span>
               <input
                 onChange={(event) => setDraft((value) => ({ ...value, stat: event.target.value }))}
-                style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+                className="dialog-input-control"
                 value={draft.stat}
               />
             </label>
           </div>
-          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+          <label className="dialog-field">
             <span>描述</span>
             <textarea
               onChange={(event) => setDraft((value) => ({ ...value, description: event.target.value }))}
               rows={4}
-              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", resize: "vertical" }}
+              className="dialog-input-control dialog-input-control--textarea"
               value={draft.description}
             />
           </label>

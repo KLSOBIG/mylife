@@ -59,6 +59,7 @@ const pageByDigit: Record<string, PageId> = {
 
 export function App() {
   const [model, dispatch] = useReducer(reduceModel, undefined, () => loadAppModel(getStorage()));
+  const [taskCreatorOpen, setTaskCreatorOpen] = useState(false);
   const { data, state } = model;
   const queuedTimers = useRef(new Set<string>());
   const [pluginRegistry, setPluginRegistry] = useState<PluginRegistry>({ sources: [], executors: [], rules: [] });
@@ -143,13 +144,8 @@ export function App() {
 
       if (event.key.toLowerCase() === "n") {
         event.preventDefault();
-        const task = createTaskFromIntent(state.currentWorkspaceId, "未命名任务", "medium");
-        dispatch({
-          type: "chat/messageSubmitted",
-          message: "新建任务",
-          reply: `已创建任务：${task.title}`
-        });
-        dispatch({ type: "task/created", task });
+        dispatch({ type: "page/switched", page: "tasks" });
+        setTaskCreatorOpen(true);
         return;
       }
 
@@ -322,7 +318,8 @@ export function App() {
   }
 
   return (
-    <div className="app-shell">
+    <>
+      <div className="app-shell">
       <Sidebar
         currentPage={state.currentPage}
         currentWorkspaceId={state.currentWorkspaceId}
@@ -386,12 +383,20 @@ export function App() {
               tasks={filteredTasks}
               selectedTaskId={state.selectedTaskId}
               viewMode={state.taskView}
+              createOpen={taskCreatorOpen}
+              onCreateOpenChange={setTaskCreatorOpen}
               onSelect={(taskId) => dispatch({ type: "task/selected", taskId })}
               onViewModeChange={(view) => dispatch({ type: "task/viewChanged", view })}
               onStatusChange={(taskId, status) => dispatch({ type: "task/statusChanged", taskId, status })}
               onCreate={(draft) => {
                 const task = createTaskFromDraft(state.currentWorkspaceId, draft);
                 dispatch({ type: "task/created", task });
+                dispatch({
+                  type: "chat/messageSubmitted",
+                  message: `创建任务 ${task.title}`,
+                  reply: `已进入任务队列：${task.title}`
+                });
+                setTaskCreatorOpen(false);
               }}
             />
           ) : null}
@@ -577,7 +582,7 @@ export function App() {
           });
         }}
       />
-
+      </div>
       <ChatPanel
         open={state.chatOpen}
         pinned={state.chatPinned}
@@ -614,16 +619,11 @@ export function App() {
         }}
         onTogglePinned={() => dispatch({ type: "chat/pinnedToggled" })}
       />
-    </div>
+    </>
   );
   function handleCreateTask() {
-    const task = createTaskFromIntent(state.currentWorkspaceId, "新任务", "high");
-    dispatch({ type: "task/created", task });
-    dispatch({
-      type: "chat/messageSubmitted",
-      message: "创建任务",
-      reply: `已创建任务：${task.title}`
-    });
+    dispatch({ type: "page/switched", page: "tasks" });
+    setTaskCreatorOpen(true);
   }
 
   async function handleRealSourceSync(sourceId: string) {

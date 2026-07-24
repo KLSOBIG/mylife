@@ -42,36 +42,22 @@ export function TaskDetail(props: {
       <section className="detail-section">
         <div className="detail-label">状态</div>
         <div className="detail-value">
-          <select aria-label="任务状态" defaultValue={props.task.status}>
-            <option value="pending_assignment">待分配</option>
-            <option value="assigned">已分配</option>
-            <option value="in_progress">进行中</option>
-            <option value="pending_review">待审核</option>
-            <option value="completed">已完成</option>
+          <select aria-label="任务状态" value={props.task.status} onChange={(event) => props.onStatusChange?.(event.target.value as TaskItem["status"])}>
+            {taskStatuses.map((status) => (
+              <option key={status} value={status}>
+                {statusLabel(status)}
+              </option>
+            ))}
           </select>
         </div>
       </section>
       <section className="detail-section">
         <div className="detail-label">优先级</div>
-        <div className="detail-value">
-          <select aria-label="任务优先级" defaultValue={props.task.priority}>
-            <option value="urgent">⚡ 紧急</option>
-            <option value="high">⬆ 高</option>
-            <option value="medium">◆ 中</option>
-            <option value="low">▾ 低</option>
-          </select>
-        </div>
+        <div className="detail-desc">{priorityLabel(props.task.priority)}</div>
       </section>
       <section className="detail-section">
         <div className="detail-label">级别</div>
-        <div className="detail-value">
-          <select aria-label="任务级别" defaultValue={props.task.level}>
-            <option value="L3">L3 必须你</option>
-            <option value="L2">L2 Agent处理</option>
-            <option value="L1">L1 可追踪</option>
-            <option value="L0">L0 噪音</option>
-          </select>
-        </div>
+        <div className="detail-desc">{levelLabel(props.task.level)}</div>
       </section>
       <section className="detail-section">
         <div className="detail-label">执行器</div>
@@ -152,7 +138,7 @@ export function TaskDetail(props: {
       <section className="detail-section">
         <div className="detail-label">状态流转</div>
         {nextStatuses.length ? (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <div className="detail-action-row">
             {nextStatuses.map((nextStatus) => (
               <button
                 className="btn"
@@ -160,7 +146,7 @@ export function TaskDetail(props: {
                 onClick={() => props.onStatusChange?.(nextStatus)}
                 type="button"
               >
-                切换到 {nextStatus}
+                切到 {statusLabel(nextStatus)}
               </button>
             ))}
           </div>
@@ -170,4 +156,62 @@ export function TaskDetail(props: {
       </section>
     </div>
   );
+}
+
+const taskStatuses: TaskItem["status"][] = [
+  "pending_assignment",
+  "assigned",
+  "in_progress",
+  "pending_review",
+  "completed",
+  "suspended",
+  "escalated",
+  "returned"
+];
+
+function statusLabel(status: TaskItem["status"]) {
+  switch (status) {
+    case "pending_assignment":
+      return "待分配";
+    case "assigned":
+      return "已分配";
+    case "in_progress":
+      return "进行中";
+    case "pending_review":
+      return "待审核";
+    case "completed":
+      return "已完成";
+    case "suspended":
+      return "已挂起";
+    case "escalated":
+      return "已升级";
+    case "returned":
+      return "已退回";
+  }
+}
+
+function priorityLabel(priority: TaskItem["priority"]) {
+  switch (priority) {
+    case "urgent":
+      return "⚡ 紧急";
+    case "high":
+      return "⬆ 高";
+    case "medium":
+      return "◆ 中";
+    case "low":
+      return "▾ 低";
+  }
+}
+
+function levelLabel(level: TaskItem["level"]) {
+  switch (level) {
+    case "L3":
+      return "L3 必须你";
+    case "L2":
+      return "L2 Agent处理";
+    case "L1":
+      return "L1 可追踪";
+    case "L0":
+      return "L0 噪音";
+  }
 }

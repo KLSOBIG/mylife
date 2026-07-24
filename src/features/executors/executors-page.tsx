@@ -54,7 +54,7 @@ export function ExecutorsPage(props: { executors: ExecutorItem[] }) {
       </div>
 
       <h3 className="subsection-title">Agent 执行器</h3>
-      <div className="agents-grid" style={{ padding: 0 }}>
+      <div className="agents-grid agents-grid--compact">
         {agents.map((item) => {
           const latestResult = item.lastResult ?? item.lastRunSummary;
           return (
@@ -74,23 +74,13 @@ export function ExecutorsPage(props: { executors: ExecutorItem[] }) {
                   </span>
                 ))}
               </div>
-              <div className="agent-stats">
-                <div className="agent-stat">
-                  <div className="agent-stat-val">{item.completedToday}</div>
-                  <div className="agent-stat-lbl">今日完成</div>
-                </div>
-                <div className="agent-stat">
-                  <div className="agent-stat-val">{item.queueCount ?? 0}</div>
-                  <div className="agent-stat-lbl">今日上限</div>
-                </div>
-                <div className="agent-stat">
-                  <div className="agent-stat-val" style={{ color: "var(--green)" }}>
-                    {item.successRate}%
-                  </div>
-                  <div className="agent-stat-lbl">成功率</div>
-                </div>
+              <div className="agent-metrics-grid">
+                <Metric label="今日完成" value={item.completedToday} />
+                <Metric label="队列中" value={item.queueCount ?? 0} />
+                <Metric label="运行中" value={item.runningCount ?? item.activeTasks ?? 0} />
+                <Metric label="失败次数" value={item.failureCount ?? 0} />
+                <Metric label="成功率" value={`${item.successRate}%`} accent />
               </div>
-              <div className="sr-only">失败次数</div>
               <div className="agent-card-actions">
                 <button className="btn btn-sm" type="button">
                   配置
@@ -109,7 +99,7 @@ export function ExecutorsPage(props: { executors: ExecutorItem[] }) {
       </div>
 
       {humans.length ? <h3 className="subsection-title">👤 人执行器</h3> : null}
-      <div className="agents-grid" style={{ padding: 0 }}>
+      <div className="agents-grid agents-grid--compact">
         {humans.map((item) => (
           <article key={item.id} className="agent-card entity-card">
             <div className="agent-card-hd">
@@ -127,23 +117,23 @@ export function ExecutorsPage(props: { executors: ExecutorItem[] }) {
                 </span>
               ))}
             </div>
-            <div className="agent-stats">
-              <div className="agent-stat">
-                <div className="agent-stat-val">{item.activeTasks}</div>
-                <div className="agent-stat-lbl">待处理</div>
-              </div>
-              <div className="agent-stat">
-                <div className="agent-stat-val">{item.queueCount ?? 0}</div>
-                <div className="agent-stat-lbl">待审核</div>
-              </div>
-              <div className="agent-stat">
-                <div className="agent-stat-val">{item.completedToday}</div>
-                <div className="agent-stat-lbl">今日完成</div>
-              </div>
+            <div className="agent-metrics-grid">
+              <Metric label="待处理" value={item.activeTasks} />
+              <Metric label="待审核" value={item.queueCount ?? 0} />
+              <Metric label="今日完成" value={item.completedToday} />
             </div>
           </article>
         ))}
       </div>
+    </div>
+  );
+}
+
+function Metric(props: { label: string; value: string | number; accent?: boolean }) {
+  return (
+    <div className="agent-metric">
+      <div className={props.accent ? "agent-metric__value agent-metric__value--accent" : "agent-metric__value"}>{props.value}</div>
+      <div className="agent-metric__label">{props.label}</div>
     </div>
   );
 }

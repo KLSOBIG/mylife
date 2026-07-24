@@ -16,6 +16,11 @@ export function ChatPanel(props: {
   const mode = props.mode ?? "side";
   const [draft, setDraft] = useState("");
   const visible = props.open;
+  const starters = [
+    "创建一个紧急任务：处理客户投诉",
+    "打开事件流",
+    "创建规则：如果收到钉钉告警就建任务"
+  ];
 
   const content = (
     <>
@@ -42,18 +47,30 @@ export function ChatPanel(props: {
           <button type="button" className="btn btn-sm" onClick={props.onTogglePinned}>
             {props.pinned ? "已钉住" : "未钉住"}
           </button>
-          {mode === "modal" ? (
-            <button
-              type="button"
-              className="btn btn-sm"
-              onClick={props.onClose}
-            >
-              关闭
-            </button>
-          ) : null}
+          <button type="button" className="btn btn-sm" aria-label="关闭对话" onClick={props.onClose}>
+            关闭
+          </button>
         </div>
       </div>
       <div className="chat-body">
+        {!props.messages.length ? (
+          <div className="chat-starter">
+            <div className="chat-starter__title">先说目标</div>
+            <p>任务、规则、页面切换，都从这里进。后面继续补全到所有功能。</p>
+            <div className="chat-starter__chips">
+              {starters.map((starter) => (
+                <button
+                  key={starter}
+                  type="button"
+                  className="chip"
+                  onClick={() => setDraft(starter)}
+                >
+                  {starter}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {props.messages.map((message) => (
           <div key={message.id} className={message.role === "ai" ? "chat-bubble ai" : "chat-bubble user"}>
             {message.content}
@@ -104,5 +121,10 @@ export function ChatPanel(props: {
     );
   }
 
-  return <aside className="chat-panel chat-panel--side open">{content}</aside>;
+  return (
+    <div className="chat-side-shell" role="dialog" aria-modal="true" aria-label="对话引擎">
+      <button type="button" className="chat-side-backdrop" aria-label="关闭对话" onClick={props.onClose} />
+      <aside className="chat-panel chat-panel--side open">{content}</aside>
+    </div>
+  );
 }

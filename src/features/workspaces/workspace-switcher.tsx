@@ -7,7 +7,6 @@ type WorkspaceDraft = {
   name: string;
   kind: Workspace["kind"];
   description: string;
-  icon: string;
 };
 
 export function WorkspaceSwitcher(props: {
@@ -21,8 +20,7 @@ export function WorkspaceSwitcher(props: {
   const [draft, setDraft] = useState<WorkspaceDraft>({
     name: "",
     kind: "personal",
-    description: "",
-    icon: "N"
+    description: ""
   });
   const current = useMemo(() => {
     return props.workspaces.find((item) => item.id === props.currentWorkspaceId) ?? props.workspaces[0];
@@ -31,7 +29,7 @@ export function WorkspaceSwitcher(props: {
     id: "",
     name: "没有工作空间",
     description: "先创建首个工作空间",
-    icon: "N"
+    icon: "工"
   };
 
   return (
@@ -85,7 +83,7 @@ export function WorkspaceSwitcher(props: {
         </div>
       ) : null}
       <Dialog
-        description="创建后由主线程接管写入。"
+        description="只保留名称和说明。类型不再暴露给用户。"
         onClose={() => setCreateOpen(false)}
         open={createOpen}
         title="创建工作空间"
@@ -98,13 +96,14 @@ export function WorkspaceSwitcher(props: {
               className="btn primary"
               aria-label="创建工作空间"
               onClick={() => {
+                const icon = draft.name.trim().slice(0, 1) || "工";
                 props.onCreateWorkspace?.({
                   name: draft.name.trim(),
-                  kind: draft.kind,
+                  kind: "personal",
                   description: draft.description.trim(),
-                  icon: draft.icon.trim() || "N"
+                  icon
                 });
-                setDraft({ name: "", kind: "personal", description: "", icon: "N" });
+                setDraft({ name: "", kind: "personal", description: "" });
                 setCreateOpen(false);
               }}
               type="button"
@@ -114,45 +113,25 @@ export function WorkspaceSwitcher(props: {
           </>
         }
       >
-        <div style={{ display: "grid", gap: 12 }}>
-          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+        <div className="dialog-form">
+          <label className="dialog-field">
             <span>工作空间名称</span>
             <input
               onChange={(event) => setDraft((value) => ({ ...value, name: event.target.value }))}
-              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
+              className="dialog-input-control"
               value={draft.name}
             />
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
-            <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
-              <span>工作空间类型</span>
-              <select
-                onChange={(event) => setDraft((value) => ({ ...value, kind: event.target.value as Workspace["kind"] }))}
-                style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
-                value={draft.kind}
-              >
-                {["personal", "team", "study", "life"].map((kind) => (
-                  <option key={kind} value={kind}>
-                    {kind}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
-              <span>图标</span>
-              <input
-                onChange={(event) => setDraft((value) => ({ ...value, icon: event.target.value }))}
-                style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px" }}
-                value={draft.icon}
-              />
-            </label>
+          <div className="dialog-field">
+            <span>图标预览</span>
+            <div className="dialog-input-control dialog-input-control--preview">{draft.name.trim().slice(0, 1) || "工"}</div>
           </div>
-          <label style={{ display: "grid", gap: 6, fontSize: 12 }}>
+          <label className="dialog-field">
             <span>工作空间描述</span>
             <textarea
               onChange={(event) => setDraft((value) => ({ ...value, description: event.target.value }))}
               rows={4}
-              style={{ border: "1px solid var(--border)", borderRadius: 12, padding: "10px 12px", resize: "vertical" }}
+              className="dialog-input-control dialog-input-control--textarea"
               value={draft.description}
             />
           </label>
