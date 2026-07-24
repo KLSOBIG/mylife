@@ -357,6 +357,11 @@ export function App() {
               executors={filteredExecutors}
               executionStats={executionStats}
               chartSeries={chartSeries}
+              onNavigatePage={(page) => dispatch({ type: "page/switched", page })}
+              onOpenEvent={(eventId) => {
+                dispatch({ type: "page/switched", page: "events" });
+                dispatch({ type: "event/selected", eventId });
+              }}
             />
           ) : null}
 

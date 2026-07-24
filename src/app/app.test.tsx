@@ -45,6 +45,26 @@ describe("App", () => {
     expect(screen.getByText("今日接收事件数")).toBeInTheDocument();
   });
 
+  it("opens events from dashboard shortcuts and selects recent event", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getAllByRole("button", { name: "查看详情" })[0]);
+    expect(screen.getByRole("heading", { name: "事件流" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "仪表盘" }));
+    await user.click(screen.getByRole("button", { name: /服务器 CPU 告警，生产集群需要排查/ }));
+    expect(screen.getByRole("heading", { name: "事件流" })).toBeInTheDocument();
+    const detailPanel = document.querySelector(".detail-panel.open");
+    expect(detailPanel).not.toBeNull();
+    expect(within(detailPanel as HTMLElement).getByText("服务器 CPU 告警，生产集群需要排查")).toBeInTheDocument();
+  });
+
+  it("opens executors from dashboard manage action", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "管理" }));
+    expect(screen.getByRole("heading", { name: "执行器" })).toBeInTheDocument();
+  });
+
   it("switches workspace and updates title", async () => {
     const user = userEvent.setup();
     render(<App />);
