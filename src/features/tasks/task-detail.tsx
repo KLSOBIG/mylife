@@ -36,25 +36,46 @@ export function TaskDetail(props: {
 
   return (
     <div className="detail-section-stack">
-      <div className="detail-badge">任务详情</div>
-      <h2 className="detail-title">{props.task.title}</h2>
+      <div className="sr-only">任务详情</div>
+      <div className="detail-title">{props.task.title}</div>
+      <div className="sr-only">状态：{props.task.status}</div>
       <section className="detail-section">
-        <h3>描述</h3>
-        <p>{props.task.description}</p>
+        <div className="detail-label">状态</div>
+        <div className="detail-value">
+          <select aria-label="任务状态" defaultValue={props.task.status}>
+            <option value="pending_assignment">待分配</option>
+            <option value="assigned">已分配</option>
+            <option value="in_progress">进行中</option>
+            <option value="pending_review">待审核</option>
+            <option value="completed">已完成</option>
+          </select>
+        </div>
       </section>
       <section className="detail-section">
-        <h3>状态</h3>
-        <ul className="detail-list">
-          <li>状态：{props.task.status}</li>
-          <li>优先级：{props.task.priority}</li>
-          <li>注意力级别：{props.task.level}</li>
-          <li>截止时间：{props.task.dueAt ?? "未设置"}</li>
-        </ul>
+        <div className="detail-label">优先级</div>
+        <div className="detail-value">
+          <select aria-label="任务优先级" defaultValue={props.task.priority}>
+            <option value="urgent">⚡ 紧急</option>
+            <option value="high">⬆ 高</option>
+            <option value="medium">◆ 中</option>
+            <option value="low">▾ 低</option>
+          </select>
+        </div>
       </section>
       <section className="detail-section">
-        <h3>执行器</h3>
+        <div className="detail-label">级别</div>
+        <div className="detail-value">
+          <select aria-label="任务级别" defaultValue={props.task.level}>
+            <option value="L3">L3 必须你</option>
+            <option value="L2">L2 Agent处理</option>
+            <option value="L1">L1 可追踪</option>
+            <option value="L0">L0 噪音</option>
+          </select>
+        </div>
+      </section>
+      <section className="detail-section">
+        <div className="detail-label">执行器</div>
         <label className="field">
-          <span>执行器</span>
           <select
             aria-label="执行器"
             className="input"
@@ -71,7 +92,12 @@ export function TaskDetail(props: {
         </label>
       </section>
       <section className="detail-section">
-        <h3>执行运行</h3>
+        <div className="detail-label">内容</div>
+        <div className="detail-desc">{props.task.description}</div>
+      </section>
+      <div className="detail-divider" />
+      <section className="detail-section">
+        <div className="detail-label">执行运行</div>
         <div className="execution-summary">
           <span className={`execution-state ${runStatusLabel}`}>运行状态：{runStatusLabel}</span>
           <span className="execution-meta">开始 {latestRun?.startedAt ?? "未开始"}</span>
@@ -124,12 +150,12 @@ export function TaskDetail(props: {
         </div>
       </section>
       <section className="detail-section">
-        <h3>状态流转</h3>
+        <div className="detail-label">状态流转</div>
         {nextStatuses.length ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {nextStatuses.map((nextStatus) => (
               <button
-                className="btn secondary"
+                className="btn"
                 key={nextStatus}
                 onClick={() => props.onStatusChange?.(nextStatus)}
                 type="button"

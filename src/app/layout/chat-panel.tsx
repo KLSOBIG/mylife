@@ -27,25 +27,25 @@ export function ChatPanel(props: {
         <div className="chat-header-actions">
           <button
             type="button"
-            className={mode === "side" ? "btn secondary small active" : "btn secondary small"}
+            className={mode === "side" ? "btn btn-sm active" : "btn btn-sm"}
             onClick={() => props.onModeChange?.("side")}
           >
             侧板
           </button>
           <button
             type="button"
-            className={mode === "modal" ? "btn secondary small active" : "btn secondary small"}
+            className={mode === "modal" ? "btn btn-sm active" : "btn btn-sm"}
             onClick={() => props.onModeChange?.("modal")}
           >
             弹窗
           </button>
-          <button type="button" className="btn secondary small" onClick={props.onTogglePinned}>
+          <button type="button" className="btn btn-sm" onClick={props.onTogglePinned}>
             {props.pinned ? "已钉住" : "未钉住"}
           </button>
           {mode === "modal" ? (
             <button
               type="button"
-              className="btn secondary small"
+              className="btn btn-sm"
               onClick={props.onClose}
             >
               关闭
@@ -79,7 +79,7 @@ export function ChatPanel(props: {
           placeholder="输入：创建一个紧急任务，处理客户投诉"
           aria-label="对话输入框"
         />
-        <button type="submit" className="btn primary small">
+        <button type="submit" className="btn btn-p btn-sm">
           发送
         </button>
       </form>

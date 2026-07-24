@@ -1,68 +1,162 @@
 import type { ExecutorItem } from "../../domain/types";
 
-export function ExecutorsPage(props: {
-  executors: ExecutorItem[];
-}) {
+export function ExecutorsPage(props: { executors: ExecutorItem[] }) {
+  const agents = props.executors.filter((item) => item.type === "agent");
+  const humans = props.executors.filter((item) => item.type === "human");
+  const totalRunning = props.executors.reduce((sum, item) => sum + (item.runningCount ?? item.activeTasks ?? 0), 0);
+  const totalCompleted = props.executors.reduce((sum, item) => sum + item.completedToday, 0);
+  const totalFailures = props.executors.reduce((sum, item) => sum + (item.failureCount ?? 0), 0);
+
   return (
-    <div className="card-grid page-scroll">
-      {props.executors.map((item) => {
-        const latestResult = item.lastResult ?? item.lastRunSummary;
-        const healthLabel = item.health?.status ?? item.status;
-        return (
-          <article key={item.id} className="entity-card">
-            <div className="entity-header">
-              <div className="entity-avatar">{item.avatar}</div>
-              <div>
-                <h3>{item.name}</h3>
-                <p>
-                  {item.role}
-                  {item.adapterKind ? ` · ${item.adapterKind}` : ""}
-                </p>
+    <div className="page-scroll">
+      <div className="page-topbar">
+        <div>
+          <h2 className="page-section-title">执行器管理</h2>
+          <p className="page-section-subtitle">执行器负责具体执行，系统只负责驱动流程</p>
+        </div>
+        <button className="btn btn-p" type="button">
+          + 添加执行器
+        </button>
+      </div>
+
+      <div className="mini-stats-row">
+        <div className="mini-stat-card">
+          <div className="mini-stat-card__value mini-stat-card__value--green">{props.executors.length}</div>
+          <div className="mini-stat-card__label">活跃执行器</div>
+        </div>
+        <div className="mini-stat-card">
+          <div className="mini-stat-card__value mini-stat-card__value--yellow">{totalRunning}</div>
+          <div className="mini-stat-card__label">执行中任务</div>
+        </div>
+        <div className="mini-stat-card">
+          <div className="mini-stat-card__value mini-stat-card__value--accent">{totalCompleted}</div>
+          <div className="mini-stat-card__label">今日完成</div>
+        </div>
+        <div className="mini-stat-card">
+          <div className="mini-stat-card__value mini-stat-card__value--muted">{totalFailures}</div>
+          <div className="mini-stat-card__label">异常/超时</div>
+        </div>
+      </div>
+
+      <div className="flow-card">
+        <div className="flow-card__title">执行流程</div>
+        <div className="flow-steps">
+          <span className="flow-step flow-step--accent">接收任务</span>
+          <span>→</span>
+          <span className="flow-step flow-step--yellow">能力匹配</span>
+          <span>→</span>
+          <span className="flow-step flow-step--green">执行任务</span>
+          <span>→</span>
+          <span className="flow-step flow-step--blue">提交结果</span>
+          <span>→</span>
+          <span className="flow-step flow-step--muted">完成/审核</span>
+        </div>
+      </div>
+
+      <h3 className="subsection-title">Agent 执行器</h3>
+      <div className="agents-grid" style={{ padding: 0 }}>
+        {agents.map((item) => {
+          const latestResult = item.lastResult ?? item.lastRunSummary;
+          return (
+            <article key={item.id} className="agent-card entity-card">
+              <div className="agent-card-hd">
+                <div className="agent-card-avatar">{item.avatar}</div>
+                <div className="agent-card-info">
+                  <div className="agent-card-name">{item.name}</div>
+                  <div className="agent-card-role">{item.role}</div>
+                </div>
+                <div className={`agent-card-status status-chip status-chip--${item.status}`}>● {statusText(item.status)}</div>
               </div>
-              <span className={`status-tag ${item.status}`}>{item.status}</span>
+              <div className="agent-caps capability-list">
+                {item.capabilities.map((capability) => (
+                  <span className="cap" key={capability}>
+                    {capability}
+                  </span>
+                ))}
+              </div>
+              <div className="agent-stats">
+                <div className="agent-stat">
+                  <div className="agent-stat-val">{item.completedToday}</div>
+                  <div className="agent-stat-lbl">今日完成</div>
+                </div>
+                <div className="agent-stat">
+                  <div className="agent-stat-val">{item.queueCount ?? 0}</div>
+                  <div className="agent-stat-lbl">今日上限</div>
+                </div>
+                <div className="agent-stat">
+                  <div className="agent-stat-val" style={{ color: "var(--green)" }}>
+                    {item.successRate}%
+                  </div>
+                  <div className="agent-stat-lbl">成功率</div>
+                </div>
+              </div>
+              <div className="sr-only">失败次数</div>
+              <div className="agent-card-actions">
+                <button className="btn btn-sm" type="button">
+                  配置
+                </button>
+                <button className="btn btn-sm" type="button">
+                  暂停
+                </button>
+                <button className="btn btn-sm" type="button">
+                  历史
+                </button>
+              </div>
+              {latestResult ? <div className="agent-card-note">{latestResult}</div> : null}
+            </article>
+          );
+        })}
+      </div>
+
+      {humans.length ? <h3 className="subsection-title">👤 人执行器</h3> : null}
+      <div className="agents-grid" style={{ padding: 0 }}>
+        {humans.map((item) => (
+          <article key={item.id} className="agent-card entity-card">
+            <div className="agent-card-hd">
+              <div className="agent-card-avatar">{item.avatar}</div>
+              <div className="agent-card-info">
+                <div className="agent-card-name">{item.name}</div>
+                <div className="agent-card-role">{item.role}</div>
+              </div>
+              <div className={`agent-card-status status-chip status-chip--${item.status}`}>● {statusText(item.status)}</div>
             </div>
-            <div className="plugin-card__meta">
-              <span>适配器：{item.adapterKind ?? item.type}</span>
-              <span>健康：{healthLabel}</span>
-              <span>{item.status === "offline" || item.status === "error" ? "不可用" : "可用"}</span>
-            </div>
-            {item.health?.message ? <p className="plugin-inline-meta">健康：{item.health.message}</p> : null}
-            <div className="capability-list">
+            <div className="agent-caps capability-list">
               {item.capabilities.map((capability) => (
-                <span key={capability}>{capability}</span>
+                <span className="cap" key={capability}>
+                  {capability}
+                </span>
               ))}
             </div>
-            <div className="metric-row">
-              <div>
-                <strong>{item.queueCount ?? 0}</strong>
-                <span>队列中</span>
+            <div className="agent-stats">
+              <div className="agent-stat">
+                <div className="agent-stat-val">{item.activeTasks}</div>
+                <div className="agent-stat-lbl">待处理</div>
               </div>
-              <div>
-                <strong>{item.runningCount ?? item.activeTasks}</strong>
-                <span>运行中</span>
+              <div className="agent-stat">
+                <div className="agent-stat-val">{item.queueCount ?? 0}</div>
+                <div className="agent-stat-lbl">待审核</div>
               </div>
-              <div>
-                <strong>{item.completedToday}</strong>
-                <span>今日完成</span>
+              <div className="agent-stat">
+                <div className="agent-stat-val">{item.completedToday}</div>
+                <div className="agent-stat-lbl">今日完成</div>
               </div>
-              <div>
-                <strong>{item.failureCount ?? 0}</strong>
-                <span>失败次数</span>
-              </div>
-              <div>
-                <span className={`recent-result ${(item.failureCount ?? 0) > 0 ? "error" : item.runningCount ? "running" : "idle"}`}>
-                  {latestResult ?? item.status}
-                </span>
-                <span>最近结果</span>
-              </div>
-            </div>
-            <div className="plugin-card__meta plugin-card__meta--bottom">
-              {latestResult ? <span>最近结果：{latestResult}</span> : null}
-              {item.lastError ? <span className="plugin-card__error-inline">错误：{item.lastError}</span> : null}
             </div>
           </article>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
+}
+
+function statusText(status: ExecutorItem["status"]) {
+  switch (status) {
+    case "idle":
+      return "空闲";
+    case "busy":
+      return "处理中";
+    case "offline":
+      return "离线";
+    case "error":
+      return "异常";
+  }
 }

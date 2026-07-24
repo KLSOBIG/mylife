@@ -60,32 +60,18 @@ export function SourcesPage(props: {
   }, [activeStatusFilter, props.sources, searchValue]);
 
   return (
-    <div className="page-scroll stack-list">
-      <div style={{ display: "grid", gap: 12 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between" }}>
-          <input
-            aria-label="搜索信息源"
-            onChange={(event) => {
-              const next = event.target.value;
-              if (props.searchQuery === undefined) {
-                setSearchDraft(next);
-              }
-              props.onSearchChange?.(next);
-            }}
-            placeholder="搜索名称、类型、状态、描述"
-            style={{
-              flex: "1 1 320px",
-              border: "1px solid var(--border)",
-              borderRadius: 14,
-              padding: "11px 14px",
-              outline: "none"
-            }}
-            value={searchValue}
-          />
-          <button className="btn primary" onClick={() => setCreateOpen(true)} type="button">
-            添加信息源
-          </button>
+    <div className="page-scroll">
+      <div className="page-topbar">
+        <div>
+          <h2 className="page-section-title">信息源接入</h2>
+          <p className="page-section-subtitle">统一接入钉钉、邮件、RSS、Webhook 和本地轮询</p>
         </div>
+        <button className="btn btn-p" onClick={() => setCreateOpen(true)} type="button">
+          + 添加信息源
+        </button>
+      </div>
+
+      <div className="rules-toolbar">
         <div className="chips">
           {(["all", "connected", "warning", "offline"] as const).map((status) => (
             <button
@@ -103,34 +89,51 @@ export function SourcesPage(props: {
             </button>
           ))}
         </div>
+        <div className="rules-toolbar-actions">
+          <input
+            aria-label="搜索信息源"
+            className="tasks-search"
+            onChange={(event) => {
+              const next = event.target.value;
+              if (props.searchQuery === undefined) {
+                setSearchDraft(next);
+              }
+              props.onSearchChange?.(next);
+            }}
+            placeholder="搜索名称、类型、状态、描述"
+            value={searchValue}
+          />
+          <button className="btn btn-p" onClick={() => setCreateOpen(true)} type="button">
+            添加信息源
+          </button>
+        </div>
       </div>
 
       {visibleSources.length ? (
-        <div className="card-grid">
+        <div className="sources-grid">
           {visibleSources.map((item) => {
             const plugin = props.pluginsBySourceId?.[item.id];
             const adapterKind = item.adapterKind ?? plugin?.adapterKind ?? plugin?.kind ?? item.kind;
             const healthLabel = plugin?.health?.status ?? item.health?.status ?? item.status;
             return (
-              <article key={item.id} className="entity-card">
-                <div className="entity-header">
-                  <div className="entity-avatar">{item.icon}</div>
-                  <div>
-                    <h3>{item.name}</h3>
-                    <p>
+              <article key={item.id} className="source-card entity-card">
+                <div className="source-card-hd">
+                  <span className="source-card-icon">{item.icon}</span>
+                  <div className="source-card-info">
+                    <div className="source-card-name">{item.name}</div>
+                    <div className="source-card-type">
                       {item.kind}
                       {plugin ? ` · ${plugin.pluginId}` : ""}
-                    </p>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <span className={`source-card-status status-chip status-chip--${item.status}`}>{healthLabel}</span>
                     <button
                       className={`status-tag ${item.status}`}
-                      onClick={() =>
-                        props.onToggleSource?.(item.id, item.status === "connected" ? "offline" : "connected")
-                      }
+                      onClick={() => props.onToggleSource?.(item.id, item.status === "connected" ? "offline" : "connected")}
                       type="button"
                     >
-                      {item.status}
+                      {item.enabled ? "已启用" : "已停用"}
                     </button>
                     {props.realSourceIds?.includes(item.id) ? (
                       <button className="btn secondary small" onClick={() => props.onSyncSource?.(item.id)} type="button">
@@ -139,22 +142,11 @@ export function SourcesPage(props: {
                     ) : null}
                   </div>
                 </div>
-                <div className="plugin-card__meta">
-                  <span>适配器：{adapterKind}</span>
-                  <span>健康：{healthLabel}</span>
-                  <span>{item.enabled ? "已启用" : "已停用"}</span>
-                </div>
+                <p className="source-card-desc">{item.description}</p>
+                <div className="source-card-stats">适配器：{adapterKind} · 最近同步：{plugin?.lastSyncAt ?? item.lastSyncAt ?? item.stat}</div>
                 {plugin?.health?.message ? <p className="plugin-inline-meta">健康：{plugin.health.message}</p> : null}
-                <p className="entity-description">{item.description}</p>
-                <div className="plugin-card__meta plugin-card__meta--bottom">
-                  <span>最近同步：{plugin?.lastSyncAt ?? item.lastSyncAt ?? item.stat}</span>
-                  {plugin?.lastResult ?? item.lastResult ? (
-                    <span>最近结果：{plugin?.lastResult ?? item.lastResult}</span>
-                  ) : null}
-                  {plugin?.lastError ?? item.lastError ? (
-                    <span className="plugin-card__error-inline">错误：{plugin?.lastError ?? item.lastError}</span>
-                  ) : null}
-                </div>
+                {plugin?.lastResult ?? item.lastResult ? <p className="plugin-inline-meta">结果：{plugin?.lastResult ?? item.lastResult}</p> : null}
+                {plugin?.lastError ?? item.lastError ? <p className="plugin-inline-error">错误：{plugin?.lastError ?? item.lastError}</p> : null}
               </article>
             );
           })}
