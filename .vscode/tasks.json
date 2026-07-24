@@ -2,63 +2,36 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "pnpm: dev:web",
-      "type": "shell",
-      "command": "pnpm dev --host 127.0.0.1 --port 5173",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "group": "nexus-web"
-      },
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": {
-          "regexp": "."
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*",
-          "endsPattern": ".*http://127\\.0\\.0\\.1:5173.*"
-        }
-      }
-    },
-    {
-      "label": "pnpm: dev:api",
-      "type": "shell",
-      "command": "pnpm dev:api",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "isBackground": true,
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "group": "nexus-api"
-      },
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": {
-          "regexp": "."
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*",
-          "endsPattern": ".*http://127\\.0\\.0\\.1:4318.*"
-        }
-      }
-    },
-    {
       "label": "nexus: start all",
-      "dependsOrder": "parallel",
-      "dependsOn": [
-        "pnpm: dev:api",
-        "pnpm: dev:web"
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "pnpm dev:api & pnpm dev --host 127.0.0.1 --port 5173"
       ],
-      "problemMatcher": []
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "nexus"
+      }
+      ,
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": "."
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*dev:api.*|.*vite.*|.*VITE.*",
+          "endsPattern": ".*http://127\\.0\\.0\\.1:5173/.*|.*Local:\\s+http://127\\.0\\.0\\.1:5173/.*"
+        }
+      }
     }
   ]
 }
