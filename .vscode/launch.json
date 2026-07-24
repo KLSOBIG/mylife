@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Nexus: 调试 API",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/server/app.mjs",
+      "cwd": "${workspaceFolder}",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Nexus: 调试 Web",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://127.0.0.1:5173",
+      "webRoot": "${workspaceFolder}/src",
+      "preLaunchTask": "pnpm: dev",
+      "presentation": {
+        "hidden": false,
+        "group": "nexus"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Nexus: 一键全栈调试",
+      "configurations": [
+        "Nexus: 调试 API",
+        "Nexus: 调试 Web"
+      ],
+      "stopAll": true
+    }
+  ]
+}
