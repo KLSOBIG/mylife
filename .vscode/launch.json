@@ -6,12 +6,7 @@
       "type": "node-terminal",
       "request": "launch",
       "command": "bash -lc 'trap \"kill 0\" EXIT; pnpm dev:api & pnpm dev --host 127.0.0.1 --port 5173'",
-      "cwd": "${workspaceFolder}",
-      "serverReadyAction": {
-        "pattern": "Local:\\s+(http://127\\.0\\.0\\.1:5173/)",
-        "uriFormat": "%s",
-        "action": "debugWithChrome"
-      }
+      "cwd": "${workspaceFolder}"
     }
   ]
 }
