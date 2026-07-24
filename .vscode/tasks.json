@@ -59,32 +59,6 @@
         "pnpm: dev:web"
       ],
       "problemMatcher": []
-    },
-    {
-      "label": "pnpm: test",
-      "type": "shell",
-      "command": "pnpm test",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": []
-    },
-    {
-      "label": "pnpm: build",
-      "type": "shell",
-      "command": "pnpm build",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": []
     }
   ]
 }

@@ -8,17 +8,6 @@
       "url": "http://127.0.0.1:5173",
       "webRoot": "${workspaceFolder}/src",
       "preLaunchTask": "nexus: start all"
-    },
-    {
-      "name": "Nexus: 仅启动 API",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/server/app.mjs",
-      "cwd": "${workspaceFolder}",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "console": "integratedTerminal"
     }
   ]
 }
