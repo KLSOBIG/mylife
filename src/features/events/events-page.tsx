@@ -71,31 +71,46 @@ export function EventsPage(props: {
       );
     });
   }, [props.activeFilter, props.events, props.sourceFilter, searchValue]);
+  const groupedEvents = useMemo(
+    () => ({
+      L3: visibleEvents.filter((item) => item.level === "L3"),
+      L2: visibleEvents.filter((item) => item.level === "L2"),
+      L1: visibleEvents.filter((item) => item.level === "L1"),
+      L0: visibleEvents.filter((item) => item.level === "L0")
+    }),
+    [visibleEvents]
+  );
 
   return (
-    <div className="page-body">
-      <div className="toolbar">
-        <div style={{ display: "grid", gap: 12 }}>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <select
-              aria-label="事件来源筛选"
-              onChange={(event) => props.onSourceFilterChange?.(event.target.value)}
-              style={{
-                minWidth: 160,
-                border: "1px solid var(--border)",
-                borderRadius: 14,
-                padding: "11px 14px",
-                outline: "none",
-                background: "#fff"
-              }}
-              value={props.sourceFilter ?? "all"}
+    <div className="page events-page">
+      <div className="events-toolbar">
+        <div className="chips">
+          {filters.map((filter) => (
+            <button
+              key={filter}
+              type="button"
+              className={filter === props.activeFilter ? "chip active" : "chip"}
+              onClick={() => props.onFilterChange(filter)}
             >
-              {sources.map((source) => (
-                <option key={source} value={source}>
-                  {source === "all" ? "全部来源" : source}
-                </option>
-              ))}
-            </select>
+              {filter === "all" ? "全部" : filter}
+            </button>
+          ))}
+        </div>
+        <div className="events-toolbar__right">
+          <select
+            aria-label="事件来源筛选"
+            className="events-source-filter"
+            onChange={(event) => props.onSourceFilterChange?.(event.target.value)}
+            value={props.sourceFilter ?? "all"}
+          >
+            {sources.map((source) => (
+              <option key={source} value={source}>
+                {source === "all" ? "全部来源" : source}
+              </option>
+            ))}
+          </select>
+          <div className="search">
+            <span className="si">🔍</span>
             <input
               aria-label="搜索事件"
               onChange={(event) => {
@@ -105,54 +120,53 @@ export function EventsPage(props: {
                 }
                 props.onSearchChange?.(next);
               }}
-              placeholder="搜索标题、来源、发送人、摘要、标签"
-              style={{
-                flex: "1 1 360px",
-                border: "1px solid var(--border)",
-                borderRadius: 14,
-                padding: "11px 14px",
-                outline: "none"
-              }}
+              placeholder="搜索事件..."
               value={searchValue}
             />
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "space-between" }}>
-            <div className="chips">
-              {filters.map((filter) => (
-                <button
-                  key={filter}
-                  type="button"
-                  className={filter === props.activeFilter ? "chip active" : "chip"}
-                  onClick={() => props.onFilterChange(filter)}
-                >
-                  {filter === "all" ? "全部" : filter}
-                </button>
-              ))}
-            </div>
-            <button className="btn primary" onClick={() => setCreateOpen(true)} type="button">
-              创建事件
-            </button>
-          </div>
+          <button className="btn btn-p" onClick={() => setCreateOpen(true)} type="button">
+            + 新建事件
+          </button>
         </div>
       </div>
-      <div className="list-wrap">
+      <div className="events-list">
         {visibleEvents.length ? (
-          visibleEvents.map((item) => (
-            <button
-              type="button"
-              key={item.id}
-              className={item.id === props.selectedEventId ? "event-card selected" : "event-card"}
-              onClick={() => props.onSelect(item.id)}
-            >
-              <div className={`level-pill ${item.level.toLowerCase()}`}>{item.level}</div>
-              <div className="event-copy">
-                <strong>{item.title}</strong>
-                <p>
-                  {item.source} / {item.sender} / {item.happenedAt}
-                </p>
-              </div>
-            </button>
-          ))
+          (["L3", "L2", "L1", "L0"] as const).map((level) =>
+            groupedEvents[level].length ? (
+              <section className="events-group" key={level}>
+                <div className={`events-group-title events-group-title--${level.toLowerCase()}`}>
+                  <span>{levelLabel(level)}</span>
+                  <small>{groupedEvents[level].length} 件</small>
+                </div>
+                {groupedEvents[level].map((item) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    className={item.id === props.selectedEventId ? "event-card selected" : "event-card"}
+                    onClick={() => props.onSelect(item.id)}
+                  >
+                    <div className={`event-priority event-priority--${level.toLowerCase()}`}>{levelGlyph(level)}</div>
+                    <div className="event-content">
+                      <div className="event-title">{item.title}</div>
+                      <div className="event-meta">
+                        <span>{item.source}</span>
+                        <span>{item.sender}</span>
+                        <span>{item.happenedAt}</span>
+                        <div className="event-tags">
+                          <span className={`tag tag--${level.toLowerCase()}`}>{level}</span>
+                          {item.tags.slice(0, 2).map((tag) => (
+                            <span className="tag" key={tag}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </section>
+            ) : null
+          )
         ) : (
           <EmptyState
             description="先放宽筛选或换个关键词。"
@@ -241,4 +255,30 @@ export function EventsPage(props: {
       </Dialog>
     </div>
   );
+}
+
+function levelLabel(level: AttentionLevel) {
+  switch (level) {
+    case "L3":
+      return "🔴 L3 必须你关注";
+    case "L2":
+      return "🟡 L2 Agent 处理中";
+    case "L1":
+      return "🔵 L1 AI 追踪中";
+    case "L0":
+      return "⚪ L0 已隔离";
+  }
+}
+
+function levelGlyph(level: AttentionLevel) {
+  switch (level) {
+    case "L3":
+      return "⚡";
+    case "L2":
+      return "▾";
+    case "L1":
+      return "·";
+    case "L0":
+      return "○";
+  }
 }

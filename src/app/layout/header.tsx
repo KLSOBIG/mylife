@@ -137,35 +137,28 @@ export function Header(props: {
   return (
     <>
       <header className="header">
-        <div className="header-copy">
-          <div className="header-breadcrumb">{props.currentWorkspace.name}</div>
-          <h1>{copy.title}</h1>
-          <p>{copy.subtitle}</p>
-          <span className="header-summary">{props.currentWorkspace.name} / {copy.subtitle}</span>
+        <div className="header-title">
+          <h1 className="sr-only">{copy.title}</h1>
+          <span>{pageIcon(props.currentPage)} {copy.title}</span>
+          <span className="sr-only">{props.currentWorkspace.name} / {copy.subtitle}</span>
         </div>
         <div className="header-actions">
           <button
             type="button"
-            className="btn secondary header-command"
+            className="btn btn-ghost btn-icon"
             aria-haspopup="dialog"
             onClick={() => setPaletteOpen(true)}
+            title="命令面板"
           >
-            <span className="header-command__label">命令面板</span>
-            <kbd>⌘K</kbd>
+            <span className="kbd">⌘K</span>
           </button>
-          <button type="button" className="btn secondary" onClick={props.onToggleChat}>
-            {props.chatOpen ? "关闭对话" : "打开对话"}
+          <button type="button" className="btn" onClick={props.onCreateTask}>
+            + 新建任务
           </button>
-          <button
-            type="button"
-            className="btn primary"
-            onClick={() => {
-              setQuery("创建");
-              setPaletteOpen(true);
-            }}
-          >
-            创建任务
+          <button type="button" className="btn btn-icon" onClick={props.onToggleChat} title={props.chatOpen ? "关闭对话" : "打开对话"}>
+            💬
           </button>
+          <button type="button" className="btn btn-icon" title="设置">⚙️</button>
         </div>
       </header>
 
@@ -237,6 +230,25 @@ export function Header(props: {
 
     navigatePage("tasks");
     window.setTimeout(() => clickButton(".page-shell", "创建任务"), 0);
+  }
+}
+
+function pageIcon(page: PageId) {
+  switch (page) {
+    case "dashboard":
+      return "📊";
+    case "events":
+      return "📥";
+    case "tasks":
+      return "📋";
+    case "executors":
+      return "🤖";
+    case "rules":
+      return "⚙️";
+    case "sources":
+      return "🔗";
+    case "plugins":
+      return "🧩";
   }
 }
 

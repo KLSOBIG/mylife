@@ -39,7 +39,7 @@ export function WorkspaceSwitcher(props: {
       <button
         aria-expanded={open}
         aria-label={`${currentLabel.name} 工作空间切换`}
-        className="workspace-button"
+        className="workspace-btn"
         onClick={() => {
           if (current) {
             setOpen((value) => !value);
@@ -49,22 +49,19 @@ export function WorkspaceSwitcher(props: {
         }}
         type="button"
       >
-        <span className="workspace-icon">{currentLabel.icon}</span>
-        <span className="workspace-meta">
-          <strong>{currentLabel.name}</strong>
-          <small>{currentLabel.description}</small>
+        <span className="workspace-icon workspace-icon--current">{currentLabel.icon}</span>
+        <span className="workspace-info">
+          <span className="workspace-name">{currentLabel.name}</span>
+          <span className="workspace-type">{currentLabel.description}</span>
         </span>
-        <span className="workspace-caret">{current ? (open ? "▴" : "▾") : "+"}</span>
+        <span className="workspace-arrow">{current ? (open ? "▲" : "▼") : "+"}</span>
       </button>
       {!current ? <EmptyState description="先创建首个工作空间。" title="没有工作空间" /> : null}
       {open && current ? (
-        <div className="workspace-menu">
-          <button className="btn secondary" onClick={() => setCreateOpen(true)} type="button">
-            新建工作空间
-          </button>
+        <div className="workspace-dropdown">
           {props.workspaces.map((item) => (
             <button
-              className={item.id === current.id ? "workspace-option active" : "workspace-option"}
+              className={item.id === current.id ? "workspace-dropdown-item active" : "workspace-dropdown-item"}
               key={item.id}
               onClick={() => {
                 props.onSwitch(item.id);
@@ -72,13 +69,19 @@ export function WorkspaceSwitcher(props: {
               }}
               type="button"
             >
-              <span className="workspace-icon">{item.icon}</span>
-              <span className="workspace-meta">
-                <strong>{item.name}</strong>
-                <small>{item.description}</small>
+              <span className="ws-icon">{item.icon}</span>
+              <span className="ws-info">
+                <span className="ws-name">{item.name}</span>
+                <span className="ws-desc">{item.description}</span>
               </span>
+              <span className="ws-check">{item.id === current.id ? "✓" : ""}</span>
             </button>
           ))}
+          <div className="workspace-divider" />
+          <button aria-label="新建工作空间" className="workspace-add" onClick={() => setCreateOpen(true)} type="button">
+            <span>+</span>
+            <span>新建工作空间</span>
+          </button>
         </div>
       ) : null}
       <Dialog

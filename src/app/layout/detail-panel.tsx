@@ -21,24 +21,18 @@ export function DetailPanel(props: {
 }) {
   const hasDetail = Boolean(props.event || props.task);
   return (
-    <aside className={hasDetail ? "detail-panel open" : "detail-panel"}>
-      <div className="detail-header">
-        <div>
-          <div className="detail-kicker">当前焦点</div>
-          <div className="detail-titlebar">详情</div>
-        </div>
+    <aside className={hasDetail ? "detail detail-panel open" : "detail detail-panel"}>
+      <div className="detail-hd">
+        <div className="detail-titlebar">详情</div>
       </div>
       <div className="detail-body">
         {props.event ? (
-          <div className="detail-section-stack">
-            <div className="detail-surface">
+          <div className="detail-panel-card">
               <EventDetail event={props.event} onConvertToTask={props.onConvertEventToTask} />
-            </div>
           </div>
         ) : null}
         {props.task ? (
-          <div className="detail-section-stack">
-            <div className="detail-surface">
+          <div className="detail-panel-card">
               <TaskDetail
                 activeRun={props.activeRun}
                 executors={props.executors}
@@ -53,12 +47,11 @@ export function DetailPanel(props: {
                 runs={props.runs}
                 task={props.task}
               />
-            </div>
           </div>
         ) : null}
         {!props.event && !props.task ? (
           <div className="detail-empty">
-            <strong>等你选中内容。</strong>
+            <strong>等你选中内容</strong>
             <p>点事件或任务，右侧出现上下文详情、状态和处理动作。</p>
           </div>
         ) : null}

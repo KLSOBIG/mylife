@@ -89,7 +89,7 @@ export function TasksPage(props: {
   return (
     <div className="page-body">
       <div className="toolbar">
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="tasks-toolbar">
           <input
             aria-label="搜索任务"
             onChange={(event) => {
@@ -100,24 +100,18 @@ export function TasksPage(props: {
               props.onSearchChange?.(next);
             }}
             placeholder="搜索标题、描述、状态、优先级、来源"
-            style={{
-              flex: "1 1 320px",
-              border: "1px solid var(--border)",
-              borderRadius: 14,
-              padding: "11px 14px",
-              outline: "none"
-            }}
+            className="tasks-search"
             value={searchValue}
           />
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <div className="chips" role="tablist" aria-label="任务视图切换">
+          <div className="tasks-toolbar-actions">
+            <div className="view-toggle" role="tablist" aria-label="任务视图切换">
               {([
                 { id: "kanban" as const, label: "看板" },
                 { id: "list" as const, label: "列表" }
               ]).map((item) => (
                 <button
                   aria-pressed={activeView === item.id}
-                  className={activeView === item.id ? "chip active" : "chip"}
+                  className={activeView === item.id ? "view-btn active" : "view-btn"}
                   key={item.id}
                   onClick={() => setViewMode(item.id)}
                   type="button"
@@ -126,7 +120,7 @@ export function TasksPage(props: {
                 </button>
               ))}
             </div>
-            <button className="btn primary" onClick={() => setCreateOpen(true)} type="button">
+            <button className="btn btn-p" onClick={() => setCreateOpen(true)} type="button">
               创建任务
             </button>
           </div>
@@ -172,11 +166,15 @@ export function TasksPage(props: {
                         className={item.id === props.selectedTaskId ? "task-card selected" : "task-card"}
                         onClick={() => props.onSelect(item.id)}
                       >
-                        <strong>{item.title}</strong>
-                        <p>{item.description}</p>
-                        <span>
-                          {item.level} / {item.priority}
-                        </span>
+                        <div className="kanban-card-title">{item.title}</div>
+                        <div className="kanban-card-meta">
+                          <span className={`tag tag--${item.level.toLowerCase()}`}>{item.level}</span>
+                          <span>{item.priority}</span>
+                        </div>
+                        <div className="kanban-card-bottom">
+                          <span>{item.type}</span>
+                          <span>{item.assigneeId ? "已分配" : "未分配"}</span>
+                        </div>
                       </button>
                     ))
                   ) : (

@@ -2,15 +2,21 @@ import type { PageId } from "../../domain/types";
 import type { Workspace } from "../../domain/types";
 import { WorkspaceSwitcher } from "../../features/workspaces/workspace-switcher";
 
-const navItems: Array<{ id: PageId; label: string; icon: string }> = [
-  { id: "dashboard", label: "仪表盘", icon: "◫" },
-  { id: "events", label: "事件流", icon: "◉" },
-  { id: "tasks", label: "任务", icon: "▣" },
-  { id: "executors", label: "执行器", icon: "⚙" },
-  { id: "rules", label: "规则引擎", icon: "◇" },
-  { id: "sources", label: "信息源", icon: "⌁" },
-  { id: "plugins", label: "插件", icon: "⧉" }
+const navItems: Array<{ id: PageId; label: string; icon: string; section: "core" | "ai" | "integration" }> = [
+  { id: "dashboard", label: "仪表盘", icon: "📊", section: "core" },
+  { id: "events", label: "事件流", icon: "📥", section: "core" },
+  { id: "tasks", label: "任务", icon: "📋", section: "core" },
+  { id: "executors", label: "执行器", icon: "🤖", section: "ai" },
+  { id: "rules", label: "规则引擎", icon: "⚙️", section: "ai" },
+  { id: "sources", label: "信息源", icon: "🔗", section: "integration" },
+  { id: "plugins", label: "插件", icon: "🧩", section: "integration" }
 ];
+
+const sections = [
+  { id: "core", label: "" },
+  { id: "ai", label: "AI 治理" },
+  { id: "integration", label: "接入" }
+] as const;
 
 export function Sidebar(props: {
   currentPage: PageId;
@@ -22,15 +28,13 @@ export function Sidebar(props: {
 }) {
   return (
     <aside className="sidebar">
-      <div className="sidebar-header">
+      <div className="sidebar-hd">
         <div className="logo">N</div>
         <div className="sidebar-brand">
-          <div className="sidebar-title">Nexus</div>
-          <div className="sidebar-subtitle">注意力保护系统</div>
+          <div className="app-name">Nexus</div>
         </div>
       </div>
-      <section className="sidebar-section">
-        <div className="sidebar-section__label">工作空间</div>
+      <section className="workspace-shell">
         <WorkspaceSwitcher
           currentWorkspaceId={props.currentWorkspaceId}
           workspaces={props.workspaces}
@@ -39,28 +43,33 @@ export function Sidebar(props: {
         />
       </section>
       <nav className="sidebar-nav" aria-label="主导航">
-        {navItems.map((item) => (
-          <button
-            type="button"
-            key={item.id}
-            className={item.id === props.currentPage ? "nav-item active" : "nav-item"}
-            onClick={() => props.onPageChange(item.id)}
-            aria-label={item.label}
-          >
-            <span className="nav-icon" aria-hidden="true">
-              {item.icon}
-            </span>
-            <span className="nav-copy">
-              <span className="nav-label">{item.label}</span>
-            </span>
-          </button>
+        {sections.map((section) => (
+          <div className="nav-s" key={section.id}>
+            {section.label ? <div className="nav-st">{section.label}</div> : null}
+            {navItems
+              .filter((item) => item.section === section.id)
+              .map((item) => (
+                <button
+                  type="button"
+                  key={item.id}
+                  className={item.id === props.currentPage ? "nav-i active" : "nav-i"}
+                  onClick={() => props.onPageChange(item.id)}
+                  aria-label={item.label}
+                >
+                  <span className="ic" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+          </div>
         ))}
       </nav>
-      <div className="sidebar-footer">
+      <div className="sidebar-ft">
         <div className="avatar">K</div>
-        <div className="sidebar-brand">
-          <div className="sidebar-title">Kael</div>
-          <div className="sidebar-subtitle">管理员</div>
+        <div className="sidebar-user">
+          <div className="user-name">Kael</div>
+          <div className="user-mode">保守模式</div>
         </div>
       </div>
     </aside>
